@@ -3,10 +3,25 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { ShieldCheck, User, Calendar, Server, MapPin } from "lucide-react";
+import { HospitalSetting } from "@/lib/types/auth";
 
 export function AppStatusBar() {
   const { user, isAuthenticated } = useAuth();
   const [currentTime, setCurrentTime] = useState("");
+  const [dbConnected, setDbConnected] = useState<boolean | null>(null);
+  const [setting, setSetting] = useState<HospitalSetting | null>(null);
+
+  useEffect(() => {
+    fetch("/api/system/info")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setDbConnected(!!data.data.database?.connected);
+          setSetting(data.data.setting || null);
+        }
+      })
+      .catch(() => setDbConnected(false));
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -27,6 +42,10 @@ export function AppStatusBar() {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const locationText = setting?.kabupaten
+    ? `${setting.kabupaten}${setting.propinsi ? `, ${setting.propinsi}` : ""}`
+    : "Sistem Informasi Manajemen Rumah Sakit";
 
   return (
     <footer className="bg-emerald-800 text-emerald-100 text-[11px] px-3 py-1 flex flex-wrap items-center justify-between border-t border-emerald-900 select-none shrink-0">
@@ -66,17 +85,23 @@ export function AppStatusBar() {
 
         <div className="hidden sm:flex items-center gap-1.5 text-emerald-200">
           <Server className="w-3.5 h-3.5 text-emerald-300" />
-          <span>127.0.0.1:3306 [sik_mitra]</span>
+          <span>
+            Database:{" "}
+            {dbConnected === null
+              ? "Memeriksa..."
+              : dbConnected
+              ? "Terhubung"
+              : "Terputus"}
+          </span>
         </div>
 
         <div className="hidden md:block h-3 w-px bg-emerald-700/60" />
 
         <div className="hidden md:flex items-center gap-1.5 text-emerald-200">
           <MapPin className="w-3.5 h-3.5 text-emerald-300" />
-          <span>Merauke, Papua Selatan</span>
+          <span>{locationText}</span>
         </div>
       </div>
     </footer>
   );
 }
-
