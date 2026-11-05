@@ -75,14 +75,14 @@ export function AppHeader({
           {/* 1. Menu Utama */}
           <button
             onClick={onToggleMenu}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
               isMenuOpen
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs"
-                : "bg-emerald-700/60 text-emerald-100 border-emerald-600/60 hover:bg-emerald-700 hover:text-white"
+                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
+                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
             }`}
             title="Buka / Tutup Menu Utama (Alt+M)"
           >
-            <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5" />
+            <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5 text-emerald-300" />
             <span>Menu Utama</span>
           </button>
 
