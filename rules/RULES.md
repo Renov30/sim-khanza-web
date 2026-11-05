@@ -117,7 +117,7 @@ export default function ModulePage() {
 ```
 khanza-web/
 ├── rules/
-│   └── agent.md                  <-- Pedoman wajib ini
+│   └── RULES.md                  <-- Pedoman wajib ini
 ├── src/
 │   ├── app/                      <-- App Router Next.js
 │   │   ├── api/                  <-- API Routes (Auth, System, Menu, dll)

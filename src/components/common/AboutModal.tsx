@@ -64,7 +64,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
               <div>
                 <p className="font-semibold text-slate-800">Standar Keseragaman Kode</p>
                 <p className="text-slate-500 text-[11px]">
-                  Seluruh halaman mematuhi pedoman baku pada <code className="text-emerald-800 bg-slate-100 px-1 py-0.5 rounded">rules/agent.md</code>.
+                  Seluruh halaman mematuhi pedoman baku pada <code className="text-emerald-800 bg-slate-100 px-1 py-0.5 rounded">rules/RULES.md</code>.
                 </p>
               </div>
             </div>
