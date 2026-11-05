@@ -2,26 +2,26 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  User,
-  ChevronDown,
-  LogOut,
-  KeyRound,
-  Clock,
-  CalendarDays,
-  FileCheck2,
-  Bed,
-  CalendarCheck,
-  BookOpen,
-  Receipt,
-  Activity,
-  MonitorCheck,
-  Pill,
-  TestTube2,
-  Info,
-  ShieldCheck,
-  ChevronRight,
-} from "lucide-react";
+  faChevronDown,
+  faChevronRight,
+  faRightFromBracket,
+  faKey,
+  faClock,
+  faCalendarDays,
+  faFileCircleCheck,
+  faBed,
+  faCalendarCheck,
+  faBookMedical,
+  faFileInvoiceDollar,
+  faChartLine,
+  faTv,
+  faPills,
+  faVial,
+  faCircleInfo,
+  faShieldHalved,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface UserAccountMenuProps {
   onModuleClick: (title: string) => void;
@@ -74,8 +74,9 @@ export function UserAccountMenu({
         <span className="max-w-[120px] md:max-w-[160px] truncate leading-tight">
           {user.fullName}
         </span>
-        <ChevronDown
-          className={`w-3.5 h-3.5 text-emerald-300 transition-transform ${
+        <FontAwesomeIcon
+          icon={faChevronDown}
+          className={`w-3 h-3 text-emerald-300 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -99,13 +100,13 @@ export function UserAccountMenu({
                 </p>
                 <div className="mt-1.5">
                   <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                    className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                       user.isAdmin
                         ? "bg-purple-50 text-purple-700 border-purple-200"
                         : "bg-emerald-50 text-emerald-700 border-emerald-200"
                     }`}
                   >
-                    <ShieldCheck className="w-3 h-3" />
+                    <FontAwesomeIcon icon={faShieldHalved} className="w-3 h-3" />
                     {user.isAdmin
                       ? "Jenis Akun: Administrator Utama"
                       : "Jenis Akun: Petugas / Dokter"}
@@ -178,30 +179,30 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Clock className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faClock} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Rekap Kehadiran Harian</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Rekap Kehadiran Bulanan")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <CalendarDays className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faCalendarDays} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Rekap Kehadiran Bulanan</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Pengajuan Cuti Pegawai")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FileCheck2 className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileCircleCheck} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Pengajuan Cuti Pegawai</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               </>
             )}
@@ -213,30 +214,30 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Bed className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Ketersediaan Kamar / Bed</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Jadwal Praktek Dokter Spesialis")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <CalendarCheck className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faCalendarCheck} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Jadwal Praktek Dokter</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Pencarian E-Book Kedokteran")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <BookOpen className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faBookMedical} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Pencarian E-Book / Jurnal</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               </>
             )}
@@ -248,40 +249,40 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Receipt className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Tarif Rawat Jalan</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Tarif Pelayanan Rawat Inap")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Receipt className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Tarif Rawat Inap</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Tarif Pemeriksaan Laboratorium")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Receipt className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Tarif Laboratorium</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Tarif Radiologi")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Receipt className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Tarif Radiologi</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               </>
             )}
@@ -293,20 +294,20 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Activity className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Indikator Pelayanan (BOR)</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Dashboard Kunjungan Poliklinik")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Activity className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Kunjungan Poliklinik</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               </>
             )}
@@ -318,40 +319,40 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <MonitorCheck className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Display Antrian Loket</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Display Antrian Poliklinik")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <MonitorCheck className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Display Antrian Poli</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Display Antrian Farmasi / Apotek")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Pill className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Display Antrian Apotek</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleAction("Display Antrian Laboratorium")}
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <TestTube2 className="w-4 h-4 text-emerald-700" />
+                    <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-emerald-700" />
                     <span>Display Antrian Laborat</span>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
                 </button>
               </>
             )}
@@ -364,14 +365,14 @@ export function UserAccountMenu({
                 onClick={() => handleAction("Ganti Password Akun")}
                 className="flex items-center gap-1.5 hover:text-emerald-700 transition-colors"
               >
-                <KeyRound className="w-3.5 h-3.5" />
+                <FontAwesomeIcon icon={faKey} className="w-3 h-3" />
                 <span>Ganti Password</span>
               </button>
               <button
                 onClick={handleAbout}
                 className="flex items-center gap-1.5 hover:text-emerald-700 transition-colors"
               >
-                <Info className="w-3.5 h-3.5" />
+                <FontAwesomeIcon icon={faCircleInfo} className="w-3 h-3" />
                 <span>Tentang Aplikasi</span>
               </button>
             </div>
@@ -383,7 +384,7 @@ export function UserAccountMenu({
               }}
               className="w-full py-2 px-3 text-xs font-semibold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 rounded-lg flex items-center justify-center gap-2 transition-colors border border-red-200 hover:border-red-600"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <FontAwesomeIcon icon={faRightFromBracket} className="w-3.5 h-3.5" />
               <span>Keluar dari Akun (Log Out)</span>
             </button>
           </div>
@@ -392,4 +393,3 @@ export function UserAccountMenu({
     </div>
   );
 }
-

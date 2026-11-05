@@ -2,75 +2,76 @@
 
 import React from "react";
 import { MenuItem } from "@/lib/types/menu";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
-  UserPlus,
-  Stethoscope,
-  BedDouble,
-  Activity,
-  Receipt,
-  CreditCard,
-  CalendarClock,
-  LayoutGrid,
-  Smartphone,
-  ScanLine,
-  QrCode,
-  Pill,
-  Users,
-  Clock,
-  Wallet,
-  Package,
-  ShoppingCart,
-  FileSpreadsheet,
-  Boxes,
-  TestTubes,
-  Bone,
-  Tags,
-  BookOpenCheck,
-  ShieldCheck,
-  HeartPulse,
-  Building2,
-  ShieldAlert,
-  HelpCircle,
-} from "lucide-react";
+  faUserPlus,
+  faStethoscope,
+  faBed,
+  faHeartPulse,
+  faReceipt,
+  faCreditCard,
+  faCalendarCheck,
+  faTableCellsLarge,
+  faMobileScreen,
+  faBarcode,
+  faQrcode,
+  faPills,
+  faUsers,
+  faClock,
+  faWallet,
+  faBox,
+  faCartShopping,
+  faFileLines,
+  faBoxesStacked,
+  faVial,
+  faXRay,
+  faTags,
+  faBookMedical,
+  faShieldHalved,
+  faHospital,
+  faShield,
+  faCircleQuestion,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface MenuCardProps {
   item: MenuItem;
   onClick: (item: MenuItem) => void;
 }
 
-const iconMap: Record<string, React.ElementType> = {
-  UserPlus,
-  Stethoscope,
-  BedDouble,
-  ActivitySquare: Activity,
-  Activity,
-  Receipt,
-  CreditCard,
-  CalendarClock,
-  LayoutGrid,
-  Smartphone,
-  ScanLine,
-  QrCode,
-  Pill,
-  Users,
-  Clock,
-  Wallet,
-  Package,
-  ShoppingCart,
-  FileSpreadsheet,
-  Boxes,
-  TestTubes,
-  Bone,
-  Tags,
-  BookOpenCheck,
-  ShieldCheck,
-  HeartPulse,
-  Building2,
-  ShieldAlert,
+const iconMap: Record<string, IconDefinition> = {
+  UserPlus: faUserPlus,
+  Stethoscope: faStethoscope,
+  BedDouble: faBed,
+  ActivitySquare: faHeartPulse,
+  Activity: faHeartPulse,
+  Receipt: faReceipt,
+  CreditCard: faCreditCard,
+  CalendarClock: faCalendarCheck,
+  LayoutGrid: faTableCellsLarge,
+  Smartphone: faMobileScreen,
+  ScanLine: faBarcode,
+  QrCode: faQrcode,
+  Pill: faPills,
+  Users: faUsers,
+  Clock: faClock,
+  Wallet: faWallet,
+  Package: faBox,
+  ShoppingCart: faCartShopping,
+  FileSpreadsheet: faFileLines,
+  Boxes: faBoxesStacked,
+  TestTubes: faVial,
+  Bone: faXRay,
+  Tags: faTags,
+  BookOpenCheck: faBookMedical,
+  ShieldCheck: faShieldHalved,
+  HeartPulse: faHeartPulse,
+  Building2: faHospital,
+  ShieldAlert: faShield,
 };
 
 export function MenuCard({ item, onClick }: MenuCardProps) {
-  const IconComponent = iconMap[item.iconName] || HelpCircle;
+  const icon = iconMap[item.iconName] || faCircleQuestion;
 
   return (
     <button
@@ -79,7 +80,7 @@ export function MenuCard({ item, onClick }: MenuCardProps) {
     >
       <div className="flex items-center justify-between w-full mb-2">
         <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white flex items-center justify-center transition-colors">
-          <IconComponent className="w-5 h-5 transition-transform group-hover:scale-105" />
+          <FontAwesomeIcon icon={icon} className="w-4 h-4 transition-transform group-hover:scale-105" />
         </div>
         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-800 transition-colors">
           [{item.categoryCode}]
@@ -98,4 +99,3 @@ export function MenuCard({ item, onClick }: MenuCardProps) {
     </button>
   );
 }
-

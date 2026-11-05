@@ -2,7 +2,16 @@
 
 import React, { useState } from "react";
 import { useAuth } from "./AuthContext";
-import { Lock, User, Eye, EyeOff, AlertCircle, X, ShieldCheck } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faLock,
+  faUser,
+  faEye,
+  faEyeSlash,
+  faCircleExclamation,
+  faXmark,
+  faShieldHalved,
+} from "@fortawesome/free-solid-svg-icons";
 
 export function LoginModal() {
   const { isLoginModalOpen, setIsLoginModalOpen, login } = useAuth();
@@ -57,7 +66,7 @@ export function LoginModal() {
         <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5" />
+              <FontAwesomeIcon icon={faShieldHalved} className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-800">
@@ -71,7 +80,7 @@ export function LoginModal() {
             className="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-200/60 transition-colors"
             title="Tutup (Esc)"
           >
-            <X className="w-4 h-4" />
+            <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
           </button>
         </div>
 
@@ -79,7 +88,7 @@ export function LoginModal() {
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {errorMsg && (
             <div className="p-3 text-xs bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+              <FontAwesomeIcon icon={faCircleExclamation} className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -90,7 +99,7 @@ export function LoginModal() {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <User className="w-4 h-4" />
+                <FontAwesomeIcon icon={faUser} className="w-3.5 h-3.5" />
               </div>
               <input
                 type="text"
@@ -109,7 +118,7 @@ export function LoginModal() {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Lock className="w-4 h-4" />
+                <FontAwesomeIcon icon={faLock} className="w-3.5 h-3.5" />
               </div>
               <input
                 type={showPassword ? "text" : "password"}
@@ -123,11 +132,10 @@ export function LoginModal() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
+                <FontAwesomeIcon
+                  icon={showPassword ? faEyeSlash : faEye}
+                  className="w-3.5 h-3.5"
+                />
               </button>
             </div>
           </div>
@@ -183,7 +191,7 @@ export function LoginModal() {
                 </>
               ) : (
                 <>
-                  <Lock className="w-3.5 h-3.5" />
+                  <FontAwesomeIcon icon={faLock} className="w-3 h-3" />
                   <span>Log In</span>
                 </>
               )}
@@ -194,4 +202,3 @@ export function LoginModal() {
     </div>
   );
 }
-

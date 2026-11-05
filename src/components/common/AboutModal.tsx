@@ -1,7 +1,14 @@
 "use client";
 
 import React from "react";
-import { Hospital, X, Shield, Code, HeartHandshake } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faHospital,
+  faXmark,
+  faShieldHalved,
+  faCode,
+  faHandshakeAngle,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -18,7 +25,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
         <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
-              <Hospital className="w-5 h-5" />
+              <FontAwesomeIcon icon={faHospital} className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-800">
@@ -33,7 +40,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
             onClick={onClose}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60"
           >
-            <X className="w-4 h-4" />
+            <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
           </button>
         </div>
 
@@ -50,7 +57,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
 
           <div className="space-y-2">
             <div className="flex items-start gap-2.5">
-              <Shield className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+              <FontAwesomeIcon icon={faShieldHalved} className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-slate-800">Konektivitas Database API</p>
                 <p className="text-slate-500 text-[11px]">
@@ -60,7 +67,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
             </div>
 
             <div className="flex items-start gap-2.5">
-              <Code className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+              <FontAwesomeIcon icon={faCode} className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-slate-800">Standar Keseragaman Kode</p>
                 <p className="text-slate-500 text-[11px]">
@@ -70,7 +77,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
             </div>
 
             <div className="flex items-start gap-2.5">
-              <HeartHandshake className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+              <FontAwesomeIcon icon={faHandshakeAngle} className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-slate-800">Lisensi & Dedikasi</p>
                 <p className="text-slate-500 text-[11px]">
@@ -93,4 +100,3 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
     </div>
   );
 }
-

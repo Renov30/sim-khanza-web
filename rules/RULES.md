@@ -9,7 +9,7 @@ Dokumen ini adalah pedoman wajib bagi AI Agent maupun developer yang berkontribu
 - **Framework**: Next.js 14+ / 16 (App Router)
 - **Bahasa**: TypeScript (Strict mode, hindari `any`)
 - **Styling**: Tailwind CSS (Utility-first, responsive, clean)
-- **Icons**: `lucide-react` (Gunakan ukuran seragam: 16px/18px/20px, stroke-width 1.75 - 2)
+- **Icons**: Font Awesome (`@fortawesome/react-fontawesome` & `@fortawesome/free-solid-svg-icons`)
 - **Database Engine**: MariaDB 10.x / MySQL 8.x (Database standar Khanza: `sik_mitra` / `sik`)
 - **Database Driver**: `mysql2/promise` dengan Connection Pool
 - **Komunikasi Data**: Seluruh interaksi database **WAJIB** melalui Next.js API Routes (`/api/...`). Tidak boleh melakukan koneksi database langsung dari Client Component.

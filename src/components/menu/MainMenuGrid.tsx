@@ -2,9 +2,14 @@
 
 import React, { useState, useMemo } from "react";
 import { MENU_CATEGORIES, MENU_ITEMS } from "@/lib/constants/menus";
-import { MenuItem } from "@/lib/types/menu";
 import { MenuCard } from "./MenuCard";
-import { Search, Filter, Layers, X, Sparkles } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFilter,
+  faMagnifyingGlass,
+  faXmark,
+  faLayerGroup,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface MainMenuGridProps {
   onModuleClick: (title: string) => void;
@@ -41,7 +46,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           {/* Category Dropdown (cmbMenu in Khanza) */}
           <div className="flex-1 max-w-xl flex items-center gap-2">
             <label className="text-xs font-semibold text-slate-700 shrink-0 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-emerald-700" />
+              <FontAwesomeIcon icon={faFilter} className="w-3.5 h-3.5 text-emerald-700" />
               <span>Kategori Menu:</span>
             </label>
             <select
@@ -63,7 +68,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           {/* Search Box (TCari in Khanza) */}
           <div className="w-full md:w-72 relative">
             <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-3.5 h-3.5" />
+              <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3.5 h-3.5" />
             </div>
             <input
               type="text"
@@ -77,7 +82,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
                 onClick={() => setSearchQuery("")}
                 className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600"
               >
-                <X className="w-3.5 h-3.5" />
+                <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -143,7 +148,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-slate-200">
-            <Layers className="w-10 h-10 text-slate-300 mb-2" />
+            <FontAwesomeIcon icon={faLayerGroup} className="w-10 h-10 text-slate-300 mb-2" />
             <h4 className="text-sm font-semibold text-slate-700">
               Modul Tidak Ditemukan
             </h4>
@@ -165,4 +170,3 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
     </div>
   );
 }
-

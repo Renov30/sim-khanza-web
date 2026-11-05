@@ -4,17 +4,18 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { HospitalSetting } from "@/lib/types/auth";
 import { UserAccountMenu } from "./UserAccountMenu";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  Menu,
-  UserPlus,
-  Activity,
-  TestTubes,
-  Bone,
-  Pill,
-  BedDouble,
-  Stethoscope,
-  LogIn,
-} from "lucide-react";
+  faBars,
+  faUserPlus,
+  faHeartPulse,
+  faVial,
+  faXRay,
+  faPills,
+  faBed,
+  faStethoscope,
+  faRightToBracket,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface AppHeaderProps {
   isMenuOpen: boolean;
@@ -81,7 +82,7 @@ export function AppHeader({
             }`}
             title="Buka / Tutup Menu Utama (Alt+M)"
           >
-            <Menu className="w-3.5 h-3.5" />
+            <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5" />
             <span>Menu Utama</span>
           </button>
 
@@ -95,7 +96,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Pendaftaran Pasien (Alt+R)"
           >
-            <UserPlus className="w-3.5 h-3.5 text-emerald-300" />
+            <FontAwesomeIcon icon={faUserPlus} className="w-3.5 h-3.5 text-emerald-300" />
             <span>Registrasi</span>
           </button>
 
@@ -106,7 +107,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Pelayanan IGD (Alt+D)"
           >
-            <Activity className="w-3.5 h-3.5 text-red-300" />
+            <FontAwesomeIcon icon={faHeartPulse} className="w-3.5 h-3.5 text-red-300" />
             <span>IGD/UGD</span>
           </button>
 
@@ -120,7 +121,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Pemeriksaan Laboratorium (Alt+O)"
           >
-            <TestTubes className="w-3.5 h-3.5 text-amber-300" />
+            <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-300" />
             <span>Laborat</span>
           </button>
 
@@ -131,7 +132,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Pemeriksaan Radiologi (Alt+A)"
           >
-            <Bone className="w-3.5 h-3.5 text-blue-300" />
+            <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-300" />
             <span>Radiologi</span>
           </button>
 
@@ -142,7 +143,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Farmasi & Penjualan Obat (Alt+J)"
           >
-            <Pill className="w-3.5 h-3.5 text-emerald-300" />
+            <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-emerald-300" />
             <span>Farmasi</span>
           </button>
 
@@ -156,7 +157,7 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Rawat Inap (Alt+K)"
           >
-            <BedDouble className="w-3.5 h-3.5 text-teal-300" />
+            <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-teal-300" />
             <span>Rawat Inap</span>
           </button>
 
@@ -167,12 +168,12 @@ export function AppHeader({
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
             title="Rawat Jalan (Alt+S)"
           >
-            <Stethoscope className="w-3.5 h-3.5 text-indigo-300" />
+            <FontAwesomeIcon icon={faStethoscope} className="w-3.5 h-3.5 text-indigo-300" />
             <span>Rawat Jalan</span>
           </button>
         </div>
 
-        {/* Sisi Kanan: Informasi Akun / Tombol Log In (Ukuran kolom tetap sama dengan sisi kiri) */}
+        {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
         <div className="flex items-center justify-end min-w-0">
           {isAuthenticated && user ? (
             <UserAccountMenu
@@ -184,7 +185,7 @@ export function AppHeader({
               onClick={() => setIsLoginModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs transition-colors"
             >
-              <LogIn className="w-3.5 h-3.5" />
+              <FontAwesomeIcon icon={faRightToBracket} className="w-3.5 h-3.5" />
               <span>Log In</span>
             </button>
           )}
