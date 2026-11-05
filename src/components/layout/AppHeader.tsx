@@ -3,10 +3,33 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { HospitalSetting } from "@/lib/types/auth";
-import { UserCheck, LogIn, LogOut } from "lucide-react";
+import { UserAccountMenu } from "./UserAccountMenu";
+import {
+  Menu,
+  UserPlus,
+  Activity,
+  TestTubes,
+  Bone,
+  Pill,
+  BedDouble,
+  Stethoscope,
+  LogIn,
+} from "lucide-react";
 
-export function AppHeader() {
-  const { user, isAuthenticated, setIsLoginModalOpen, logout } = useAuth();
+interface AppHeaderProps {
+  isMenuOpen: boolean;
+  onToggleMenu: () => void;
+  onModuleClick: (title: string) => void;
+  onAboutClick: () => void;
+}
+
+export function AppHeader({
+  isMenuOpen,
+  onToggleMenu,
+  onModuleClick,
+  onAboutClick,
+}: AppHeaderProps) {
+  const { user, isAuthenticated, hasPermission, setIsLoginModalOpen } = useAuth();
   const [setting, setSetting] = useState<HospitalSetting | null>(null);
 
   useEffect(() => {
@@ -20,47 +43,146 @@ export function AppHeader() {
       .catch((err) => console.error("Error loading system info:", err));
   }, []);
 
+  const handleToolAction = (permKey: string, title: string) => {
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    if (!hasPermission(permKey)) {
+      alert(`Akses Ditolak: Anda tidak memiliki hak akses untuk modul ${title}`);
+      return;
+    }
+    onModuleClick(title);
+  };
+
   return (
-    <header className="bg-emerald-800 text-white border-b border-emerald-900 shrink-0">
-      <div className="flex items-center justify-between px-5 py-3">
-        {/* Kiri: Nama Instansi & Alamat */}
-        <div className="flex flex-col">
-          <h1 className="text-sm md:text-base font-bold tracking-tight text-white uppercase leading-snug">
+    <header className="bg-emerald-800 text-white border-b border-emerald-900 px-4 py-2 shrink-0 select-none shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        {/* Sisi Kiri: Nama Instansi & Alamat Lengkap */}
+        <div className="flex flex-col shrink-0 min-w-0 max-w-[200px] lg:max-w-xs">
+          <h1 className="text-xs lg:text-sm font-bold tracking-tight text-white uppercase truncate leading-tight">
             {setting?.nama_instansi || "KLINIK MITRA KELUARGA PAPUA"}
           </h1>
-          <p className="text-xs text-emerald-100/90 leading-tight">
+          <p className="text-[11px] text-emerald-100/80 truncate leading-tight mt-0.5">
             {setting?.alamat_instansi || "JL. Irian Seringgu Kelurahan Samkai"}
             {setting?.kabupaten ? `, ${setting.kabupaten}` : ""}
-            {setting?.propinsi ? ` - ${setting.propinsi}` : ""}
           </p>
         </div>
 
-        {/* Kanan: Tombol Login / Info Akun Login */}
-        <div className="flex items-center">
+        {/* Sisi Tengah: Toolbar Modul Cepat (Registrasi, IGD, dll) */}
+        <div className="flex-1 flex items-center justify-center space-x-1 overflow-x-auto px-1 scrollbar-none">
+          {/* 1. Menu Utama */}
+          <button
+            onClick={onToggleMenu}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all shrink-0 ${
+              isMenuOpen
+                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs"
+                : "bg-emerald-700/60 text-emerald-100 border-emerald-600/60 hover:bg-emerald-700 hover:text-white"
+            }`}
+            title="Buka / Tutup Menu Utama (Alt+M)"
+          >
+            <Menu className="w-3.5 h-3.5" />
+            <span>Menu Utama</span>
+          </button>
+
+          {/* Separator */}
+          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+
+          {/* 2. Registrasi */}
+          <button
+            onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
+            disabled={isAuthenticated && !hasPermission("registrasi")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Pendaftaran Pasien (Alt+R)"
+          >
+            <UserPlus className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Registrasi</span>
+          </button>
+
+          {/* 3. IGD/UGD */}
+          <button
+            onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
+            disabled={isAuthenticated && !hasPermission("igd")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Pelayanan IGD (Alt+D)"
+          >
+            <Activity className="w-3.5 h-3.5 text-red-300" />
+            <span>IGD/UGD</span>
+          </button>
+
+          {/* Separator */}
+          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+
+          {/* 4. Laborat */}
+          <button
+            onClick={() => handleToolAction("periksa_lab", "Laboratorium")}
+            disabled={isAuthenticated && !hasPermission("periksa_lab")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Pemeriksaan Laboratorium (Alt+O)"
+          >
+            <TestTubes className="w-3.5 h-3.5 text-amber-300" />
+            <span>Laborat</span>
+          </button>
+
+          {/* 5. Radiologi */}
+          <button
+            onClick={() => handleToolAction("periksa_radiologi", "Radiologi")}
+            disabled={isAuthenticated && !hasPermission("periksa_radiologi")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Pemeriksaan Radiologi (Alt+A)"
+          >
+            <Bone className="w-3.5 h-3.5 text-blue-300" />
+            <span>Radiologi</span>
+          </button>
+
+          {/* 6. Farmasi */}
+          <button
+            onClick={() => handleToolAction("penjualan_obat", "Farmasi & Obat")}
+            disabled={isAuthenticated && !hasPermission("penjualan_obat")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Farmasi & Penjualan Obat (Alt+J)"
+          >
+            <Pill className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Farmasi</span>
+          </button>
+
+          {/* Separator */}
+          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+
+          {/* 7. Rawat Inap */}
+          <button
+            onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
+            disabled={isAuthenticated && !hasPermission("kamar_inap")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Rawat Inap (Alt+K)"
+          >
+            <BedDouble className="w-3.5 h-3.5 text-teal-300" />
+            <span>Rawat Inap</span>
+          </button>
+
+          {/* 8. Rawat Jalan */}
+          <button
+            onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
+            disabled={isAuthenticated && !hasPermission("tindakan_ralan")}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
+            title="Rawat Jalan (Alt+S)"
+          >
+            <Stethoscope className="w-3.5 h-3.5 text-indigo-300" />
+            <span>Rawat Jalan</span>
+          </button>
+        </div>
+
+        {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
+        <div className="flex items-center shrink-0">
           {isAuthenticated && user ? (
-            <div className="flex items-center gap-2.5 bg-emerald-900/80 pl-3 pr-2 py-1.5 rounded-lg border border-emerald-700/60 text-xs">
-              <UserCheck className="w-4 h-4 text-emerald-300 shrink-0" />
-              <div className="text-left">
-                <p className="font-semibold text-white leading-tight">
-                  {user.fullName}
-                </p>
-                <p className="text-[10px] text-emerald-200/80">
-                  {user.role === "admin" ? "Administrator" : `@${user.username}`}
-                </p>
-              </div>
-              <button
-                onClick={() => logout()}
-                className="ml-2 px-2 py-1 text-emerald-200 hover:text-white hover:bg-emerald-700/60 rounded flex items-center gap-1 transition-colors"
-                title="Keluar (Log Out)"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="text-[11px] font-medium">Log Out</span>
-              </button>
-            </div>
+            <UserAccountMenu
+              onModuleClick={onModuleClick}
+              onAboutClick={onAboutClick}
+            />
           ) : (
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs transition-colors"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Log In</span>

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { AppToolbar } from "@/components/layout/AppToolbar";
 import { AppStatusBar } from "@/components/layout/AppStatusBar";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
@@ -35,14 +34,12 @@ export default function FrmUtamaPage() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100">
-      {/* 1. Header (Nama Instansi, Alamat, Info Login) */}
-      <AppHeader />
-
-      {/* 2. Quick Access Toolbar (Tengah) */}
-      <AppToolbar
+      {/* 1. Header Terpadu: Nama Instansi (Kiri), Toolbar Modul (Tengah), Akun (Kanan) */}
+      <AppHeader
         isMenuOpen={isMenuOpen}
         onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
         onModuleClick={handleModuleClick}
+        onAboutClick={() => setIsAboutOpen(true)}
       />
 
       {/* 3. Main Workspace Area (PanelUtama & DlgHome in frmUtama) */}
