@@ -370,3 +370,4 @@ export function AppMenuBar({ onModuleClick, onAboutClick }: MenuBarProps) {
     </div>
   );
 }
+

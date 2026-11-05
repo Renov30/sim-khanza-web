@@ -165,3 +165,4 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
     </div>
   );
 }
+

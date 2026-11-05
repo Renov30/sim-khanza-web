@@ -146,3 +146,4 @@ khanza-web/
 - Saat membuat modul atau halaman baru, **selalu verifikasi referensi asli di `simitra-keluarga-merauke/src/`** untuk memahami alur data dan tabel database yang bersangkutan, namun **tulis ulang menggunakan Clean Architecture di Next.js**.
 - Jangan pernah mengulang kode duplikat (*DRY Principle*).
 - Utamakan performa tinggi dan aksesibilitas untuk petugas medis di rumah sakit/klinik.
+

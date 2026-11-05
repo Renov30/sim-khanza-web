@@ -35,3 +35,4 @@ export function Toast({ message, onClose, duration = 3500 }: ToastProps) {
     </div>
   );
 }
+

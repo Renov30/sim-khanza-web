@@ -98,3 +98,4 @@ export function MenuCard({ item, onClick }: MenuCardProps) {
     </button>
   );
 }
+

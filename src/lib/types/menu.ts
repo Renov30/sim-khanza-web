@@ -14,3 +14,4 @@ export interface MenuCategory {
   title: string;
   description: string;
 }
+

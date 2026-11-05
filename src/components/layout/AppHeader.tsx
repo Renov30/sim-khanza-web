@@ -119,3 +119,4 @@ export function AppHeader({ onModuleClick, onAboutClick }: AppHeaderProps) {
     </header>
   );
 }
+
