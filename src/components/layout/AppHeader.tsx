@@ -57,9 +57,9 @@ export function AppHeader({
 
   return (
     <header className="bg-emerald-800 text-white border-b border-emerald-900 px-4 py-2 shrink-0 select-none shadow-sm">
-      <div className="flex items-center justify-between gap-2">
+      <div className="grid grid-cols-[240px_1fr_240px] xl:grid-cols-[280px_1fr_280px] items-center gap-2">
         {/* Sisi Kiri: Nama Instansi & Alamat Lengkap */}
-        <div className="flex flex-col shrink-0 min-w-0 max-w-[200px] lg:max-w-xs">
+        <div className="flex flex-col min-w-0 pr-2">
           <h1 className="text-xs lg:text-sm font-bold tracking-tight text-white uppercase truncate leading-tight">
             {setting?.nama_instansi || "KLINIK MITRA KELUARGA PAPUA"}
           </h1>
@@ -70,7 +70,7 @@ export function AppHeader({
         </div>
 
         {/* Sisi Tengah: Toolbar Modul Cepat (Registrasi, IGD, dll) */}
-        <div className="flex-1 flex items-center justify-center space-x-1 overflow-x-auto px-1 scrollbar-none">
+        <div className="flex items-center justify-center space-x-1 overflow-x-auto px-1 scrollbar-none">
           {/* 1. Menu Utama */}
           <button
             onClick={onToggleMenu}
@@ -172,8 +172,8 @@ export function AppHeader({
           </button>
         </div>
 
-        {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
-        <div className="flex items-center shrink-0">
+        {/* Sisi Kanan: Informasi Akun / Tombol Log In (Ukuran kolom tetap sama dengan sisi kiri) */}
+        <div className="flex items-center justify-end min-w-0">
           {isAuthenticated && user ? (
             <UserAccountMenu
               onModuleClick={onModuleClick}
