@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { AppStatusBar } from "@/components/layout/AppStatusBar";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { AboutModal } from "@/components/common/AboutModal";
@@ -71,10 +70,7 @@ export default function FrmUtamaPage() {
         )}
       </main>
 
-      {/* 4. Status Bar (internalFrame4 in frmUtama) */}
-      <AppStatusBar />
-
-      {/* 5. Modals & Notifications */}
+      {/* 4. Modals & Notifications */}
       <LoginModal />
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />

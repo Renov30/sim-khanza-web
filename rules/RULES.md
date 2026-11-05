@@ -125,7 +125,7 @@ khanza-web/
 │   │   ├── page.tsx              <-- Halaman Utama (frmUtama)
 │   │   └── globals.css           <-- Tailwind config & theme
 │   ├── components/
-│   │   ├── layout/               <-- Header, MenuBar, Toolbar, StatusBar
+│   │   ├── layout/               <-- AppHeader, UserAccountMenu
 │   │   ├── menu/                 <-- MainMenuGrid, CategorySelector, MenuCard
 │   │   ├── auth/                 <-- LoginModal, AuthProvider
 │   │   └── ui/                   <-- Tombol, Input, Modal, Badge seragam
