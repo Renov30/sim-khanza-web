@@ -33,6 +33,10 @@ Mengikuti instruksi spesifik:
    - **TIDAK BOLEH** menggunakan animasi atau transisi lambat yang menghambat kecepatan kerja petugas medis.
 3. **Kepadatan Informasi (*Information Density*)**:
    - Sistem rumah sakit memerlukan efisiensi ruang: gunakan padding kompak (`py-1.5 px-3`, `text-xs` hingga `text-sm`, font tabular untuk angka dan tanggal).
+4. **Standar Komponen Form & Dropdown / Combo Box**:
+   - **WAJIB**: Jangan pernah menggunakan tanda panah dropdown default bawaan browser yang mepet ke tepi.
+   - Semua elemen dropdown/select harus menggunakan `appearance-none` dengan ikon Font Awesome `faChevronDown` yang memiliki jarak tepi proporsional (menggunakan padding kanan `pr-9` pada select dan posisi ikon `pr-3`).
+   - Gunakan komponen reusable [`CustomSelect`](src/components/ui/CustomSelect.tsx) di seluruh formulir, filter, dan tabel modul.
 
 ---
 

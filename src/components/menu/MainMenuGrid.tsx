@@ -3,13 +3,13 @@
 import React, { useState, useMemo } from "react";
 import { MENU_CATEGORIES, MENU_ITEMS } from "@/lib/constants/menus";
 import { MenuCard } from "./MenuCard";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilter,
   faMagnifyingGlass,
   faXmark,
   faLayerGroup,
-  faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface MainMenuGridProps {
@@ -50,25 +50,20 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               <FontAwesomeIcon icon={faFilter} className="w-3.5 h-3.5 text-emerald-700" />
               <span>Kategori Menu:</span>
             </label>
-            <div className="relative flex-1">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full appearance-none text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors cursor-pointer"
-              >
-                <option value="ALL">
-                  [Semua] Seluruh Modul & Menu SIMRS Khanza
+            <CustomSelect
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              containerClassName="relative flex-1"
+            >
+              <option value="ALL">
+                [Semua] Seluruh Modul & Menu SIMRS Khanza
+              </option>
+              {MENU_CATEGORIES.map((cat) => (
+                <option key={cat.code} value={cat.code}>
+                  {cat.title}
                 </option>
-                {MENU_CATEGORIES.map((cat) => (
-                  <option key={cat.code} value={cat.code}>
-                    {cat.title}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500">
-                <FontAwesomeIcon icon={faChevronDown} className="w-3 h-3" />
-              </div>
-            </div>
+              ))}
+            </CustomSelect>
           </div>
 
           {/* Search Box (TCari in Khanza) */}
