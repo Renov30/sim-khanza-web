@@ -35,13 +35,10 @@ export default function FrmUtamaPage() {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-100">
-      {/* 1. Header & Menu Bar (jMenuBar1 in frmUtama) */}
-      <AppHeader
-        onModuleClick={handleModuleClick}
-        onAboutClick={() => setIsAboutOpen(true)}
-      />
+      {/* 1. Header (Nama Instansi, Alamat, Info Login) */}
+      <AppHeader />
 
-      {/* 2. Quick Access Toolbar (internalFrame1 in frmUtama) */}
+      {/* 2. Quick Access Toolbar (Tengah) */}
       <AppToolbar
         isMenuOpen={isMenuOpen}
         onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
