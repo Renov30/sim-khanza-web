@@ -87,15 +87,9 @@ export function MenuCard({ item, onClick }: MenuCardProps) {
         </span>
       </div>
 
-      <h3 className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 line-clamp-1 transition-colors">
+      <h3 className="text-xs font-bold text-slate-800 group-hover:text-emerald-800 line-clamp-2 transition-colors">
         {item.title}
       </h3>
-
-      {item.description && (
-        <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-snug">
-          {item.description}
-        </p>
-      )}
     </button>
   );
 }
