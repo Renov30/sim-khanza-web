@@ -51,8 +51,6 @@ export default function HalamanPermintaanLabPA() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Permintaan Laboratorium Patologi Anatomi (PA)"
-        deskripsi="Permintaan pengujian jaringan/biopsi patologi anatomi (DlgCariPermintaanLabPA)"
-        ikon={faMicroscope}
         onMuatUlang={muatData}
         memuat={memuat}
       />

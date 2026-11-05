@@ -51,8 +51,6 @@ export default function HalamanPermintaanLabMB() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Permintaan Laboratorium Mikrobiologi (MB)"
-        deskripsi="Permintaan biakan kultur dan uji resistensi antibiotik mikrobiologi (DlgCariPermintaanLabMB)"
-        ikon={faBacteria}
         onMuatUlang={muatData}
         memuat={memuat}
       />

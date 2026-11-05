@@ -55,8 +55,6 @@ export default function HalamanIGD() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Instalasi Gawat Darurat (IGD / UGD)"
-        deskripsi="Pelayanan gawat darurat, triase medis, dan tindakan kegawatdaruratan (DlgIGD)"
-        ikon={faHeartPulse}
         onMuatUlang={muatData}
         memuat={memuat}
       />

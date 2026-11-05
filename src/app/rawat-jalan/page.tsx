@@ -55,8 +55,6 @@ export default function HalamanRawatJalan() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Rawat Jalan & Tindakan Medis Poliklinik"
-        deskripsi="Tindakan medis dokter poliklinik spesialis/umum, perawat, dan billing ralan (DlgRawatJalan)"
-        ikon={faStethoscope}
         onMuatUlang={muatData}
         memuat={memuat}
       />

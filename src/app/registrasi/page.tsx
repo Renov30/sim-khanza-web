@@ -56,8 +56,6 @@ export default function HalamanRegistrasi() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Registrasi & Pendaftaran Pasien"
-        deskripsi="Manajemen pendaftaran pasien baru/lama, poliklinik tujuan, dan nomor antrean loket (DlgReg)"
-        ikon={faUserPlus}
         onMuatUlang={muatData}
         memuat={memuat}
       />

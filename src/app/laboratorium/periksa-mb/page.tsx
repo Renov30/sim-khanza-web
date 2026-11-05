@@ -51,8 +51,6 @@ export default function HalamanPeriksaLabMB() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Pemeriksaan Laboratorium Mikrobiologi (MB)"
-        deskripsi="Pencatatan pemeriksaan mikrobiologi, kultur bakteri, dan resistensi antibiotik (DlgPeriksaLaboratoriumMB)"
-        ikon={faBacteria}
         onMuatUlang={muatData}
         memuat={memuat}
       />

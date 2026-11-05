@@ -51,8 +51,6 @@ export default function HalamanPermintaanRadiologi() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Permintaan Pemeriksaan Radiologi"
-        deskripsi="Daftar surat rujukan foto rontgen, USG, dan CT-Scan dari dokter perujuk (DlgCariPermintaanRadiologi)"
-        ikon={faXRay}
         onMuatUlang={muatData}
         memuat={memuat}
       />

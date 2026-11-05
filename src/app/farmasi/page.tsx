@@ -55,8 +55,6 @@ export default function HalamanFarmasi() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Pelayanan Farmasi & Penyerahan Obat"
-        deskripsi="Manajemen resep dokter, telaah obat, dispensing farmasi, dan mutasi obat (DlgPemberianObat)"
-        ikon={faPills}
         onMuatUlang={muatData}
         memuat={memuat}
       />

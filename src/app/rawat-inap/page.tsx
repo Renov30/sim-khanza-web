@@ -51,8 +51,6 @@ export default function HalamanRawatInap() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Rawat Inap & Manajemen Kamar Bangsal"
-        deskripsi="Pencatatan registrasi ranap, bangsal kamar tidur, diagnosa masuk/keluar, dan billing ranap (DlgKamarInap)"
-        ikon={faBed}
         onMuatUlang={muatData}
         memuat={memuat}
       />

@@ -51,8 +51,6 @@ export default function HalamanPermintaanLabPK() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Permintaan Laboratorium Patologi Klinis (PK)"
-        deskripsi="Daftar surat permintaan pemeriksaan sampel lab PK dari dokter perujuk (DlgCariPermintaanLab)"
-        ikon={faVial}
         onMuatUlang={muatData}
         memuat={memuat}
       />

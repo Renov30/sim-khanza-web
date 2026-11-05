@@ -51,8 +51,6 @@ export default function HalamanPeriksaLabPK() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Pemeriksaan Laboratorium Patologi Klinis (PK)"
-        deskripsi="Pencatatan hasil pemeriksaan darah lengkap, kimia darah, serologi, dan urin (DlgPeriksaLaboratorium)"
-        ikon={faVial}
         onMuatUlang={muatData}
         memuat={memuat}
       />

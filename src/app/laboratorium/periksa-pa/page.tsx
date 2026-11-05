@@ -48,8 +48,6 @@ export default function HalamanPeriksaLabPA() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Pemeriksaan Laboratorium Patologi Anatomi (PA)"
-        deskripsi="Pencatatan pemeriksaan makroskopik, mikroskopik, dan kesimpulan patologi anatomi (DlgPeriksaLaboratoriumPA)"
-        ikon={faMicroscope}
         onMuatUlang={muatData}
         memuat={memuat}
       />

@@ -51,8 +51,6 @@ export default function HalamanPeriksaRadiologi() {
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Pemeriksaan & Tindakan Radiologi"
-        deskripsi="Pencatatan hasil penyinaran, proyeksi, eksposur teknis, dan tindakan radiologi (DlgPeriksaRadiologi)"
-        ikon={faXRay}
         onMuatUlang={muatData}
         memuat={memuat}
       />
