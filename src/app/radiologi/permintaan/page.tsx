@@ -47,7 +47,7 @@ export default function HalamanPermintaanRadiologi() {
   }, [muatData]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 p-3 sm:p-4 space-y-3">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-3 sm:p-4 space-y-3">
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Permintaan Pemeriksaan Radiologi"
