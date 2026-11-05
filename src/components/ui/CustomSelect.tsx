@@ -56,3 +56,4 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
 );
 
 CustomSelect.displayName = "CustomSelect";
+

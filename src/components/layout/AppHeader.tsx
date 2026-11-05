@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { useAuth } from "../auth/AuthContext";
 import { HospitalSetting } from "@/lib/types/auth";
 import { UserAccountMenu } from "./UserAccountMenu";
@@ -15,6 +16,10 @@ import {
   faBed,
   faStethoscope,
   faRightToBracket,
+  faChevronDown,
+  faMicroscope,
+  faBacteria,
+  faFileMedical,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface AppHeaderProps {
@@ -32,6 +37,26 @@ export function AppHeader({
 }: AppHeaderProps) {
   const { user, isAuthenticated, hasPermission, setIsLoginModalOpen } = useAuth();
   const [setting, setSetting] = useState<HospitalSetting | null>(null);
+  const [menuLabTerbuka, setMenuLabTerbuka] = useState(false);
+  const [menuRadTerbuka, setMenuRadTerbuka] = useState(false);
+
+  const labRef = useRef<HTMLDivElement>(null);
+  const radRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (labRef.current && !labRef.current.contains(event.target as Node)) {
+        setMenuLabTerbuka(false);
+      }
+      if (radRef.current && !radRef.current.contains(event.target as Node)) {
+        setMenuRadTerbuka(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     fetch("/api/system/info")
@@ -71,7 +96,7 @@ export function AppHeader({
         </div>
 
         {/* Sisi Tengah: Toolbar Modul Cepat (Registrasi, IGD, dll) */}
-        <div className="flex items-center justify-center space-x-1 overflow-x-auto px-1 scrollbar-none">
+        <div className="flex items-center justify-center space-x-1 px-1">
           {/* 1. Menu Utama */}
           <button
             onClick={onToggleMenu}
@@ -114,27 +139,135 @@ export function AppHeader({
           {/* Separator */}
           <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
 
-          {/* 4. Laborat */}
-          <button
-            onClick={() => handleToolAction("periksa_lab", "Laboratorium")}
-            disabled={isAuthenticated && !hasPermission("periksa_lab")}
-            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
-            title="Pemeriksaan Laboratorium (Alt+O)"
-          >
-            <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-300" />
-            <span>Laborat</span>
-          </button>
+          {/* 4. Laborat Dropdown */}
+          <div className="relative shrink-0" ref={labRef}>
+            <button
+              onClick={() => {
+                setMenuRadTerbuka(false);
+                setMenuLabTerbuka(!menuLabTerbuka);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
+                menuLabTerbuka
+                  ? "bg-emerald-950 text-white border-emerald-700 shadow-xs"
+                  : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50"
+              }`}
+              title="Pilihan Modul Laboratorium (Alt+O)"
+            >
+              <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-300" />
+              <span>Laborat</span>
+              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-emerald-300 ml-0.5" />
+            </button>
 
-          {/* 5. Radiologi */}
-          <button
-            onClick={() => handleToolAction("periksa_radiologi", "Radiologi")}
-            disabled={isAuthenticated && !hasPermission("periksa_radiologi")}
-            className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-100 hover:text-white hover:bg-emerald-700/70 disabled:opacity-40 disabled:hover:bg-transparent flex items-center gap-1.5 border border-transparent hover:border-emerald-600/50 transition-colors shrink-0"
-            title="Pemeriksaan Radiologi (Alt+A)"
-          >
-            <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-300" />
-            <span>Radiologi</span>
-          </button>
+            {menuLabTerbuka && (
+              <div className="absolute left-0 top-full mt-1.5 w-60 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-[9999] text-slate-800">
+                <div className="px-3 py-1 border-b border-slate-100 bg-slate-50/70 rounded-t-lg">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Permintaan Laborat
+                  </p>
+                </div>
+                <Link
+                  href="/laboratorium/permintaan-pk"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="font-medium">Permintaan Lab PK</span>
+                </Link>
+                <Link
+                  href="/laboratorium/permintaan-pa"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="font-medium">Permintaan Lab PA</span>
+                </Link>
+                <Link
+                  href="/laboratorium/permintaan-mb"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="font-medium">Permintaan Lab MB</span>
+                </Link>
+
+                <div className="px-3 py-1 border-t border-b border-slate-100 bg-slate-50/70 mt-1">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Pemeriksaan & Hasil
+                  </p>
+                </div>
+                <Link
+                  href="/laboratorium/periksa-pk"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span className="font-medium">Periksa Lab PK</span>
+                </Link>
+                <Link
+                  href="/laboratorium/periksa-pa"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                  <span className="font-medium">Periksa Lab PA</span>
+                </Link>
+                <Link
+                  href="/laboratorium/periksa-mb"
+                  onClick={() => setMenuLabTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                  <span className="font-medium">Periksa Lab MB</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Radiologi Dropdown */}
+          <div className="relative shrink-0" ref={radRef}>
+            <button
+              onClick={() => {
+                setMenuLabTerbuka(false);
+                setMenuRadTerbuka(!menuRadTerbuka);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
+                menuRadTerbuka
+                  ? "bg-emerald-950 text-white border-emerald-700 shadow-xs"
+                  : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50"
+              }`}
+              title="Pilihan Modul Radiologi (Alt+A)"
+            >
+              <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-300" />
+              <span>Radiologi</span>
+              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-emerald-300 ml-0.5" />
+            </button>
+
+            {menuRadTerbuka && (
+              <div className="absolute left-0 top-full mt-1.5 w-56 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-[9999] text-slate-800">
+                <div className="px-3 py-1 border-b border-slate-100 bg-slate-50/70 rounded-t-lg">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Pelayanan Radiologi
+                  </p>
+                </div>
+                <Link
+                  href="/radiologi/permintaan"
+                  onClick={() => setMenuRadTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span className="font-medium">Permintaan Radiologi</span>
+                </Link>
+                <Link
+                  href="/radiologi/periksa"
+                  onClick={() => setMenuRadTerbuka(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span className="font-medium">Periksa Radiologi</span>
+                </Link>
+              </div>
+            )}
+          </div>
 
           {/* 6. Farmasi */}
           <button

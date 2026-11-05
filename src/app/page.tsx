@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
@@ -9,6 +10,7 @@ import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 
 export default function FrmUtamaPage() {
+  const router = useRouter();
   const { isAuthenticated, setIsLoginModalOpen } = useAuth();
   // Default isMenuOpen = false agar web membuka Halaman Utama (polos) terlebih dahulu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,6 +28,36 @@ export default function FrmUtamaPage() {
       } else {
         setToastMessage("Fitur Ganti Password sedang dalam antrian pengembangan.");
       }
+      return;
+    }
+
+    // Routing ke halaman modul yang telah dibangun
+    if (title === "Registrasi Pasien" || title === "Pendaftaran Pasien") {
+      router.push("/registrasi");
+      return;
+    }
+    if (title === "Instalasi Gawat Darurat" || title === "Pelayanan IGD") {
+      router.push("/igd");
+      return;
+    }
+    if (title === "Laboratorium" || title === "Pemeriksaan Laboratorium") {
+      router.push("/laboratorium");
+      return;
+    }
+    if (title === "Radiologi" || title === "Pemeriksaan Radiologi") {
+      router.push("/radiologi");
+      return;
+    }
+    if (title === "Farmasi & Obat" || title === "Farmasi & Penjualan Obat" || title === "Pemberian Obat Farmasi") {
+      router.push("/farmasi");
+      return;
+    }
+    if (title === "Rawat Inap & Kamar" || title === "Rawat Inap" || title === "Kamar Inap") {
+      router.push("/rawat-inap");
+      return;
+    }
+    if (title === "Rawat Jalan / Poliklinik" || title === "Rawat Jalan" || title === "Tindakan Ralan") {
+      router.push("/rawat-jalan");
       return;
     }
 
