@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const tanggalMulai = searchParams.get("tanggal_mulai");
     const tanggalSelesai = searchParams.get("tanggal_selesai");
     const cari = searchParams.get("cari") || "";
-    const limit = Math.min(Number(searchParams.get("limit")) || 50, 100);
+    const limit = Math.min(Number(searchParams.get("limit")) || 100, 200);
 
     let sql = `
       SELECT r.no_reg, r.no_rawat, DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') as tgl_registrasi, 
@@ -53,3 +53,99 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      no_rawat,
+      no_reg,
+      tgl_registrasi,
+      jam_reg,
+      kd_dokter,
+      no_rkm_medis,
+      kd_poli = "IGD",
+      p_jawab,
+      almt_pj,
+      hubunganpj,
+      biaya_reg = 0,
+      stts = "Belum",
+      status_bayar = "Belum Bayar",
+    } = body;
+
+    if (!no_rawat || !no_rkm_medis || !kd_dokter) {
+      return NextResponse.json(
+        { success: false, error: "Data wajib (no_rawat, no_rkm_medis, kd_dokter) harus diisi!" },
+        { status: 400 }
+      );
+    }
+
+    const sql = `
+      INSERT INTO reg_periksa (
+        no_reg, no_rawat, tgl_registrasi, jam_reg, kd_dokter, no_rkm_medis,
+        kd_poli, p_jawab, almt_pj, hubunganpj, biaya_reg, stts,
+        stts_daftar, status_lanjut, kd_pj, umurdaftar, sttsumur, status_bayar
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Baru', 'Ralan', 'A09', 0, 'Th', ?)
+      ON DUPLICATE KEY UPDATE
+        kd_dokter = VALUES(kd_dokter),
+        p_jawab = VALUES(p_jawab),
+        almt_pj = VALUES(almt_pj),
+        hubunganpj = VALUES(hubunganpj),
+        stts = VALUES(stts),
+        status_bayar = VALUES(status_bayar)
+    `;
+
+    await executeQuery(sql, [
+      no_reg || "001",
+      no_rawat,
+      tgl_registrasi || new Date().toISOString().slice(0, 10),
+      jam_reg || new Date().toTimeString().slice(0, 8),
+      kd_dokter,
+      no_rkm_medis,
+      kd_poli,
+      p_jawab || "-",
+      almt_pj || "-",
+      hubunganpj || "-",
+      biaya_reg,
+      stts,
+      status_bayar,
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      message: "Data pasien IGD berhasil disimpan",
+    });
+  } catch (error: any) {
+    console.error("Error in POST api/igd:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Gagal menyimpan data IGD" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const no_rawat = searchParams.get("no_rawat");
+
+    if (!no_rawat) {
+      return NextResponse.json(
+        { success: false, error: "Parameter no_rawat diperlukan" },
+        { status: 400 }
+      );
+    }
+
+    await executeQuery("DELETE FROM reg_periksa WHERE no_rawat = ?", [no_rawat]);
+
+    return NextResponse.json({
+      success: true,
+      message: `Data IGD ${no_rawat} berhasil dihapus`,
+    });
+  } catch (error: any) {
+    console.error("Error in DELETE api/igd:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Gagal menghapus data IGD" },
+      { status: 500 }
+    );
+  }
+}
