@@ -20,7 +20,6 @@ import {
   faPills,
   faVial,
   faCircleInfo,
-  faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface UserAccountMenuProps {
@@ -95,23 +94,11 @@ export function UserAccountMenu({
                 <h3 className="text-xs font-bold text-slate-800 leading-snug truncate">
                   {user.fullName}
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  ID User: <span className="font-medium text-slate-700">@{user.username}</span>
+                <p className="text-[11px] font-medium text-emerald-700 mt-0.5">
+                  {user.isAdmin
+                    ? "Administrator Utama"
+                    : "Petugas / Dokter"}
                 </p>
-                <div className="mt-1.5">
-                  <span
-                    className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
-                      user.isAdmin
-                        ? "bg-purple-50 text-purple-700 border-purple-200"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    }`}
-                  >
-                    <FontAwesomeIcon icon={faShieldHalved} className="w-3 h-3" />
-                    {user.isAdmin
-                      ? "Jenis Akun: Administrator Utama"
-                      : "Jenis Akun: Petugas / Dokter"}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
