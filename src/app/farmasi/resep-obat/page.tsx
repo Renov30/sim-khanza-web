@@ -149,7 +149,7 @@ export default function HalamanResepObat() {
                     <td className="py-2 px-2.5 text-slate-600">
                       {item.tgl_penyerahan || "-"} <span className="text-slate-400">{item.jam_penyerahan}</span>
                     </td>
-                    <td className="py-2 px-2.5 text-emerald-800 font-medium">
+                    <td className="py-2 px-2.5 font-medium text-slate-800">
                       {item.no_rawat}
                     </td>
                     <td className="py-2 px-2.5 font-bold text-slate-800">

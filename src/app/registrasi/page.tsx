@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useTransition } from "react";
+import Link from "next/link";
 import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
@@ -128,7 +129,7 @@ export default function HalamanRegistrasi() {
     return () => clearInterval(timer);
   }, [terpilih]);
 
-  // Fungsi Reset / Baru (emptTeks() di DlgReg.java)
+  // Fungsi Reset / Baru (emptTeks() di DlgReg.java - mereset text & combobox)
   const resetForm = useCallback(() => {
     const sekarang = new Date();
     const tgl = sekarang.toISOString().slice(0, 10);
@@ -144,11 +145,26 @@ export default function HalamanRegistrasi() {
     setNmPasien("");
     setPenanggungJawab("-");
     setAlmtPj("-");
-    setHubunganPj("Keluarga");
     setAsalRujukan("-");
     setStatusPoli("Belum");
+
+    // Reset seluruh pilihan dropdown / combobox ke nilai default awal
+    setHubunganPj("DIRI SENDIRI");
     setSttsBayar("Belum Bayar");
-  }, []);
+    if (daftarDokter.length > 0) {
+      setKdDokter(daftarDokter[0].kd_dokter);
+      setNmDokter(daftarDokter[0].nm_dokter);
+    }
+    if (daftarPoli.length > 0) {
+      setKdPoli(daftarPoli[0].kd_poli);
+      setNmPoli(daftarPoli[0].nm_poli);
+      setBiayaReg(String(daftarPoli[0].registrasi || 0));
+    }
+    if (daftarPenjab.length > 0) {
+      setKdPj(daftarPenjab[0].kd_pj);
+      setNmPj(daftarPenjab[0].png_jawab);
+    }
+  }, [daftarDokter, daftarPoli, daftarPenjab]);
 
   // Fetch Data Tabel
   const muatData = useCallback(async () => {
@@ -343,45 +359,122 @@ export default function HalamanRegistrasi() {
         </div>
       )}
 
-      {/* 2. Panel Input Data (ChkInput & FormInput seperti di DlgReg.java) */}
+      {/* 2. Panel Input Data (3 Kolom: Kolom 1 & 2 berisi inputan sesuai DlgReg, Kolom 3 kosong untuk fitur/ekspansi) */}
       <PanelInputData
         judul=".: Input Data"
-        terbukaAwal={true}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          {/* Kolom 1: No. Reg, No. Rawat, Tgl & Jam */}
-          <div className="space-y-2">
+        <div className="space-y-2.5 text-xs text-slate-700">
+          {/* Baris 1: No. Reg | No. Rekam Medik + Pasien | Kolom 3 Kosong */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+            {/* Kolom 1: No. Reg */}
             <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">No. Reg :</label>
+              <label className="w-20 font-semibold text-slate-600 shrink-0">No. Reg. :</label>
               <input
                 type="text"
                 value={noReg}
                 onChange={(e) => setNoReg(e.target.value)}
-                className="w-24 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                className="w-28 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
                 placeholder="001"
               />
             </div>
 
+            {/* Kolom 2: No. Rekam Medik & Nama Pasien */}
+            <div className="flex items-center gap-2">
+              <label className="w-28 font-semibold text-slate-600 shrink-0">No. Rekam Medik :</label>
+              <div className="flex items-center gap-1.5 flex-1">
+                <input
+                  type="text"
+                  value={noRm}
+                  onChange={(e) => setNoRm(e.target.value)}
+                  placeholder="No. RM..."
+                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                />
+                <input
+                  type="text"
+                  value={nmPasien}
+                  onChange={(e) => setNmPasien(e.target.value)}
+                  placeholder="Nama Pasien..."
+                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:border-emerald-600 truncate"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalPasienBuka(true);
+                    if (noRm) handleCariPasien(noRm);
+                  }}
+                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer"
+                  title="Cari Data Pasien (BtnPasien Alt+1)"
+                >
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Kolom 3: Kosong untuk ekspansi fitur mendatang */}
+            <div className="hidden lg:block"></div>
+          </div>
+
+          {/* Baris 2: No. Rawat | Penanggung Jawab & Hubungan | Kolom 3 Kosong */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+            {/* Kolom 1: No. Rawat */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">No. Rawat :</label>
               <input
                 type="text"
                 value={noRawat}
                 onChange={(e) => setNoRawat(e.target.value)}
-                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-semibold text-emerald-800 focus:outline-none focus:border-emerald-600"
+                className="w-56 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
                 placeholder="YYYY/MM/DD/000001"
               />
             </div>
 
+            {/* Kolom 2: Penanggung Jawab & Hubungan */}
             <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Tgl. Reg :</label>
-              <div className="flex items-center gap-1.5 flex-1">
+              <label className="w-28 font-semibold text-slate-600 shrink-0">P. Jawab :</label>
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={penanggungJawab}
+                  onChange={(e) => setPenanggungJawab(e.target.value)}
+                  placeholder="Nama P.J."
+                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+                />
+                <label className="font-semibold text-slate-600 shrink-0">Hubungan :</label>
+                <div className="w-36 shrink-0">
+                  <CustomSelect
+                    value={hubunganPj}
+                    onChange={(e) => setHubunganPj(e.target.value)}
+                  >
+                    <option value="DIRI SENDIRI">Diri Sendiri</option>
+                    <option value="KELUARGA">Keluarga</option>
+                    <option value="AYAH">Ayah</option>
+                    <option value="IBU">Ibu</option>
+                    <option value="ISTRI">Istri</option>
+                    <option value="SUAMI">Suami</option>
+                    <option value="ANAK">Anak</option>
+                    <option value="SAUDARA">Saudara</option>
+                  </CustomSelect>
+                </div>
+              </div>
+            </div>
+
+            {/* Kolom 3: Kosong */}
+            <div className="hidden lg:block"></div>
+          </div>
+
+          {/* Baris 3: Tgl. Reg & Jam | Alamat P.J. & Status | Kolom 3 Kosong */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+            {/* Kolom 1: Tgl. Reg & Jam */}
+            <div className="flex items-center gap-2">
+              <label className="w-20 font-semibold text-slate-600 shrink-0">Tgl. Reg. :</label>
+              <div className="flex items-center gap-2">
                 <input
                   type="date"
                   value={tglReg}
                   onChange={(e) => setTglReg(e.target.value)}
                   className="px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
                 />
+                <label className="font-semibold text-slate-600 shrink-0">Jam :</label>
                 <input
                   type="text"
                   value={jamReg}
@@ -391,71 +484,40 @@ export default function HalamanRegistrasi() {
                 />
               </div>
             </div>
-          </div>
 
-          {/* Kolom 2: No. RM & Pasien */}
-          <div className="space-y-2">
+            {/* Kolom 2: Alamat P.J. & Status */}
             <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">No. RM :</label>
-              <div className="flex items-center gap-1 flex-1">
+              <label className="w-28 font-semibold text-slate-600 shrink-0">Alamat P.J. :</label>
+              <div className="flex items-center gap-2 flex-1">
                 <input
                   type="text"
-                  value={noRm}
-                  onChange={(e) => setNoRm(e.target.value)}
-                  placeholder="Ketik No. RM..."
-                  className="w-28 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                  value={almtPj}
+                  onChange={(e) => setAlmtPj(e.target.value)}
+                  placeholder="Alamat penanggung jawab"
+                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalPasienBuka(true);
-                    if (noRm) handleCariPasien(noRm);
-                  }}
-                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer"
-                  title="Cari Data Pasien (BtnPasien)"
-                >
-                  <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3 h-3" />
-                </button>
+                <label className="font-semibold text-slate-600 shrink-0">Status :</label>
+                <div className="w-24 shrink-0">
+                  <input
+                    type="text"
+                    value={statusPoli}
+                    readOnly
+                    className="w-full px-2 py-1 text-xs bg-slate-100 border border-slate-300 rounded text-slate-700 font-semibold text-center"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">Pasien :</label>
-              <input
-                type="text"
-                value={nmPasien}
-                onChange={(e) => setNmPasien(e.target.value)}
-                placeholder="Nama Pasien..."
-                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">Jenis Bayar :</label>
-              <div className="flex-1">
-                <CustomSelect
-                  value={kdPj}
-                  onChange={(e) => {
-                    setKdPj(e.target.value);
-                    const sel = daftarPenjab.find((pj) => pj.kd_pj === e.target.value);
-                    if (sel) setNmPj(sel.png_jawab);
-                  }}
-                >
-                  {daftarPenjab.map((pj) => (
-                    <option key={pj.kd_pj} value={pj.kd_pj}>
-                      {pj.png_jawab} ({pj.kd_pj})
-                    </option>
-                  ))}
-                </CustomSelect>
-              </div>
-            </div>
+            {/* Kolom 3: Kosong */}
+            <div className="hidden lg:block"></div>
           </div>
 
-          {/* Kolom 3: Dokter & Poliklinik */}
-          <div className="space-y-2">
+          {/* Baris 4: Dr Dituju | Jenis Bayar & Status Bayar | Kolom 3 Kosong */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+            {/* Kolom 1: Dr Dituju */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">Dr Dituju :</label>
-              <div className="flex-1">
+              <div className="flex-1 max-w-sm">
                 <CustomSelect
                   value={kdDokter}
                   onChange={(e) => {
@@ -466,99 +528,99 @@ export default function HalamanRegistrasi() {
                 >
                   {daftarDokter.map((d) => (
                     <option key={d.kd_dokter} value={d.kd_dokter}>
-                      {d.nm_dokter}
+                      {d.nm_dokter} ({d.kd_dokter})
                     </option>
                   ))}
                 </CustomSelect>
               </div>
             </div>
 
+            {/* Kolom 2: Jenis Bayar & Status Bayar */}
             <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Unit Poli :</label>
-              <div className="flex-1">
-                <CustomSelect
-                  value={kdPoli}
-                  onChange={(e) => {
-                    setKdPoli(e.target.value);
-                    const sel = daftarPoli.find((p) => p.kd_poli === e.target.value);
-                    if (sel) {
-                      setNmPoli(sel.nm_poli);
-                      setBiayaReg(String(sel.registrasi || 0));
-                    }
-                  }}
-                >
-                  {daftarPoli.map((p) => (
-                    <option key={p.kd_poli} value={p.kd_poli}>
-                      {p.nm_poli}
-                    </option>
-                  ))}
-                </CustomSelect>
+              <label className="w-28 font-semibold text-slate-600 shrink-0">Jenis Bayar :</label>
+              <div className="flex items-center gap-2 flex-1">
+                <div className="flex-1">
+                  <CustomSelect
+                    value={kdPj}
+                    onChange={(e) => {
+                      setKdPj(e.target.value);
+                      const sel = daftarPenjab.find((pj) => pj.kd_pj === e.target.value);
+                      if (sel) setNmPj(sel.png_jawab);
+                    }}
+                  >
+                    {daftarPenjab.map((pj) => (
+                      <option key={pj.kd_pj} value={pj.kd_pj}>
+                        {pj.png_jawab} ({pj.kd_pj})
+                      </option>
+                    ))}
+                  </CustomSelect>
+                </div>
+                <label className="font-semibold text-slate-600 shrink-0">Bayar :</label>
+                <div className="w-28 shrink-0">
+                  <CustomSelect
+                    value={sttsBayar}
+                    onChange={(e) => setSttsBayar(e.target.value)}
+                  >
+                    <option value="Belum Bayar">Belum Bayar</option>
+                    <option value="Sudah Bayar">Sudah Bayar</option>
+                  </CustomSelect>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Biaya Reg :</label>
-              <input
-                type="number"
-                value={biayaReg}
-                onChange={(e) => setBiayaReg(e.target.value)}
-                className="w-24 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
-              <label className="font-semibold text-slate-600 shrink-0 ml-1">Bayar :</label>
-              <div className="flex-1 min-w-[100px]">
-                <CustomSelect
-                  value={sttsBayar}
-                  onChange={(e) => setSttsBayar(e.target.value)}
-                >
-                  <option value="Belum Bayar">Belum Bayar</option>
-                  <option value="Sudah Bayar">Sudah Bayar</option>
-                </CustomSelect>
-              </div>
-            </div>
+            {/* Kolom 3: Kosong */}
+            <div className="hidden lg:block"></div>
           </div>
 
-          {/* Kolom 4: Penanggung Jawab, Alamat, Hubungan & Status */}
-          <div className="space-y-2">
+          {/* Baris 5: Unit Poli + Biaya Reg | Asal Rujukan | Kolom 3 Kosong */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+            {/* Kolom 1: Unit & Biaya Reg */}
             <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">P. Jawab :</label>
-              <input
-                type="text"
-                value={penanggungJawab}
-                onChange={(e) => setPenanggungJawab(e.target.value)}
-                placeholder="Nama P.J."
-                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">Alamat P.J. :</label>
-              <input
-                type="text"
-                value={almtPj}
-                onChange={(e) => setAlmtPj(e.target.value)}
-                placeholder="Alamat penanggung jawab"
-                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="w-24 font-semibold text-slate-600 shrink-0">Hubungan :</label>
-              <div className="flex-1">
-                <CustomSelect
-                  value={hubunganPj}
-                  onChange={(e) => setHubunganPj(e.target.value)}
-                >
-                  <option value="DIRI SENDIRI">Diri Sendiri</option>
-                  <option value="KELUARGA">Keluarga</option>
-                  <option value="AYAH">Ayah</option>
-                  <option value="IBU">Ibu</option>
-                  <option value="ISTRI">Istri</option>
-                  <option value="SUAMI">Suami</option>
-                  <option value="ANAK">Anak</option>
-                  <option value="SAUDARA">Saudara</option>
-                </CustomSelect>
+              <label className="w-20 font-semibold text-slate-600 shrink-0">Unit :</label>
+              <div className="flex items-center gap-2 flex-1 max-w-sm">
+                <div className="flex-1">
+                  <CustomSelect
+                    value={kdPoli}
+                    onChange={(e) => {
+                      setKdPoli(e.target.value);
+                      const sel = daftarPoli.find((p) => p.kd_poli === e.target.value);
+                      if (sel) {
+                        setNmPoli(sel.nm_poli);
+                        setBiayaReg(String(sel.registrasi || 0));
+                      }
+                    }}
+                  >
+                    {daftarPoli.map((p) => (
+                      <option key={p.kd_poli} value={p.kd_poli}>
+                        {p.nm_poli}
+                      </option>
+                    ))}
+                  </CustomSelect>
+                </div>
+                <label className="font-semibold text-slate-600 shrink-0">Biaya :</label>
+                <input
+                  type="number"
+                  value={biayaReg}
+                  onChange={(e) => setBiayaReg(e.target.value)}
+                  className="w-20 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 text-right focus:outline-none focus:border-emerald-600"
+                />
               </div>
             </div>
+
+            {/* Kolom 2: Asal Rujukan */}
+            <div className="flex items-center gap-2">
+              <label className="w-28 font-semibold text-slate-600 shrink-0">Asal Rujukan :</label>
+              <input
+                type="text"
+                value={asalRujukan}
+                onChange={(e) => setAsalRujukan(e.target.value)}
+                placeholder="Asal rujukan (jika ada)..."
+                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+
+            {/* Kolom 3: Kosong */}
+            <div className="hidden lg:block"></div>
           </div>
         </div>
       </PanelInputData>
@@ -611,7 +673,7 @@ export default function HalamanRegistrasi() {
                     <td className="py-2 px-2.5 text-center font-bold text-slate-700">
                       {item.no_reg}
                     </td>
-                    <td className="py-2 px-2.5 text-emerald-800 font-semibold">
+                    <td className="py-2 px-2.5 font-medium text-slate-800">
                       {item.no_rawat}
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">
@@ -751,7 +813,16 @@ export default function HalamanRegistrasi() {
           <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[85vh]">
             <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between">
               <span>Cari Data Pasien (Rekam Medis)</span>
-              <button onClick={() => setModalPasienBuka(false)} className="text-white hover:text-emerald-200 font-bold">✕</button>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/pasien"
+                  target="_blank"
+                  className="text-emerald-100 hover:text-white underline text-[11px] font-normal"
+                >
+                  Buka Halaman Pasien Lengkap ↗
+                </Link>
+                <button onClick={() => setModalPasienBuka(false)} className="text-white hover:text-emerald-200 font-bold">✕</button>
+              </div>
             </div>
             <div className="p-3 border-b border-slate-100 flex gap-2">
               <input

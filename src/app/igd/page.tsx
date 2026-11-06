@@ -150,7 +150,7 @@ export default function HalamanIGD() {
                     <td className="py-2 px-2.5 text-center font-bold text-slate-700">
                       {item.no_reg}
                     </td>
-                    <td className="py-2 px-2.5 text-emerald-800 font-medium">
+                    <td className="py-2 px-2.5 font-medium text-slate-800">
                       {item.no_rawat}
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">

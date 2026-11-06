@@ -126,7 +126,7 @@ export default function HalamanPeriksaLabPA() {
                     key={idx}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="py-2 px-2.5 text-emerald-800 font-medium">
+                    <td className="py-2 px-2.5 font-medium text-slate-800">
                       {item.no_rawat}
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">

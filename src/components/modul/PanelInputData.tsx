@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronDown,
@@ -11,7 +12,8 @@ import {
 
 export interface PanelInputDataProps {
   judul?: string;
-  terbukaAwal?: boolean;
+  idPenyimpanan?: string; // ID unik untuk menyimpan state di sessionStorage/localStorage
+  terbukaAwal?: boolean; // Default false (tertutup secara default)
   children: React.ReactNode;
   onSimpan?: () => void;
   onBaru?: () => void;
@@ -22,12 +24,17 @@ export interface PanelInputDataProps {
 
 /**
  * Komponen Panel Input Data SIMRS Khanza
- * Mengadopsi mekanisme `ChkInput` (.: Input Data) yang bisa di-toggle buka/tutup
- * seperti di DlgReg, DlgRawatJalan, DlgPeriksaRadiologi, DlgPermintaanLaboratorium, dll.
+ * Mengadopsi mekanisme `ChkInput` (.: Input Data) yang bisa di-toggle buka/tutup.
+ * 
+ * Rule Perilaku:
+ * - Secara default dalam keadaan TERTUTUP (false).
+ * - Jika pengguna membukanya dan berpindah ke halaman lain lalu kembali, panel TETAP dalam kondisi TERBUKA.
+ * - State persistensi disimpan per-halaman/per-id di sessionStorage / localStorage.
  */
 export function PanelInputData({
   judul = ".: Input Data",
-  terbukaAwal = true,
+  idPenyimpanan,
+  terbukaAwal = false,
   children,
   onSimpan,
   onBaru,
@@ -35,13 +42,40 @@ export function PanelInputData({
   teksBaru = "Kosongkan",
   sedangMenyimpan = false,
 }: PanelInputDataProps) {
+  const pathname = usePathname();
+  const kunciStorage = `panel_input_${idPenyimpanan || pathname}`;
+
+  // Menginisialisasi state dengan false (tertutup default), lalu mengecek persistence
   const [terbuka, setTerbuka] = useState(terbukaAwal);
+
+  useEffect(() => {
+    try {
+      const nilaiTersimpan = localStorage.getItem(kunciStorage);
+      if (nilaiTersimpan !== null) {
+        setTerbuka(nilaiTersimpan === "true");
+      }
+    } catch (e) {
+      // Abaikan jika storage dinonaktifkan di browser
+    }
+  }, [kunciStorage]);
+
+  const handleToggle = () => {
+    setTerbuka((prev) => {
+      const stateBaru = !prev;
+      try {
+        localStorage.setItem(kunciStorage, String(stateBaru));
+      } catch (e) {
+        // Abaikan
+      }
+      return stateBaru;
+    });
+  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden shrink-0 select-none transition-all">
       {/* Header Panel Input Toggle (ChkInput di Khanza) */}
       <div
-        onClick={() => setTerbuka(!terbuka)}
+        onClick={handleToggle}
         className="px-3 py-2 bg-slate-100/90 hover:bg-slate-200/70 border-b border-slate-200 cursor-pointer flex items-center justify-between transition-colors"
       >
         <div className="flex items-center gap-2">

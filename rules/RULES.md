@@ -31,12 +31,19 @@ Mengikuti instruksi spesifik:
    - **TIDAK BOLEH** menggunakan gradient warna mencolok / multi-color rainbow gradient.
    - **TIDAK BOLEH** menggunakan icon 3D/dekoratif berlebihan atau icon bitmap pixelated lama.
    - **TIDAK BOLEH** menggunakan animasi atau transisi lambat yang menghambat kecepatan kerja petugas medis.
+   - **TIDAK BOLEH MENGGUNAKAN TEKS BERWARNA**: Jangan gunakan warna teks (seperti teks hijau/emerald, biru, merah, dll.) untuk teks data biasa seperti No. Rawat, No. RM, nama pasien, dll. Seluruh teks data harus menggunakan warna teks netral (`text-slate-800` / `text-slate-700` / `text-slate-600`), **KECUALI** jika pengguna secara eksplisit meminta warna khusus atau berupa badge status (seperti status bayar/status rawat).
 3. **Kepadatan Informasi (*Information Density*)**:
    - Sistem rumah sakit memerlukan efisiensi ruang: gunakan padding kompak (`py-1.5 px-3`, `text-xs` hingga `text-sm`, font tabular untuk angka dan tanggal).
 4. **Standar Komponen Form & Dropdown / Combo Box**:
    - **WAJIB**: Jangan pernah menggunakan tanda panah dropdown default bawaan browser yang mepet ke tepi.
    - Semua elemen dropdown/select harus menggunakan `appearance-none` dengan ikon Font Awesome `faChevronDown` yang memiliki jarak tepi proporsional (menggunakan padding kanan `pr-9` pada select dan posisi ikon `pr-3`).
    - Gunakan komponen reusable [`CustomSelect`](src/components/ui/CustomSelect.tsx) di seluruh formulir, filter, dan tabel modul.
+5. **Standar Perilaku Panel Input Data (`PanelInputData` / `ChkInput`)**:
+   - **Default State**: Secara default formulir panel input berada dalam kondisi **TERTUTUP** (`terbuka = false`).
+   - **Persistensi State**: Jika pengguna membuka panel input pada suatu modul kemudian berpindah halaman lalu kembali lagi ke modul tersebut, panel input **WAJIB TETAP TERBUKA** (menggunakan persistensi `localStorage` berdasarkan rute halaman / `idPenyimpanan`).
+   - Gunakan komponen standar [`PanelInputData`](src/components/modul/PanelInputData.tsx) di semua modul yang memiliki inputan form di bagian atas tabel.
+6. **Standar Aksi Tombol Baru / Method `emptTeks`**:
+   - **WAJIB**: Tombol **Baru** (`BtnBatal` / `emptTeks`) tidak hanya mengosongkan *field text input*, tetapi **WAJIB mereset seluruh pilihan dropdown / combo box** kembali ke nilai default awal (misal: dokter pertama/default, poli pertama, jenis bayar default, status 'Belum Bayar', JK default, agama default, dll.) dan membatalkan seleksi baris tabel (`setTerpilih(null)`).
 
 ---
 
