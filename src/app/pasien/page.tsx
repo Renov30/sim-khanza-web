@@ -5,6 +5,8 @@ import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { Toast } from "@/components/common/Toast";
+import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHospitalUser,
@@ -45,8 +47,14 @@ export default function HalamanDataPasien() {
   const [data, setData] = useState<PasienData[]>([]);
   const [terpilih, setTerpilih] = useState<PasienData | null>(null);
   const [memuat, setMemuat] = useState(true);
-  const [pesanError, setPesanError] = useState<string | null>(null);
-  const [pesanSukses, setPesanSukses] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
+  const [dialogHapusBuka, setDialogHapusBuka] = useState(false);
+  const [sedangMenghapus, setSedangMenghapus] = useState(false);
+
+  // Helper menampilkan Toast Feedback
+  const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
+    setToast({ pesan, tipe, key: Date.now() });
+  }, []);
 
   // Filter States
   const [kataKunci, setKataKunci] = useState("");
@@ -97,7 +105,6 @@ export default function HalamanDataPasien() {
   // Fetch Data Pasien
   const muatData = useCallback(async () => {
     setMemuat(true);
-    setPesanError(null);
     try {
       const url = new URL("/api/pasien", window.location.origin);
       if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
@@ -108,14 +115,14 @@ export default function HalamanDataPasien() {
       if (json.success) {
         setData(json.data || []);
       } else {
-        setPesanError(json.error || "Gagal memuat data pasien");
+        tampilkanToast(json.error || "Gagal memuat data pasien", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+      tampilkanToast(err.message || "Terjadi kesalahan jaringan", "error");
     } finally {
       setMemuat(false);
     }
-  }, [kataKunci]);
+  }, [kataKunci, tampilkanToast]);
 
   useEffect(() => {
     muatData();
@@ -177,16 +184,14 @@ export default function HalamanDataPasien() {
     setNoPeserta(p.no_peserta || "-");
   };
 
-  // Simpan / Perbarui Pasien (BtnSimpan / BtnEdit di DlgPasien.java)
+  // Simpan Pasien Baru (BtnSimpan di DlgPasien.java)
   const handleSimpan = async () => {
     if (!noRm.trim() || !nmPasien.trim()) {
-      setPesanError("No. Rekam Medis dan Nama Pasien wajib diisi!");
+      tampilkanToast("No. Rekam Medis dan Nama Pasien wajib diisi!", "error");
       return;
     }
 
     setSedangMenyimpan(true);
-    setPesanError(null);
-    setPesanSukses(null);
 
     try {
       const res = await fetch("/api/pasien", {
@@ -218,25 +223,87 @@ export default function HalamanDataPasien() {
 
       const json = await res.json();
       if (json.success) {
-        setPesanSukses("Data pasien berhasil disimpan!");
+        tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil disimpan!`, "sukses");
         muatData();
-        setTimeout(() => setPesanSukses(null), 3000);
+        if (!terpilih) resetForm();
       } else {
-        setPesanError(json.error || "Gagal menyimpan data pasien");
+        tampilkanToast(json.error || "Gagal menyimpan data pasien", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Gagal menghubungi server");
+      tampilkanToast(err.message || "Gagal menghubungi server", "error");
     } finally {
       setSedangMenyimpan(false);
     }
   };
 
-  // Hapus Data Pasien (BtnHapus di DlgPasien.java)
-  const handleHapus = async () => {
-    if (!terpilih) return;
-    if (!confirm(`Hapus data pasien ${terpilih.nm_pasien} (No. RM: ${terpilih.no_rkm_medis})?`)) {
+  // Ganti / Edit Data Pasien (BtnEdit di DlgPasien.java)
+  const handleGanti = async () => {
+    if (!terpilih) {
+      tampilkanToast("Pilih data pasien pada tabel yang ingin diubah terlebih dahulu!", "error");
       return;
     }
+    if (!noRm.trim() || !nmPasien.trim()) {
+      tampilkanToast("No. Rekam Medis dan Nama Pasien wajib diisi!", "error");
+      return;
+    }
+
+    setSedangMenyimpan(true);
+
+    try {
+      const res = await fetch("/api/pasien", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          no_rkm_medis: noRm,
+          nm_pasien: nmPasien,
+          no_ktp: noKtp,
+          jk,
+          tmp_lahir: tmpLahir,
+          tgl_lahir: tglLahir,
+          nm_ibu: nmIbu,
+          alamat,
+          gol_darah: golDarah,
+          pekerjaan,
+          stts_nikah: sttsNikah,
+          agama,
+          no_tlp: noTlp,
+          pnd: pendidikan,
+          keluarga: keluargaPj,
+          namakeluarga: namaPj,
+          kd_pj: kdPj,
+          no_peserta: noPeserta,
+          pekerjaanpj: pekerjaanPj,
+          alamatpj: alamatPj,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil diperbarui!`, "sukses");
+        muatData();
+      } else {
+        tampilkanToast(json.error || "Gagal memperbarui data pasien", "error");
+      }
+    } catch (err: any) {
+      tampilkanToast(err.message || "Gagal menghubungi server", "error");
+    } finally {
+      setSedangMenyimpan(false);
+    }
+  };
+
+  // Buka Dialog Konfirmasi Hapus Data Pasien
+  const handleBukaDialogHapus = () => {
+    if (!terpilih) {
+      tampilkanToast("Pilih data pasien pada tabel yang ingin dihapus terlebih dahulu!", "error");
+      return;
+    }
+    setDialogHapusBuka(true);
+  };
+
+  // Eksekusi Hapus Data Pasien (BtnHapus di DlgPasien.java)
+  const handleKonfirmasiHapus = async () => {
+    if (!terpilih) return;
+    setSedangMenghapus(true);
 
     try {
       const res = await fetch(`/api/pasien?no_rkm_medis=${encodeURIComponent(terpilih.no_rkm_medis)}`, {
@@ -244,16 +311,30 @@ export default function HalamanDataPasien() {
       });
       const json = await res.json();
       if (json.success) {
-        setPesanSukses(`Pasien ${terpilih.no_rkm_medis} berhasil dihapus.`);
+        tampilkanToast(
+          `Data pasien ${terpilih.nm_pasien} (${terpilih.no_rkm_medis}) berhasil dihapus.`,
+          "sukses"
+        );
         resetForm();
         muatData();
-        setTimeout(() => setPesanSukses(null), 3000);
+        setDialogHapusBuka(false);
       } else {
-        setPesanError(json.error || "Gagal menghapus data");
+        tampilkanToast(json.error || "Gagal menghapus data pasien", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Gagal menghapus pasien");
+      tampilkanToast(err.message || "Gagal menghapus pasien", "error");
+    } finally {
+      setSedangMenghapus(false);
     }
+  };
+
+  // Cetak Data Pasien
+  const handleCetak = () => {
+    if (data.length === 0) {
+      tampilkanToast("Tidak ada data pasien untuk dicetak!", "info");
+      return;
+    }
+    window.print();
   };
 
   return (
@@ -264,26 +345,6 @@ export default function HalamanDataPasien() {
         onMuatUlang={muatData}
         memuat={memuat}
       />
-
-      {/* Alert Error / Sukses */}
-      {pesanError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faCircleExclamation} className="w-4 h-4 text-red-500" />
-            <span>{pesanError}</span>
-          </div>
-          <button onClick={() => setPesanError(null)} className="text-red-500 font-bold ml-2">✕</button>
-        </div>
-      )}
-      {pesanSukses && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-lg text-xs flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4 text-emerald-600" />
-            <span>{pesanSukses}</span>
-          </div>
-          <button onClick={() => setPesanSukses(null)} className="text-emerald-700 font-bold ml-2">✕</button>
-        </div>
-      )}
 
       {/* 2. Panel Input Data (FormInput DlgPasien: 3 Kolom) */}
       <PanelInputData
@@ -664,9 +725,9 @@ export default function HalamanDataPasien() {
         <PanelBawah
           onSimpan={handleSimpan}
           onBaru={resetForm}
-          onHapus={handleHapus}
-          onGanti={handleSimpan}
-          onCetak={() => window.print()}
+          onHapus={handleBukaDialogHapus}
+          onGanti={handleGanti}
+          onCetak={handleCetak}
           onSemua={() => {
             setKataKunci("");
             muatData();
@@ -681,6 +742,27 @@ export default function HalamanDataPasien() {
           memuat={memuat}
         />
       </div>
+
+      {/* Dialog Konfirmasi Hapus Data Pasien */}
+      <KonfirmasiDialog
+        terbuka={dialogHapusBuka}
+        judul="Hapus Data Pasien"
+        pesan={`Yakin ingin menghapus data pasien ${terpilih?.nm_pasien} (No. RM: ${terpilih?.no_rkm_medis})?`}
+        subPesan="Data riwayat rekam medis dan data terkait lainnya mungkin terpengaruh."
+        teksBatal="Batal"
+        teksKonfirmasi="Ya, Hapus"
+        onBatal={() => setDialogHapusBuka(false)}
+        onKonfirmasi={handleKonfirmasiHapus}
+        sedangMemproses={sedangMenghapus}
+      />
+
+      {/* Toast Notifikasi (Simpan, Edit, Hapus, Error, Info) */}
+      <Toast
+        key={toast?.key}
+        message={toast?.pesan || null}
+        tipe={toast?.tipe || "info"}
+        onClose={() => setToast(null)}
+      />
     </div>
   );
 }

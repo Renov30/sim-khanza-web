@@ -6,6 +6,8 @@ import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { Toast } from "@/components/common/Toast";
+import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHospitalUser,
@@ -44,8 +46,14 @@ export default function HalamanRegistrasi() {
   const [data, setData] = useState<PasienReg[]>([]);
   const [terpilih, setTerpilih] = useState<PasienReg | null>(null);
   const [memuat, setMemuat] = useState(true);
-  const [pesanError, setPesanError] = useState<string | null>(null);
-  const [pesanSukses, setPesanSukses] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
+  const [dialogHapusBuka, setDialogHapusBuka] = useState(false);
+  const [sedangMenghapus, setSedangMenghapus] = useState(false);
+
+  // Helper menampilkan Toast Feedback
+  const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
+    setToast({ pesan, tipe, key: Date.now() });
+  }, []);
 
   // Filter States
   const hariIni = new Date().toISOString().slice(0, 10);
@@ -169,7 +177,6 @@ export default function HalamanRegistrasi() {
   // Fetch Data Tabel
   const muatData = useCallback(async () => {
     setMemuat(true);
-    setPesanError(null);
     try {
       const url = new URL("/api/registrasi", window.location.origin);
       if (tanggalMulai && tanggalSelesai) {
@@ -186,14 +193,14 @@ export default function HalamanRegistrasi() {
       if (json.success) {
         setData(json.data || []);
       } else {
-        setPesanError(json.error || "Gagal memuat data registrasi");
+        tampilkanToast(json.error || "Gagal memuat data registrasi", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+      tampilkanToast(err.message || "Terjadi kesalahan jaringan", "error");
     } finally {
       setMemuat(false);
     }
-  }, [tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci]);
+  }, [tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, tampilkanToast]);
 
   useEffect(() => {
     muatData();
@@ -223,16 +230,14 @@ export default function HalamanRegistrasi() {
     setSttsBayar(item.status_bayar || "Belum Bayar");
   };
 
-  // Simpan Data (BtnSimpanActionPerformed di DlgReg.java)
+  // Simpan Data Baru (BtnSimpanActionPerformed di DlgReg.java)
   const handleSimpan = async () => {
     if (!noRm.trim() || !kdDokter.trim() || !kdPoli.trim()) {
-      setPesanError("No. RM, Dokter, dan Unit Poli harus terisi lengkap!");
+      tampilkanToast("No. RM, Dokter, dan Unit Poli harus terisi lengkap!", "error");
       return;
     }
 
     setSedangMenyimpan(true);
-    setPesanError(null);
-    setPesanSukses(null);
 
     try {
       const res = await fetch("/api/registrasi", {
@@ -258,26 +263,84 @@ export default function HalamanRegistrasi() {
 
       const json = await res.json();
       if (json.success) {
-        setPesanSukses("Data registrasi pasien berhasil disimpan!");
+        tampilkanToast("Data registrasi pasien berhasil disimpan!", "sukses");
         muatData();
         if (!terpilih) resetForm();
-        setTimeout(() => setPesanSukses(null), 3500);
       } else {
-        setPesanError(json.error || "Gagal menyimpan data");
+        tampilkanToast(json.error || "Gagal menyimpan data registrasi", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Gagal menyimpan ke server");
+      tampilkanToast(err.message || "Gagal menyimpan ke server", "error");
     } finally {
       setSedangMenyimpan(false);
     }
   };
 
-  // Hapus Data (BtnHapusActionPerformed di DlgReg.java)
-  const handleHapus = async () => {
-    if (!terpilih) return;
-    if (!confirm(`Hapus registrasi pasien No. Rawat ${terpilih.no_rawat} (${terpilih.nm_pasien})?`)) {
+  // Ganti / Edit Data Registrasi (BtnEditActionPerformed di DlgReg.java)
+  const handleGanti = async () => {
+    if (!terpilih) {
+      tampilkanToast("Pilih data registrasi pada tabel yang ingin diubah terlebih dahulu!", "error");
       return;
     }
+    if (!noRm.trim() || !kdDokter.trim() || !kdPoli.trim()) {
+      tampilkanToast("No. RM, Dokter, dan Unit Poli harus terisi lengkap!", "error");
+      return;
+    }
+
+    setSedangMenyimpan(true);
+
+    try {
+      const res = await fetch("/api/registrasi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          no_rawat: noRawat,
+          no_reg: noReg,
+          tgl_registrasi: tglReg,
+          jam_reg: jamReg,
+          kd_dokter: kdDokter,
+          no_rkm_medis: noRm,
+          kd_poli: kdPoli,
+          kd_pj: kdPj,
+          p_jawab: penanggungJawab,
+          almt_pj: almtPj,
+          hubunganpj: hubunganPj,
+          biaya_reg: Number(biayaReg) || 0,
+          stts: statusPoli,
+          status_bayar: sttsBayar,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        tampilkanToast(
+          `Data registrasi No. Rawat ${noRawat} (${nmPasien || terpilih.nm_pasien}) berhasil diperbarui!`,
+          "sukses"
+        );
+        muatData();
+      } else {
+        tampilkanToast(json.error || "Gagal memperbarui data registrasi", "error");
+      }
+    } catch (err: any) {
+      tampilkanToast(err.message || "Gagal menghubungi server", "error");
+    } finally {
+      setSedangMenyimpan(false);
+    }
+  };
+
+  // Buka Dialog Konfirmasi Hapus
+  const handleBukaDialogHapus = () => {
+    if (!terpilih) {
+      tampilkanToast("Pilih data registrasi pada tabel yang ingin dihapus terlebih dahulu!", "error");
+      return;
+    }
+    setDialogHapusBuka(true);
+  };
+
+  // Eksekusi Hapus Data (BtnHapusActionPerformed di DlgReg.java)
+  const handleKonfirmasiHapus = async () => {
+    if (!terpilih) return;
+    setSedangMenghapus(true);
 
     try {
       const res = await fetch(`/api/registrasi?no_rawat=${encodeURIComponent(terpilih.no_rawat)}`, {
@@ -285,16 +348,30 @@ export default function HalamanRegistrasi() {
       });
       const json = await res.json();
       if (json.success) {
-        setPesanSukses(`Data registrasi ${terpilih.no_rawat} berhasil dihapus.`);
+        tampilkanToast(
+          `Data registrasi No. Rawat ${terpilih.no_rawat} (${terpilih.nm_pasien}) berhasil dihapus.`,
+          "sukses"
+        );
         resetForm();
         muatData();
-        setTimeout(() => setPesanSukses(null), 3000);
+        setDialogHapusBuka(false);
       } else {
-        setPesanError(json.error || "Gagal menghapus data");
+        tampilkanToast(json.error || "Gagal menghapus data", "error");
       }
     } catch (err: any) {
-      setPesanError(err.message || "Gagal menghapus");
+      tampilkanToast(err.message || "Gagal menghapus data", "error");
+    } finally {
+      setSedangMenghapus(false);
     }
+  };
+
+  // Cetak Data Registrasi
+  const handleCetak = () => {
+    if (data.length === 0) {
+      tampilkanToast("Tidak ada data registrasi untuk dicetak!", "info");
+      return;
+    }
+    window.print();
   };
 
   // Cari Pasien untuk tombol BtnPasien
@@ -338,26 +415,6 @@ export default function HalamanRegistrasi() {
         onMuatUlang={muatData}
         memuat={memuat}
       />
-
-      {/* Pesan Alert Error / Sukses */}
-      {pesanError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faCircleExclamation} className="w-4 h-4 text-red-500" />
-            <span>{pesanError}</span>
-          </div>
-          <button onClick={() => setPesanError(null)} className="text-red-500 font-bold ml-2">✕</button>
-        </div>
-      )}
-      {pesanSukses && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-lg text-xs flex items-center justify-between shadow-2xs">
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4 text-emerald-600" />
-            <span>{pesanSukses}</span>
-          </div>
-          <button onClick={() => setPesanSukses(null)} className="text-emerald-700 font-bold ml-2">✕</button>
-        </div>
-      )}
 
       {/* 2. Panel Input Data (3 Kolom: Kolom 1 & 2 berisi inputan sesuai DlgReg, Kolom 3 kosong untuk fitur/ekspansi) */}
       <PanelInputData
@@ -735,9 +792,9 @@ export default function HalamanRegistrasi() {
         <PanelBawah
           onSimpan={handleSimpan}
           onBaru={resetForm}
-          onHapus={handleHapus}
-          onGanti={handleSimpan}
-          onCetak={() => window.print()}
+          onHapus={handleBukaDialogHapus}
+          onGanti={handleGanti}
+          onCetak={handleCetak}
           onSemua={() => {
             setKataKunci("");
             setTanggalMulai("");
@@ -877,6 +934,27 @@ export default function HalamanRegistrasi() {
           </div>
         </div>
       )}
+
+      {/* Dialog Konfirmasi Hapus Data */}
+      <KonfirmasiDialog
+        terbuka={dialogHapusBuka}
+        judul="Hapus Registrasi Pasien"
+        pesan={`Yakin ingin menghapus data registrasi pasien No. Rawat ${terpilih?.no_rawat} (${terpilih?.nm_pasien})?`}
+        subPesan="Data pemeriksaan registrasi terkait yang sudah dihapus tidak dapat dipulihkan."
+        teksBatal="Batal"
+        teksKonfirmasi="Ya, Hapus"
+        onBatal={() => setDialogHapusBuka(false)}
+        onKonfirmasi={handleKonfirmasiHapus}
+        sedangMemproses={sedangMenghapus}
+      />
+
+      {/* Toast Notifikasi (Simpan, Edit, Hapus, Error, Info) */}
+      <Toast
+        key={toast?.key}
+        message={toast?.pesan || null}
+        tipe={toast?.tipe || "info"}
+        onClose={() => setToast(null)}
+      />
     </div>
   );
 }

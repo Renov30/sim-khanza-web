@@ -44,6 +44,12 @@ Mengikuti instruksi spesifik:
    - Gunakan komponen standar [`PanelInputData`](src/components/modul/PanelInputData.tsx) di semua modul yang memiliki inputan form di bagian atas tabel.
 6. **Standar Aksi Tombol Baru / Method `emptTeks`**:
    - **WAJIB**: Tombol **Baru** (`BtnBatal` / `emptTeks`) tidak hanya mengosongkan *field text input*, tetapi **WAJIB mereset seluruh pilihan dropdown / combo box** kembali ke nilai default awal (misal: dokter pertama/default, poli pertama, jenis bayar default, status 'Belum Bayar', JK default, agama default, dll.) dan membatalkan seleksi baris tabel (`setTerpilih(null)`).
+7. **Standar Notifikasi Feedback (Toast Floating)**:
+   - **DILARANG KERAS** menggunakan banner alert statis di atas panel input atau atas tabel yang mendorong/menggeser tata letak (*layout shift*).
+   - **WAJIB** menggunakan komponen notifikasi mengambang [`Toast`](src/components/common/Toast.tsx) di pojok kanan bawah layar (`bottom-5 right-5`) dengan auto-dismiss (3 detik), tombol tutup manual, dan ikon status yang sesuai (`tipe: "sukses" | "error" | "info"`).
+8. **Standar Dialog Konfirmasi (Custom Modal Dialog)**:
+   - **DILARANG KERAS** menggunakan `window.confirm()` atau `alert()` bawaan browser untuk konfirmasi hapus data atau aksi penting lainnya.
+   - **WAJIB** menggunakan komponen modal dialog custom [`KonfirmasiDialog`](src/components/common/KonfirmasiDialog.tsx) yang konsisten: memiliki latar belakang semi-transparan dengan efek *backdrop-blur*, judul tegas, pesan konfirmasi yang menyebutkan data spesifik (contoh: No. Rawat / No. RM dan Nama Pasien), sub-pesan peringatan risiko, tombol aksi bahaya merah tegas (*danger*), serta penanganan tombol Escape.
 
 ---
 
