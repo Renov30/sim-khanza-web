@@ -434,7 +434,7 @@ export default function HalamanRegistrasi() {
       >
         <div className="space-y-2.5 text-xs text-slate-700">
           {/* Baris 1: No. Reg | No. Rekam Medik + Pasien | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
             {/* Kolom 1: No. Reg */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">No. Reg. :</label>
@@ -442,7 +442,7 @@ export default function HalamanRegistrasi() {
                 type="text"
                 value={noReg}
                 onChange={(e) => setNoReg(e.target.value)}
-                className="w-28 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                className="w-28 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
                 placeholder="001"
               />
             </div>
@@ -450,25 +450,25 @@ export default function HalamanRegistrasi() {
             {/* Kolom 2: No. Rekam Medik & Nama Pasien */}
             <div className="flex items-center gap-2">
               <label className="w-28 font-semibold text-slate-600 shrink-0">No. Rekam Medik :</label>
-              <div className="flex items-center gap-1.5 flex-1">
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <input
                   type="text"
                   value={noRm}
                   onChange={(e) => setNoRm(e.target.value)}
                   placeholder="No. RM..."
-                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
+                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600 shrink-0"
                 />
                 <input
                   type="text"
                   value={nmPasien}
                   onChange={(e) => setNmPasien(e.target.value)}
                   placeholder="Nama Pasien..."
-                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:border-emerald-600 truncate"
+                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:border-emerald-600 truncate"
                 />
                 <button
                   type="button"
                   onClick={handleBukaModalPasien}
-                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer"
+                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer shrink-0"
                   title="Cari Data Pasien (BtnPasien Alt+1)"
                 >
                   <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3 h-3" />
@@ -481,7 +481,7 @@ export default function HalamanRegistrasi() {
           </div>
 
           {/* Baris 2: No. Rawat | Penanggung Jawab & Hubungan | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
             {/* Kolom 1: No. Rawat */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">No. Rawat :</label>
@@ -489,7 +489,7 @@ export default function HalamanRegistrasi() {
                 type="text"
                 value={noRawat}
                 onChange={(e) => setNoRawat(e.target.value)}
-                className="w-56 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
+                className="w-56 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
                 placeholder="YYYY/MM/DD/000001"
               />
             </div>
@@ -497,16 +497,16 @@ export default function HalamanRegistrasi() {
             {/* Kolom 2: Penanggung Jawab & Hubungan */}
             <div className="flex items-center gap-2">
               <label className="w-28 font-semibold text-slate-600 shrink-0">P. Jawab :</label>
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <input
                   type="text"
                   value={penanggungJawab}
                   onChange={(e) => setPenanggungJawab(e.target.value)}
-                  placeholder="Nama P.J."
-                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+                  placeholder="Nama Penanggung Jawab"
+                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
                 />
-                <label className="font-semibold text-slate-600 shrink-0">Hubungan :</label>
-                <div className="w-36 shrink-0">
+                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Hubungan :</label>
+                <div className="w-32 shrink-0">
                   <CustomSelect
                     value={hubunganPj}
                     onChange={(e) => setHubunganPj(e.target.value)}
@@ -529,7 +529,7 @@ export default function HalamanRegistrasi() {
           </div>
 
           {/* Baris 3: Tgl. Reg & Jam | Alamat P.J. & Status | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
             {/* Kolom 1: Tgl. Reg & Jam */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">Tgl. Reg. :</label>
@@ -538,14 +538,14 @@ export default function HalamanRegistrasi() {
                   type="date"
                   value={tglReg}
                   onChange={(e) => setTglReg(e.target.value)}
-                  className="px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+                  className="px-2 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
                 />
                 <label className="font-semibold text-slate-600 shrink-0">Jam :</label>
                 <input
                   type="text"
                   value={jamReg}
                   onChange={(e) => setJamReg(e.target.value)}
-                  className="w-20 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-center font-mono text-slate-700"
+                  className="w-20 px-2 py-1 text-xs bg-white border border-slate-300 rounded text-center font-mono text-slate-700 focus:outline-none focus:border-emerald-600"
                   title="Jam:Menit:Detik"
                 />
               </div>
@@ -554,22 +554,24 @@ export default function HalamanRegistrasi() {
             {/* Kolom 2: Alamat P.J. & Status */}
             <div className="flex items-center gap-2">
               <label className="w-28 font-semibold text-slate-600 shrink-0">Alamat P.J. :</label>
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <input
                   type="text"
                   value={almtPj}
                   onChange={(e) => setAlmtPj(e.target.value)}
-                  placeholder="Alamat penanggung jawab"
-                  className="flex-1 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+                  placeholder="Alamat Penanggung Jawab"
+                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
                 />
-                <label className="font-semibold text-slate-600 shrink-0">Status :</label>
-                <div className="w-24 shrink-0">
-                  <input
-                    type="text"
+                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Status :</label>
+                <div className="w-32 shrink-0">
+                  <CustomSelect
                     value={statusPoli}
-                    readOnly
-                    className="w-full px-2 py-1 text-xs bg-slate-100 border border-slate-300 rounded text-slate-700 font-semibold text-center"
-                  />
+                    onChange={(e) => setStatusPoli(e.target.value)}
+                  >
+                    <option value="Belum">Belum</option>
+                    <option value="Sudah">Sudah</option>
+                    <option value="Batal">Batal</option>
+                  </CustomSelect>
                 </div>
               </div>
             </div>
@@ -579,7 +581,7 @@ export default function HalamanRegistrasi() {
           </div>
 
           {/* Baris 4: Dr Dituju | Jenis Bayar & Status Bayar | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
             {/* Kolom 1: Dr Dituju */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">Dr Dituju :</label>
@@ -604,8 +606,8 @@ export default function HalamanRegistrasi() {
             {/* Kolom 2: Jenis Bayar & Status Bayar */}
             <div className="flex items-center gap-2">
               <label className="w-28 font-semibold text-slate-600 shrink-0">Jenis Bayar :</label>
-              <div className="flex items-center gap-2 flex-1">
-                <div className="flex-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                   <CustomSelect
                     value={kdPj}
                     onChange={(e) => {
@@ -621,8 +623,8 @@ export default function HalamanRegistrasi() {
                     ))}
                   </CustomSelect>
                 </div>
-                <label className="font-semibold text-slate-600 shrink-0">Bayar :</label>
-                <div className="w-28 shrink-0">
+                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Bayar :</label>
+                <div className="w-32 shrink-0">
                   <CustomSelect
                     value={sttsBayar}
                     onChange={(e) => setSttsBayar(e.target.value)}
@@ -639,7 +641,7 @@ export default function HalamanRegistrasi() {
           </div>
 
           {/* Baris 5: Unit Poli + Biaya Reg | Asal Rujukan | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
             {/* Kolom 1: Unit & Biaya Reg */}
             <div className="flex items-center gap-2">
               <label className="w-20 font-semibold text-slate-600 shrink-0">Unit :</label>
@@ -668,7 +670,7 @@ export default function HalamanRegistrasi() {
                   type="number"
                   value={biayaReg}
                   onChange={(e) => setBiayaReg(e.target.value)}
-                  className="w-20 px-2 py-1 text-xs bg-slate-50 border border-slate-300 rounded font-mono font-bold text-slate-800 text-right focus:outline-none focus:border-emerald-600"
+                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 text-right focus:outline-none focus:border-emerald-600"
                 />
               </div>
             </div>
@@ -681,7 +683,7 @@ export default function HalamanRegistrasi() {
                 value={asalRujukan}
                 onChange={(e) => setAsalRujukan(e.target.value)}
                 placeholder="Asal rujukan (jika ada)..."
-                className="flex-1 px-2.5 py-1 text-xs bg-slate-50 border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
+                className="flex-1 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
               />
             </div>
 

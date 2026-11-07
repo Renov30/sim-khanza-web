@@ -33,10 +33,10 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(
     ref
   ) => {
     return (
-      <div className={containerClassName}>
+      <div className={`min-w-0 ${containerClassName}`}>
         <select
           ref={ref}
-          className={`w-full appearance-none text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-1.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed ${className}`}
+          className={`w-full appearance-none text-xs font-medium bg-white border border-slate-300 rounded-lg pl-3 pr-9 py-1.5 text-slate-800 truncate focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed ${className}`}
           {...props}
         >
           {options
