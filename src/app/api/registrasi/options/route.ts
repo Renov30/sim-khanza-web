@@ -51,11 +51,20 @@ export async function GET(req: NextRequest) {
         SELECT no_rkm_medis, nm_pasien, jk, alamat, namakeluarga, keluarga, kd_pj, no_peserta, no_tlp
         FROM pasien 
         ${cari ? "WHERE no_rkm_medis LIKE ? OR nm_pasien LIKE ?" : ""}
-        ORDER BY no_rkm_medis DESC LIMIT 30
+        ORDER BY no_rkm_medis DESC LIMIT 50
       `;
       const params = cari ? [`%${cari}%`, `%${cari}%`] : [];
       const data = await executeQuery(sql, params);
       return NextResponse.json({ success: true, data });
+    }
+
+    if (jenis === "next-rm" || jenis === "next_rm") {
+      const rows = await executeQuery<any>(
+        "SELECT IFNULL(MAX(CAST(no_rkm_medis AS UNSIGNED)), 0) + 1 AS next_rm FROM pasien"
+      );
+      const nextNum = (rows as any[])[0]?.next_rm || 1;
+      const nextRm = String(nextNum).padStart(6, "0");
+      return NextResponse.json({ success: true, data: { next_rm: nextRm } });
     }
 
     // Default: kembalikan opsi ringkas dokter & poli & penjab untuk dropdown langsung

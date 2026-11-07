@@ -16,6 +16,9 @@ import {
   faMagnifyingGlass,
   faUserTie,
   faBuilding,
+  faPlus,
+  faXmark,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface PasienReg {
@@ -95,6 +98,7 @@ export default function HalamanRegistrasi() {
   const [daftarPasienCari, setDaftarPasienCari] = useState<any[]>([]);
   const [modalPasienBuka, setModalPasienBuka] = useState(false);
   const [kataCariPasien, setKataCariPasien] = useState("");
+  const [sedangMemuatPasien, setSedangMemuatPasien] = useState(false);
 
   // Muat opsi dokter, poli, penjab sekali di awal
   useEffect(() => {
@@ -374,13 +378,10 @@ export default function HalamanRegistrasi() {
     window.print();
   };
 
-  // Cari Pasien untuk tombol BtnPasien
-  const handleCariPasien = async (query: string) => {
+  // Cari Pasien untuk tombol BtnPasien (langsung memuat saat kosong)
+  const handleCariPasien = async (query: string = "") => {
     setKataCariPasien(query);
-    if (!query.trim()) {
-      setDaftarPasienCari([]);
-      return;
-    }
+    setSedangMemuatPasien(true);
     try {
       const res = await fetch(`/api/registrasi/options?jenis=pasien&cari=${encodeURIComponent(query)}`);
       const json = await res.json();
@@ -388,17 +389,28 @@ export default function HalamanRegistrasi() {
         setDaftarPasienCari(json.data || []);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Gagal mencari pasien:", e);
+    } finally {
+      setSedangMemuatPasien(false);
     }
+  };
+
+  const handleBukaModalPasien = () => {
+    setModalPasienBuka(true);
+    handleCariPasien(noRm || "");
   };
 
   const handlePilihPasienCari = (p: any) => {
     setNoRm(p.no_rkm_medis);
     setNmPasien(p.nm_pasien);
-    setPenanggungJawab(p.namakeluarga || "-");
+    setPenanggungJawab(p.namakeluarga || p.nm_pasien || "-");
     setAlmtPj(p.alamat || "-");
-    setHubunganPj(p.keluarga || "Keluarga");
-    if (p.kd_pj) setKdPj(p.kd_pj);
+    setHubunganPj(p.keluarga || "DIRI SENDIRI");
+    if (p.kd_pj) {
+      setKdPj(p.kd_pj);
+      const pjMatch = daftarPenjab.find((item) => item.kd_pj === p.kd_pj);
+      if (pjMatch) setNmPj(pjMatch.png_jawab);
+    }
     setModalPasienBuka(false);
   };
 
@@ -455,10 +467,7 @@ export default function HalamanRegistrasi() {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setModalPasienBuka(true);
-                    if (noRm) handleCariPasien(noRm);
-                  }}
+                  onClick={handleBukaModalPasien}
                   className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer"
                   title="Cari Data Pasien (BtnPasien Alt+1)"
                 >
@@ -867,60 +876,110 @@ export default function HalamanRegistrasi() {
       {/* Modal Dialog Pencarian Pasien (BtnPasien di DlgReg.java) */}
       {modalPasienBuka && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between">
-              <span>Cari Data Pasien (Rekam Medis)</span>
-              <div className="flex items-center gap-3">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faHospitalUser} className="w-3.5 h-3.5 text-emerald-200" />
+                <span className="text-sm font-semibold tracking-wide">Cari Data Pasien (Rekam Medis)</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <Link
                   href="/pasien"
                   target="_blank"
-                  className="text-emerald-100 hover:text-white underline text-[11px] font-normal"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs no-underline"
+                  title="Buka Halaman Data Pasien & Rekam Medis untuk Input Pasien Baru"
                 >
-                  Buka Halaman Pasien Lengkap ↗
+                  <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
+                  <span>Pasien Baru</span>
                 </Link>
-                <button onClick={() => setModalPasienBuka(false)} className="text-white hover:text-emerald-200 font-bold">✕</button>
+                <button
+                  type="button"
+                  onClick={() => setModalPasienBuka(false)}
+                  className="text-white hover:text-emerald-200 p-1 font-bold text-sm leading-none ml-1 cursor-pointer"
+                  title="Tutup"
+                >
+                  <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
-            <div className="p-3 border-b border-slate-100 flex gap-2">
-              <input
-                type="text"
-                value={kataCariPasien}
-                onChange={(e) => handleCariPasien(e.target.value)}
-                placeholder="Ketik No. RM atau Nama Pasien..."
-                autoFocus
-                className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
+
+            {/* Input Pencarian Pasien */}
+            <div className="p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={kataCariPasien}
+                  onChange={(e) => handleCariPasien(e.target.value)}
+                  placeholder="Ketik No. RM, Nama Pasien, NIK, atau Alamat..."
+                  autoFocus
+                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
+                <FontAwesomeIcon
+                  icon={faMagnifyingGlass}
+                  className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"
+                />
+                {kataCariPasien && (
+                  <button
+                    type="button"
+                    onClick={() => handleCariPasien("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                    title="Bersihkan Pencarian"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {sedangMemuatPasien && (
+                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 text-emerald-600 animate-spin" />
+              )}
             </div>
+
+            {/* Tabel Pasien Langsung Tampil */}
             <div className="flex-1 overflow-auto p-2">
               <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-600 font-bold border-b">
+                <thead className="bg-slate-50 text-slate-600 font-bold border-b sticky top-0 z-10 shadow-2xs">
                   <tr>
-                    <th className="p-2">No. RM</th>
+                    <th className="p-2 w-24">No. RM</th>
                     <th className="p-2">Nama Pasien</th>
-                    <th className="p-2">JK</th>
+                    <th className="p-2 w-10 text-center">JK</th>
                     <th className="p-2">Alamat</th>
-                    <th className="p-2 text-center">Pilih</th>
+                    <th className="p-2 w-28">No. Telp</th>
+                    <th className="p-2 w-16 text-center">Pilih</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px]">
                   {daftarPasienCari.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-4 text-center text-slate-400">
-                        {kataCariPasien ? "Pasien tidak ditemukan" : "Masukkan kata kunci pencarian pasien"}
+                      <td colSpan={6} className="p-8 text-center text-slate-400">
+                        {sedangMemuatPasien
+                          ? "Sedang memuat data pasien..."
+                          : kataCariPasien
+                          ? `Pasien dengan kata kunci "${kataCariPasien}" tidak ditemukan.`
+                          : "Belum ada data pasien terdaftar."}
                       </td>
                     </tr>
                   ) : (
                     daftarPasienCari.map((p) => (
-                      <tr key={p.no_rkm_medis} className="hover:bg-emerald-50/50">
+                      <tr
+                        key={p.no_rkm_medis}
+                        onClick={() => handlePilihPasienCari(p)}
+                        className="hover:bg-emerald-50/70 cursor-pointer transition-colors"
+                      >
                         <td className="p-2 font-mono font-bold text-slate-700">{p.no_rkm_medis}</td>
                         <td className="p-2 font-semibold text-slate-800">{p.nm_pasien}</td>
-                        <td className="p-2">{p.jk}</td>
-                        <td className="p-2 text-slate-500 truncate max-w-xs">{p.alamat}</td>
+                        <td className="p-2 text-center text-slate-600">{p.jk}</td>
+                        <td className="p-2 text-slate-500 truncate max-w-xs">{p.alamat || "-"}</td>
+                        <td className="p-2 text-slate-600 font-mono text-[10px]">{p.no_tlp || "-"}</td>
                         <td className="p-2 text-center">
                           <button
                             type="button"
-                            onClick={() => handlePilihPasienCari(p)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePilihPasienCari(p);
+                            }}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold shadow-2xs cursor-pointer"
                           >
                             Pilih
                           </button>
@@ -930,6 +989,12 @@ export default function HalamanRegistrasi() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex justify-between items-center">
+              <span>Menampilkan {daftarPasienCari.length} pasien</span>
+              <span>Klik baris untuk langsung memilih pasien</span>
             </div>
           </div>
         </div>
