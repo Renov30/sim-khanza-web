@@ -28,7 +28,7 @@ export function useNavigation() {
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, setIsLoginModalOpen } = useAuth();
+  const { isAuthenticated, setIsLoginModalOpen, isLocked } = useAuth();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -99,26 +99,33 @@ export function AppShell({ children }: { children: ReactNode }) {
         toggleMenu: handleToggleMenu,
       }}
     >
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50">
-        {/* Header Global Selalu Tampil di Semua Halaman */}
-        <AppHeader
-          isMenuOpen={isMenuOpen && pathname === "/"}
-          onToggleMenu={handleToggleMenu}
-          onModuleClick={handleModuleClick}
-          onAboutClick={() => setIsAboutOpen(true)}
-        />
+      <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 relative">
+        {/* Konten Halaman & Header: Mengalami efek blur dan non-interaktif saat logout/terkunci */}
+        <div
+          className={`flex flex-col flex-1 h-full w-full overflow-hidden transition-all duration-300 ease-out ${
+            isLocked ? "filter blur-sm select-none pointer-events-none" : ""
+          }`}
+        >
+          {/* Header Global Selalu Tampil di Semua Halaman */}
+          <AppHeader
+            isMenuOpen={isMenuOpen && pathname === "/"}
+            onToggleMenu={handleToggleMenu}
+            onModuleClick={handleModuleClick}
+            onAboutClick={() => setIsAboutOpen(true)}
+          />
 
-        {/* Konten Halaman */}
-        <div className="flex-1 overflow-hidden relative flex flex-col">
-          {isMenuOpen && pathname === "/" ? (
-            <main className="flex-1 overflow-hidden relative flex flex-col bg-white">
-              <MainMenuGrid onModuleClick={handleModuleClick} />
-            </main>
-          ) : (
-            <main className="flex-1 overflow-hidden relative flex flex-col">
-              {children}
-            </main>
-          )}
+          {/* Konten Halaman */}
+          <div className="flex-1 overflow-hidden relative flex flex-col">
+            {isMenuOpen && pathname === "/" ? (
+              <main className="flex-1 overflow-hidden relative flex flex-col bg-white">
+                <MainMenuGrid onModuleClick={handleModuleClick} />
+              </main>
+            ) : (
+              <main className="flex-1 overflow-hidden relative flex flex-col">
+                {children}
+              </main>
+            )}
+          </div>
         </div>
 
         {/* Modals & Toast Notifikasi Global */}

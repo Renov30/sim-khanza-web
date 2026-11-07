@@ -50,6 +50,9 @@ Mengikuti instruksi spesifik:
 8. **Standar Dialog Konfirmasi (Custom Modal Dialog)**:
    - **DILARANG KERAS** menggunakan `window.confirm()` atau `alert()` bawaan browser untuk konfirmasi hapus data atau aksi penting lainnya.
    - **WAJIB** menggunakan komponen modal dialog custom [`KonfirmasiDialog`](src/components/common/KonfirmasiDialog.tsx) yang konsisten: memiliki latar belakang semi-transparan dengan efek *backdrop-blur*, judul tegas, pesan konfirmasi yang menyebutkan data spesifik (contoh: No. Rawat / No. RM dan Nama Pasien), sub-pesan peringatan risiko, tombol aksi bahaya merah tegas (*danger*), serta penanganan tombol Escape.
+9. **Standar Penguncian Sesi & Sinkronisasi Logout Lintas Tab (Session Lock & Multi-Tab Sync)**:
+   - **Fitur Penguncian saat Logout**: Saat logout atau ketika sesi berakhir, seluruh antarmuka di belakang modal login **WAJIB dikunci dan diberi efek blur** (`filter blur-sm select-none pointer-events-none` pada shell dan overlay `backdrop-blur-md bg-slate-900/60`). Modal login berada di lapisan terdepan (`z-[99990]`), tombol 'X' dan 'Batal' disembunyikan, serta penutupan dengan tombol Escape dinonaktifkan sehingga pengguna wajib login kembali untuk membuka kunci akses.
+   - **Sinkronisasi Multi-Tab**: Aplikasi **WAJIB** menggunakan sinkronisasi antar-tab browser (menggunakan `BroadcastChannel` dan `window.addEventListener('storage')`). Jika pengguna melakukan logout di salah satu tab, maka seluruh tab SIMRS Khanza lain yang sedang terbuka harus ikut ter-logout secara otomatis dan terkunci (*locked with blurred background*) seketika tanpa perlu me-refresh halaman. Sebaliknya, saat login kembali di satu tab, tab-tab lain dapat otomatis membuka kunci.
 
 ---
 
