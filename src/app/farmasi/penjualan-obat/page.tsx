@@ -66,7 +66,7 @@ export default function HalamanPenjualanObat() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari No. Nota, No. RM, Pasien, Keterangan..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
             />
             {kataKunci && (
               <button
@@ -137,7 +137,7 @@ export default function HalamanPenjualanObat() {
                 data.map((item, idx) => (
                   <tr
                     key={idx}
-                    className="hover:bg-slate-50/80 transition-colors"
+                    className="hover:bg-slate-50/80"
                   >
                     <td className="py-2 px-2.5 font-bold text-slate-800">
                       {item.nota_jual}

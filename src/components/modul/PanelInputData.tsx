@@ -72,11 +72,11 @@ export function PanelInputData({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden shrink-0 select-none transition-all">
+    <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden shrink-0 select-none">
       {/* Header Panel Input Toggle (ChkInput di Khanza) */}
       <div
         onClick={handleToggle}
-        className="px-3 py-2 bg-slate-100/90 hover:bg-slate-200/70 border-b border-slate-200 cursor-pointer flex items-center justify-between transition-colors"
+        className="px-3 py-2 bg-slate-100/90 hover:bg-slate-200/70 border-b border-slate-200 cursor-pointer flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
           <FontAwesomeIcon
@@ -110,7 +110,7 @@ export function PanelInputData({
                 <button
                   type="button"
                   onClick={onBaru}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 cursor-pointer"
                 >
                   {teksBaru}
                 </button>
@@ -120,7 +120,7 @@ export function PanelInputData({
                   type="button"
                   onClick={onSimpan}
                   disabled={sedangMenyimpan}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   <FontAwesomeIcon icon={faCircleCheck} className="w-3.5 h-3.5" />
                   <span>{sedangMenyimpan ? "Menyimpan..." : teksSimpan}</span>

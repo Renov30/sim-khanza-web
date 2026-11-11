@@ -34,7 +34,7 @@ export default function LocationWidget() {
   }, []);
 
   return (
-    <div className="relative group overflow-hidden w-[184px] h-[184px] rounded-[30px] p-4 bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgb(0,0,0,0.1)] transition-all duration-300 flex flex-col justify-between select-none">
+    <div className="relative group overflow-hidden w-[184px] h-[184px] rounded-[30px] p-4 bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgb(0,0,0,0.1)] flex flex-col justify-between select-none">
       {/* Background glass shine effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/20 to-transparent pointer-events-none rounded-[30px]" />
 
@@ -56,7 +56,7 @@ export default function LocationWidget() {
 
         <FontAwesomeIcon 
           icon={faCloudSun} 
-          className="text-amber-500 text-sm mt-1 animate-pulse" 
+          className="text-amber-500 text-sm mt-1"
         />
       </div>
 
@@ -86,7 +86,7 @@ export default function LocationWidget() {
           </span>
         </div>
         <span className="inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-medium border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Online
         </span>
       </div>

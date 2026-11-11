@@ -664,7 +664,7 @@ export default function HalamanDataPasien() {
                   <tr
                     key={item.no_rkm_medis}
                     onClick={() => handlePilihData(item)}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer ${
                       terpilih?.no_rkm_medis === item.no_rkm_medis
                         ? "bg-emerald-50/90 font-semibold text-emerald-950"
                         : "hover:bg-slate-50/80 text-slate-700"

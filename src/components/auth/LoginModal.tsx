@@ -69,7 +69,7 @@ export function LoginModal() {
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99990] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99990] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4"
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
@@ -79,7 +79,7 @@ export function LoginModal() {
       }}
     >
       <div
-        className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -101,7 +101,7 @@ export function LoginModal() {
             <button
               type="button"
               onClick={() => setIsLoginModalOpen(false)}
-              className="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              className="text-slate-400 hover:text-slate-600 rounded-lg p-1 hover:bg-slate-200/60 cursor-pointer"
               title="Tutup (Esc)"
             >
               <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
@@ -131,7 +131,7 @@ export function LoginModal() {
                 value={idUser}
                 onChange={(e) => setIdUser(e.target.value)}
                 placeholder="Contoh: admin atau dr.medianto"
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                 autoFocus
               />
             </div>
@@ -150,7 +150,7 @@ export function LoginModal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan kata sandi"
-                className="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors"
+                className="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
               />
               <button
                 type="button"
@@ -171,7 +171,7 @@ export function LoginModal() {
               <button
                 type="button"
                 onClick={() => setIsLoginModalOpen(false)}
-                className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg cursor-pointer"
               >
                 Batal
               </button>
@@ -179,7 +179,7 @@ export function LoginModal() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 rounded-lg shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

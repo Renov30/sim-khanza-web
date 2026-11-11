@@ -120,7 +120,7 @@ export function AppHeader({
           {/* 1. Menu Utama */}
           <button
             onClick={onToggleMenu}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isMenuOpen
                 ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                 : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -138,7 +138,7 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
             disabled={isAuthenticated && !hasPermission("registrasi")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
                 ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                 : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -153,7 +153,7 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
             disabled={isAuthenticated && !hasPermission("igd")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
                 ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                 : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -175,7 +175,7 @@ export function AppHeader({
                 setMenuFarmasiTerbuka(false);
                 setMenuLabTerbuka(!menuLabTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isLaboratActive
                   ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                   : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -197,7 +197,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/permintaan-pk"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-pk"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -209,7 +209,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/permintaan-pa"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-pa"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -221,7 +221,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/permintaan-mb"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-mb"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -239,7 +239,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/periksa-pk"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-pk"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -251,7 +251,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/periksa-pa"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-pa"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -263,7 +263,7 @@ export function AppHeader({
                 <Link
                   href="/laboratorium/periksa-mb"
                   onClick={() => setMenuLabTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-mb"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -284,7 +284,7 @@ export function AppHeader({
                 setMenuFarmasiTerbuka(false);
                 setMenuRadTerbuka(!menuRadTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isRadiologiActive
                   ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                   : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -306,7 +306,7 @@ export function AppHeader({
                 <Link
                   href="/radiologi/permintaan"
                   onClick={() => setMenuRadTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/radiologi/permintaan"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -318,7 +318,7 @@ export function AppHeader({
                 <Link
                   href="/radiologi/periksa"
                   onClick={() => setMenuRadTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/radiologi/periksa"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -339,7 +339,7 @@ export function AppHeader({
                 setMenuRadTerbuka(false);
                 setMenuFarmasiTerbuka(!menuFarmasiTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isFarmasiActive
                   ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                   : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -361,7 +361,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi/input-penjualan"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/input-penjualan"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -373,7 +373,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi/penjualan-obat"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/penjualan-obat"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -385,7 +385,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi/penyerahan-darah"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/penyerahan-darah"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -397,7 +397,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi/daftar-resep-dokter"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/daftar-resep-dokter"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -409,7 +409,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi/resep-obat"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/resep-obat"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -427,7 +427,7 @@ export function AppHeader({
                 <Link
                   href="/farmasi"
                   onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi"
                       ? "bg-emerald-50 text-emerald-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
@@ -447,7 +447,7 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
             disabled={isAuthenticated && !hasPermission("kamar_inap")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
                 ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                 : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -462,7 +462,7 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
             disabled={isAuthenticated && !hasPermission("tindakan_ralan")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border transition-all shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
                 ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
                 : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
@@ -484,7 +484,7 @@ export function AppHeader({
           ) : (
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs"
             >
               <FontAwesomeIcon icon={faRightToBracket} className="w-3.5 h-3.5" />
               <span>Log In</span>

@@ -90,7 +90,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
           <div className="pt-2 border-t border-slate-100 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-xs transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-xs"
             >
               Tutup
             </button>

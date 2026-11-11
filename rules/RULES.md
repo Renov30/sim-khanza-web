@@ -30,7 +30,7 @@ Mengikuti instruksi spesifik:
 2. **Larangan**:
    - **TIDAK BOLEH** menggunakan gradient warna mencolok / multi-color rainbow gradient.
    - **TIDAK BOLEH** menggunakan icon 3D/dekoratif berlebihan atau icon bitmap pixelated lama.
-   - **TIDAK BOLEH** menggunakan animasi atau transisi lambat yang menghambat kecepatan kerja petugas medis.
+   - **TIDAK BOLEH** menggunakan animasi masuk halaman, modal, atau menu (fade, slide, zoom), transisi tata letak, maupun animasi dekoratif berulang. Konten harus langsung tampil agar ringan. Tombol, input, dan komponen lain juga tidak boleh memakai transisi warna, opacity, hover, fokus, atau perubahan kondisi disabled; perubahan tampilannya harus langsung berlaku. Animasi indikator pemrosesan hanya digunakan selama proses benar-benar berjalan.
    - **TIDAK BOLEH MENGGUNAKAN TEKS BERWARNA**: Jangan gunakan warna teks (seperti teks hijau/emerald, biru, merah, dll.) untuk teks data biasa seperti No. Rawat, No. RM, nama pasien, dll. Seluruh teks data harus menggunakan warna teks netral (`text-slate-800` / `text-slate-700` / `text-slate-600`), **KECUALI** jika pengguna secara eksplisit meminta warna khusus atau berupa badge status (seperti status bayar/status rawat).
 3. **Kepadatan Informasi (*Information Density*)**:
    - Sistem rumah sakit memerlukan efisiensi ruang: gunakan padding kompak (`py-1.5 px-3`, `text-xs` hingga `text-sm`, font tabular untuk angka dan tanggal).

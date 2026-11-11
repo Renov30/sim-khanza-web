@@ -150,7 +150,7 @@ export function PanelBawah({
                 onChange={(e) => onGantiKataKunci(e.target.value)}
                 onKeyDown={handleKeyDownKataKunci}
                 placeholder={placeholderCari}
-                className="w-full pl-8 pr-7 py-1 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors"
+                className="w-full pl-8 pr-7 py-1 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
               />
               {kataKunci && (
                 <button
@@ -170,7 +170,7 @@ export function PanelBawah({
               type="button"
               onClick={onCari}
               disabled={memuat}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
+              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium text-xs shadow-2xs flex items-center gap-1 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
               title="Cari Data (Enter)"
             >
               <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3 h-3" />
@@ -209,7 +209,7 @@ export function PanelBawah({
               type="button"
               onClick={onSimpan}
               disabled={disabledSimpan || memuat}
-              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold text-xs shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold text-xs shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
               title="Simpan Data Registrasi (Alt+S)"
             >
               <FontAwesomeIcon icon={faFloppyDisk} className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ export function PanelBawah({
               type="button"
               onClick={onBaru}
               disabled={memuat}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 cursor-pointer"
               title="Baru / Kosongkan Formulir (Alt+B)"
             >
               <FontAwesomeIcon icon={faFileCirclePlus} className="w-3.5 h-3.5 text-blue-600" />
@@ -237,7 +237,7 @@ export function PanelBawah({
               type="button"
               onClick={onHapus}
               disabled={disabledHapus || memuat}
-              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-semibold text-xs border border-red-200 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-semibold text-xs border border-red-200 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title="Hapus Data Terpilih (Alt+H)"
             >
               <FontAwesomeIcon icon={faTrashCan} className="w-3.5 h-3.5 text-red-600" />
@@ -251,7 +251,7 @@ export function PanelBawah({
               type="button"
               onClick={onGanti}
               disabled={disabledGanti || memuat}
-              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-semibold text-xs border border-amber-200 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-semibold text-xs border border-amber-200 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title="Ganti / Edit Data (Alt+G)"
             >
               <FontAwesomeIcon icon={faPenToSquare} className="w-3.5 h-3.5 text-amber-600" />
@@ -265,7 +265,7 @@ export function PanelBawah({
               type="button"
               onClick={onCetak}
               disabled={disabledCetak || memuat}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title="Cetak Data (Alt+T)"
             >
               <FontAwesomeIcon icon={faPrint} className="w-3.5 h-3.5 text-slate-600" />
@@ -279,7 +279,7 @@ export function PanelBawah({
               type="button"
               onClick={onNota}
               disabled={disabledNota || memuat}
-              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-lg font-semibold text-xs border border-indigo-200 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-lg font-semibold text-xs border border-indigo-200 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title="Cetak Nota (Alt+N)"
             >
               <FontAwesomeIcon icon={faReceipt} className="w-3.5 h-3.5 text-indigo-600" />
@@ -293,7 +293,7 @@ export function PanelBawah({
               type="button"
               onClick={onSemua}
               disabled={memuat}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 cursor-pointer"
               title="Tampilkan Semua Data (Alt+M)"
             >
               <FontAwesomeIcon icon={faRotateRight} className="w-3.5 h-3.5 text-teal-600" />
@@ -309,7 +309,7 @@ export function PanelBawah({
                 type="button"
                 onClick={btn.onClick}
                 disabled={btn.disabled || memuat}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs border border-slate-300 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title={btn.tooltip}
               >
                 {btn.ikon && <FontAwesomeIcon icon={btn.ikon} className="w-3.5 h-3.5" />}
@@ -323,7 +323,7 @@ export function PanelBawah({
           <button
             type="button"
             onClick={onKeluar}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 rounded-lg font-semibold text-xs border border-slate-200 hover:border-red-200 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 rounded-lg font-semibold text-xs border border-slate-200 hover:border-red-200 shadow-2xs flex items-center gap-1.5 cursor-pointer"
             title="Keluar ke Menu Utama (Alt+K)"
           >
             <FontAwesomeIcon icon={faRightFromBracket} className="w-3.5 h-3.5 text-slate-500 hover:text-red-600" />

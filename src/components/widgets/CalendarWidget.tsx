@@ -31,7 +31,7 @@ export default function CalendarWidget() {
   const miniDays = ["M", "S", "S", "R", "K", "J", "S"];
 
   return (
-    <div className="relative group overflow-hidden w-[184px] h-[184px] rounded-[30px] p-4 bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgb(0,0,0,0.1)] transition-all duration-300 flex flex-col justify-between select-none">
+    <div className="relative group overflow-hidden w-[184px] h-[184px] rounded-[30px] p-4 bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgb(0,0,0,0.1)] flex flex-col justify-between select-none">
       {/* Background glass shine effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-white/20 to-transparent pointer-events-none rounded-[30px]" />
 
@@ -72,7 +72,7 @@ export default function CalendarWidget() {
             return (
               <span
                 key={dateNum}
-                className={`h-4 w-4 mx-auto flex items-center justify-center rounded-full transition-all ${
+                className={`h-4 w-4 mx-auto flex items-center justify-center rounded-full ${
                   isToday
                     ? "bg-red-500 text-white font-bold shadow-sm"
                     : "hover:bg-black/5"

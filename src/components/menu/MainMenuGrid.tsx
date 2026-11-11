@@ -76,7 +76,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari modul atau menu..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
             />
             {searchQuery && (
               <button
@@ -93,7 +93,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
           <button
             onClick={() => setSelectedCategory("ALL")}
-            className={`px-2.5 py-1 rounded-md font-medium shrink-0 transition-colors ${
+            className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
               selectedCategory === "ALL"
                 ? "bg-emerald-700 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -105,7 +105,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
             <button
               key={cat.code}
               onClick={() => setSelectedCategory(cat.code)}
-              className={`px-2.5 py-1 rounded-md font-medium shrink-0 transition-colors ${
+              className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
                 selectedCategory === cat.code
                   ? "bg-emerald-700 text-white shadow-2xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"

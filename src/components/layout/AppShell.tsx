@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 relative">
         {/* Konten Halaman & Header: Mengalami efek blur dan non-interaktif saat logout/terkunci */}
         <div
-          className={`flex flex-col flex-1 h-full w-full overflow-hidden transition-all duration-300 ease-out ${
+          className={`flex flex-col flex-1 h-full w-full overflow-hidden ${
             isLocked ? "filter blur-sm select-none pointer-events-none" : ""
           }`}
         >

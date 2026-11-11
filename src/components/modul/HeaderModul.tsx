@@ -24,7 +24,7 @@ export function HeaderModul({
       <div className="flex items-center gap-2.5">
         <Link
           href="/"
-          className="w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors shadow-2xs"
+          className="w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 flex items-center justify-center shadow-2xs"
           title="Kembali ke Beranda"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="w-3 h-3" />
@@ -39,7 +39,7 @@ export function HeaderModul({
           <button
             onClick={onMuatUlang}
             disabled={memuat}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-2xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-2xs disabled:opacity-50"
           >
             <FontAwesomeIcon
               icon={faRotate}

@@ -164,11 +164,12 @@ export default function HalamanRegistrasi() {
 
   // Update jam otomatis jika form baru
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (!terpilih) {
-        setJamReg(new Date().toTimeString().slice(0, 8));
-      }
-    }, 1000);
+    if (terpilih) return;
+
+    const perbaruiJam = () => setJamReg(new Date().toTimeString().slice(0, 8));
+    // Sinkronkan dengan jam browser saat mount, tanpa menunggu tick pertama.
+    perbaruiJam();
+    const timer = setInterval(perbaruiJam, 1000);
     return () => clearInterval(timer);
   }, [terpilih]);
 
@@ -760,7 +761,7 @@ export default function HalamanRegistrasi() {
                   <tr
                     key={item.no_rawat}
                     onClick={() => handlePilihData(item)}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer ${
                       terpilih?.no_rawat === item.no_rawat
                         ? "bg-emerald-50/90 font-semibold text-emerald-950"
                         : "hover:bg-slate-50/80 text-slate-700"
@@ -919,7 +920,7 @@ export default function HalamanRegistrasi() {
                   href="/pasien"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs no-underline"
+                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs no-underline"
                   title="Buka Halaman Data Pasien & Rekam Medis untuk Input Pasien Baru"
                 >
                   <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
@@ -996,7 +997,7 @@ export default function HalamanRegistrasi() {
                       <tr
                         key={p.no_rkm_medis}
                         onClick={() => handlePilihPasienCari(p)}
-                        className="hover:bg-emerald-50/70 cursor-pointer transition-colors"
+                        className="hover:bg-emerald-50/70 cursor-pointer"
                       >
                         <td className="p-2 font-mono font-bold text-slate-700">{p.no_rkm_medis}</td>
                         <td className="p-2 font-semibold text-slate-800">{p.nm_pasien}</td>

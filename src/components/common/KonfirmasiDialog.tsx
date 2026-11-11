@@ -59,8 +59,8 @@ export function KonfirmasiDialog({
   if (!mounted || !terbuka) return null;
 
   const dialogContent = (
-    <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/50 backdrop-blur-2xs p-4">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-md overflow-hidden">
         {/* Header Dialog */}
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ export function KonfirmasiDialog({
             type="button"
             onClick={onBatal}
             disabled={sedangMemproses}
-            className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg shadow-2xs cursor-pointer disabled:opacity-50"
           >
             {teksBatal}
           </button>
@@ -109,7 +109,7 @@ export function KonfirmasiDialog({
             type="button"
             onClick={onKonfirmasi}
             disabled={sedangMemproses}
-            className={`px-3.5 py-1.5 text-xs font-semibold text-white rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+            className={`px-3.5 py-1.5 text-xs font-semibold text-white rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
               bahaya
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-emerald-700 hover:bg-emerald-800"
