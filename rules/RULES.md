@@ -163,7 +163,12 @@ khanza-web/
 
 ## 6. Prinsip Tambahan untuk AI Agent
 
-- Saat membuat modul atau halaman baru, **selalu verifikasi referensi asli di `simitra-keluarga-merauke/src/`** untuk memahami alur data dan tabel database yang bersangkutan, namun **tulis ulang menggunakan Clean Architecture di Next.js**.
+- Saat membuat atau mengubah modul, **selalu verifikasi referensi asli di `../simitra-keluarga-merauke/src/`** (relatif terhadap root proyek web) untuk memahami alur kerja, aturan bisnis, relasi tabel, dan kompatibilitas Khanza.
+- **Referensi perilaku bukan template implementasi**: kode Java dapat mengandung pola yang tidak mengikuti praktik baik. Jangan menyalinnya secara langsung; adaptasikan ke Next.js dengan struktur yang jelas, aman, mudah dipelihara, dan proporsional terhadap kebutuhan.
+- Perbaiki pola yang kurang baik pada bagian yang diadaptasi, khususnya autentikasi dan otorisasi di server, validasi input, query berparameter, transaksi untuk operasi yang harus atomik, penanganan konkurensi/penomoran, tipe data yang tepat, penanganan error, performa, serta aksesibilitas. Jangan hanya mengandalkan pembatasan antarmuka untuk melindungi data.
+- Pertahankan aturan bisnis yang valid dan kompatibilitas database bersama dengan aplikasi desktop. Jangan mengubah skema, format data, mekanisme kredensial, atau aturan operasional secara sembarangan demi modernisasi teknis. Telusuri referensi terkait dan klarifikasi jika maksud aturan bisnis belum jelas.
+- Untuk perubahan perilaku yang disengaja, jelaskan alasan perbaikan dan lakukan verifikasi yang relevan terhadap aturan bisnis serta integritas data. Jangan menambahkan abstraksi atau dependensi tanpa manfaat konkret.
+- Folder `../simitra-keluarga-merauke/` digunakan sebagai referensi baca dan tidak diubah kecuali diminta pengguna.
 - Jangan pernah mengulang kode duplikat (*DRY Principle*).
 - Utamakan performa tinggi dan aksesibilitas untuk petugas medis di rumah sakit/klinik.
 
