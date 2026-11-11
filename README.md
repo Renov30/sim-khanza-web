@@ -21,3 +21,13 @@ Aplikasi Sistem Informasi Manajemen Rumah Sakit (SIMRS) Khanza versi web yang di
    npm run dev
 
 4. Buka http://localhost:3000 pada peramban.
+
+## Penomoran Registrasi
+
+Penomoran mengikuti `DlgReg.isNumber()` pada referensi `../simitra-keluarga-merauke/src/simrskhanza/DlgReg.java`. No. Rawat memakai format `YYYY/MM/DD/000001` dengan urutan harian. No. Reg memakai urutan per dokter, poli, atau kombinasi keduanya sesuai `KHANZA_URUTNOREG`. Bila `KHANZA_BASENOREG=booking`, urutan memperhitungkan maksimum nomor booking dan registrasi pada tanggal serta kelompok yang sama.
+
+Nilai bawaan adalah `dokter + poli` dan `booking`, sesuai `setting/database.xml` pada referensi. Sesuaikan kedua variabel environment dengan konfigurasi desktop yang memakai database yang sama. Tanggal awal formulir mengikuti zona waktu Asia/Jayapura.
+
+Membuka halaman atau menekan Baru hanya menampilkan nomor berikutnya, tanpa memesan atau menghabiskan nomor. Server menghitung ulang saat menyimpan dengan lock antar-penyimpanan web. Nomor yang akhirnya tersimpan dapat berbeda dari pratinjau bila petugas lain lebih dahulu mendaftar. Benturan primary key dengan desktop dicoba ulang tanpa menimpa data lama; lock web tidak mengunci proses antrean pada aplikasi desktop.
+
+Jalankan `npm run test:registrasi` untuk memeriksa penomoran, tanggal, serta penanganan benturan nomor dan lock.

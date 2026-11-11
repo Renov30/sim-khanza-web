@@ -8,6 +8,9 @@ import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
+import { useAuth } from "@/components/auth/AuthContext";
+import { registrationDate } from "@/lib/registrasi/date";
+import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHospitalUser,
@@ -46,6 +49,7 @@ interface PasienReg {
 }
 
 export default function HalamanRegistrasi() {
+  const { isAuthenticated } = useAuth();
   const [data, setData] = useState<PasienReg[]>([]);
   const [terpilih, setTerpilih] = useState<PasienReg | null>(null);
   const [memuat, setMemuat] = useState(true);
@@ -59,7 +63,7 @@ export default function HalamanRegistrasi() {
   }, []);
 
   // Filter States
-  const hariIni = new Date().toISOString().slice(0, 10);
+  const hariIni = registrationDate();
   const [tanggalMulai, setTanggalMulai] = useState(hariIni);
   const [tanggalSelesai, setTanggalSelesai] = useState(hariIni);
   const [kataKunci, setKataKunci] = useState("");
@@ -73,8 +77,8 @@ export default function HalamanRegistrasi() {
   const [daftarPenjab, setDaftarPenjab] = useState<any[]>([]);
 
   // Form Input Data States (sesuai DlgReg.java)
-  const [noRawat, setNoRawat] = useState("");
-  const [noReg, setNoReg] = useState("");
+  const [nomorBerikutnya, setNomorBerikutnya] = useState<(RegistrationNumbers & { kunci: string }) | null>(null);
+  const [versiNomor, setVersiNomor] = useState(0);
   const [tglReg, setTglReg] = useState(hariIni);
   const [jamReg, setJamReg] = useState("");
   const [noRm, setNoRm] = useState("");
@@ -85,9 +89,9 @@ export default function HalamanRegistrasi() {
   const [nmPoli, setNmPoli] = useState("");
   const [kdPj, setKdPj] = useState("A09");
   const [nmPj, setNmPj] = useState("Umum / Personal");
-  const [penanggungJawab, setPenanggungJawab] = useState("");
-  const [almtPj, setAlmtPj] = useState("");
-  const [hubunganPj, setHubunganPj] = useState("Keluarga");
+  const [penanggungJawab, setPenanggungJawab] = useState("-");
+  const [almtPj, setAlmtPj] = useState("-");
+  const [hubunganPj, setHubunganPj] = useState("DIRI SENDIRI");
   const [biayaReg, setBiayaReg] = useState("0");
   const [statusPoli, setStatusPoli] = useState("Belum");
   const [sttsBayar, setSttsBayar] = useState("Belum Bayar");
@@ -99,6 +103,33 @@ export default function HalamanRegistrasi() {
   const [modalPasienBuka, setModalPasienBuka] = useState(false);
   const [kataCariPasien, setKataCariPasien] = useState("");
   const [sedangMemuatPasien, setSedangMemuatPasien] = useState(false);
+
+  const kunciNomor = JSON.stringify([tglReg, kdDokter, kdPoli, versiNomor]);
+  const nomorSiap = nomorBerikutnya?.kunci === kunciNomor;
+  const noRawat = terpilih?.no_rawat || (nomorSiap ? nomorBerikutnya.no_rawat : "");
+  const noReg = terpilih?.no_reg || (nomorSiap ? nomorBerikutnya.no_reg : "");
+
+  useEffect(() => {
+    if (terpilih || !isAuthenticated || !tglReg || !kdDokter || !kdPoli) return;
+    const controller = new AbortController();
+    async function muatNomor() {
+      try {
+        const params = new URLSearchParams({ tanggal: tglReg, dokter: kdDokter, poli: kdPoli });
+        const res = await fetch(`/api/registrasi/nomor?${params}`, {
+          signal: controller.signal, cache: "no-store",
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error(json.error || "Gagal memuat nomor registrasi");
+        if (!controller.signal.aborted) setNomorBerikutnya({ ...json.data, kunci: kunciNomor });
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          tampilkanToast(error instanceof Error ? error.message : "Gagal memuat nomor registrasi", "error");
+        }
+      }
+    }
+    void muatNomor();
+    return () => controller.abort();
+  }, [terpilih, isAuthenticated, tglReg, kdDokter, kdPoli, kunciNomor, tampilkanToast]);
 
   // Muat opsi dokter, poli, penjab sekali di awal
   useEffect(() => {
@@ -119,7 +150,7 @@ export default function HalamanRegistrasi() {
             setNmPoli(json.data.poli[0].nm_poli);
             setBiayaReg(String(json.data.poli[0].registrasi || 0));
           }
-          if (json.data.penjab?.length > 0 && !kdPj) {
+          if (json.data.penjab?.length > 0) {
             setKdPj(json.data.penjab[0].kd_pj);
             setNmPj(json.data.penjab[0].png_jawab);
           }
@@ -144,13 +175,11 @@ export default function HalamanRegistrasi() {
   // Fungsi Reset / Baru (emptTeks() di DlgReg.java - mereset text & combobox)
   const resetForm = useCallback(() => {
     const sekarang = new Date();
-    const tgl = sekarang.toISOString().slice(0, 10);
+    const tgl = registrationDate(sekarang);
     const jam = sekarang.toTimeString().slice(0, 8);
-    const randomRw = `${tgl.replace(/-/g, "/")}/${String(Math.floor(Math.random() * 900000) + 100000)}`;
 
     setTerpilih(null);
-    setNoRawat(randomRw);
-    setNoReg(String(Math.floor(Math.random() * 900) + 1).padStart(3, "0"));
+    setVersiNomor((versi) => versi + 1);
     setTglReg(tgl);
     setJamReg(jam);
     setNoRm("");
@@ -208,14 +237,11 @@ export default function HalamanRegistrasi() {
 
   useEffect(() => {
     muatData();
-    resetForm();
-  }, [muatData, resetForm]);
+  }, [muatData]);
 
   // Handle Klik Baris Tabel (getData() di DlgReg.java)
   const handlePilihData = (item: PasienReg) => {
     setTerpilih(item);
-    setNoRawat(item.no_rawat);
-    setNoReg(item.no_reg);
     setTglReg(item.tgl_registrasi);
     setJamReg(item.jam_reg);
     setNoRm(item.no_rkm_medis);
@@ -236,6 +262,7 @@ export default function HalamanRegistrasi() {
 
   // Simpan Data Baru (BtnSimpanActionPerformed di DlgReg.java)
   const handleSimpan = async () => {
+    if (terpilih || !nomorSiap || sedangMenyimpan) return;
     if (!noRm.trim() || !kdDokter.trim() || !kdPoli.trim()) {
       tampilkanToast("No. RM, Dokter, dan Unit Poli harus terisi lengkap!", "error");
       return;
@@ -267,9 +294,9 @@ export default function HalamanRegistrasi() {
 
       const json = await res.json();
       if (json.success) {
-        tampilkanToast("Data registrasi pasien berhasil disimpan!", "sukses");
+        tampilkanToast(`Registrasi ${json.data.no_rawat} (No. Reg. ${json.data.no_reg}) berhasil disimpan!`, "sukses");
         muatData();
-        if (!terpilih) resetForm();
+        resetForm();
       } else {
         tampilkanToast(json.error || "Gagal menyimpan data registrasi", "error");
       }
@@ -282,6 +309,7 @@ export default function HalamanRegistrasi() {
 
   // Ganti / Edit Data Registrasi (BtnEditActionPerformed di DlgReg.java)
   const handleGanti = async () => {
+    if (sedangMenyimpan) return;
     if (!terpilih) {
       tampilkanToast("Pilih data registrasi pada tabel yang ingin diubah terlebih dahulu!", "error");
       return;
@@ -295,7 +323,7 @@ export default function HalamanRegistrasi() {
 
     try {
       const res = await fetch("/api/registrasi", {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           no_rawat: noRawat,
@@ -441,9 +469,9 @@ export default function HalamanRegistrasi() {
               <input
                 type="text"
                 value={noReg}
-                onChange={(e) => setNoReg(e.target.value)}
+                readOnly
                 className="w-28 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
-                placeholder="001"
+                placeholder="Otomatis"
               />
             </div>
 
@@ -488,7 +516,7 @@ export default function HalamanRegistrasi() {
               <input
                 type="text"
                 value={noRawat}
-                onChange={(e) => setNoRawat(e.target.value)}
+                readOnly
                 className="w-56 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
                 placeholder="YYYY/MM/DD/000001"
               />
@@ -802,6 +830,7 @@ export default function HalamanRegistrasi() {
         {/* 4. Panel Bawah (panelGlass6, 7, 8 di DlgReg.java) */}
         <PanelBawah
           onSimpan={handleSimpan}
+          disabledSimpan={!!terpilih || !nomorSiap || sedangMenyimpan}
           onBaru={resetForm}
           onHapus={handleBukaDialogHapus}
           onGanti={handleGanti}
@@ -816,7 +845,7 @@ export default function HalamanRegistrasi() {
             muatData();
           }}
           disabledHapus={!terpilih}
-          disabledGanti={!terpilih}
+          disabledGanti={!terpilih || sedangMenyimpan}
           tanggalMulai={tanggalMulai}
           tanggalSelesai={tanggalSelesai}
           onGantiTanggalMulai={setTanggalMulai}

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeQuery } from "@/lib/db";
+import { executeQuery, pool } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { saveWithRegistrationNumbers, type RegistrationNumbers } from "@/lib/registrasi/numbering";
+import { isRegistrationDate } from "@/lib/registrasi/date";
 
 export async function GET(req: NextRequest) {
   try {
@@ -68,11 +71,23 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  return saveRegistration(req, false);
+}
+
+export async function PUT(req: NextRequest) {
+  return saveRegistration(req, true);
+}
+
+async function saveRegistration(req: NextRequest, editing: boolean) {
   try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ success: false, error: "Silakan login kembali." }, { status: 401 });
+    if (!session.isAdmin && !session.permissions.registrasi) {
+      return NextResponse.json({ success: false, error: "Akses registrasi tidak diizinkan." }, { status: 403 });
+    }
     const body = await req.json();
     const {
       no_rawat,
-      no_reg,
       tgl_registrasi,
       jam_reg,
       kd_dokter,
@@ -91,11 +106,27 @@ export async function POST(req: NextRequest) {
       status_bayar = "Belum Bayar",
     } = body;
 
-    if (!no_rawat || !no_rkm_medis || !kd_dokter || !kd_poli) {
+    if (typeof no_rkm_medis !== "string" || !no_rkm_medis.trim()
+      || typeof kd_dokter !== "string" || !kd_dokter.trim()
+      || typeof kd_poli !== "string" || !kd_poli.trim()
+      || typeof tgl_registrasi !== "string" || !isRegistrationDate(tgl_registrasi)
+      || (editing && (typeof no_rawat !== "string" || !no_rawat))) {
       return NextResponse.json(
-        { success: false, error: "Data registrasi wajib (no_rawat, no_rkm_medis, kd_dokter, kd_poli) harus diisi!" },
+        { success: false, error: "Tanggal registrasi, No. RM, dokter, dan poli harus valid." },
         { status: 400 }
       );
+    }
+
+    if (editing) {
+      // Edit eksplisit: tabrakan nomor pada INSERT tidak boleh mengubah pasien lain.
+      await executeQuery(
+        `UPDATE reg_periksa SET kd_dokter = ?, kd_poli = ?, p_jawab = ?,
+         almt_pj = ?, hubunganpj = ?, biaya_reg = ?, stts = ?, status_bayar = ?
+         WHERE no_rawat = ?`,
+        [kd_dokter, kd_poli, p_jawab || "-", almt_pj || "-", hubunganpj || "-",
+          biaya_reg, stts, status_bayar, no_rawat],
+      );
+      return NextResponse.json({ success: true, message: "Data registrasi berhasil diperbarui" });
     }
 
     const sql = `
@@ -104,46 +135,48 @@ export async function POST(req: NextRequest) {
         kd_poli, p_jawab, almt_pj, hubunganpj, biaya_reg, stts,
         stts_daftar, status_lanjut, kd_pj, umurdaftar, sttsumur, status_bayar
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        kd_dokter = VALUES(kd_dokter),
-        kd_poli = VALUES(kd_poli),
-        p_jawab = VALUES(p_jawab),
-        almt_pj = VALUES(almt_pj),
-        hubunganpj = VALUES(hubunganpj),
-        biaya_reg = VALUES(biaya_reg),
-        stts = VALUES(stts),
-        status_bayar = VALUES(status_bayar)
     `;
 
-    await executeQuery(sql, [
-      no_reg || "001",
-      no_rawat,
-      tgl_registrasi || new Date().toISOString().slice(0, 10),
-      jam_reg || new Date().toTimeString().slice(0, 8),
-      kd_dokter,
-      no_rkm_medis,
-      kd_poli,
-      p_jawab || "-",
-      almt_pj || "-",
-      hubunganpj || "-",
-      biaya_reg,
-      stts,
-      stts_daftar,
-      status_lanjut,
-      kd_pj,
-      umurdaftar,
-      sttsumur,
-      status_bayar,
-    ]);
+    const connection = await pool.getConnection();
+    let numbers: RegistrationNumbers;
+    try {
+      numbers = await saveWithRegistrationNumbers(connection, {
+        tanggal: tgl_registrasi, dokter: kd_dokter, poli: kd_poli,
+      }, async (assigned) => {
+        await connection.execute(sql, [
+          assigned.no_reg,
+          assigned.no_rawat,
+          tgl_registrasi,
+          jam_reg || new Date().toTimeString().slice(0, 8),
+          kd_dokter,
+          no_rkm_medis,
+          kd_poli,
+          p_jawab || "-",
+          almt_pj || "-",
+          hubunganpj || "-",
+          biaya_reg,
+          stts,
+          stts_daftar,
+          status_lanjut,
+          kd_pj,
+          umurdaftar,
+          sttsumur,
+          status_bayar,
+        ]);
+      });
+    } finally {
+      connection.release();
+    }
 
     return NextResponse.json({
       success: true,
+      data: numbers,
       message: "Data registrasi berhasil disimpan",
     });
-  } catch (error: any) {
-    console.error("Error in POST api/registrasi:", error);
+  } catch (error: unknown) {
+    console.error("Error saving api/registrasi:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal menyimpan data registrasi" },
+      { success: false, error: "Gagal menyimpan data registrasi. Silakan coba kembali." },
       { status: 500 }
     );
   }

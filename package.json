@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:registrasi": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/registrasi-tests src/lib/registrasi/date.ts src/lib/registrasi/numbering.ts tests/registrasi-numbering.test.ts && node --test .next/registrasi-tests/tests/registrasi-numbering.test.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
