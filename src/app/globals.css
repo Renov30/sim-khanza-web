@@ -12,34 +12,34 @@ body {
   color: var(--foreground);
 }
 
-/* Kontrol web pada halaman registrasi: tetap padat dan tanpa animasi. */
-.registration-web :where(input:not([type="checkbox"]), select) {
+/* Kontrol halaman modul: padat, konsisten, dan tanpa animasi. */
+.module-page :where(input:not([type="checkbox"]), select) {
   min-height: 1.75rem;
   font-size: 0.75rem;
 }
-.registration-web input[readonly]:not([data-lookup-field]) {
+.module-page input[readonly]:not([data-lookup-field]) {
   background-color: #f8fafc;
   color: #475569;
 }
-.registration-web :where(button, a, input, select):focus-visible {
+.module-page :where(button, a, input, select):focus-visible {
   outline: 2px solid #047857;
   outline-offset: 2px;
 }
-.registration-web :where(button, a)[class*="h-8"] {
+.module-page :where(button, a)[class*="h-8"] {
   min-height: 2.25rem;
   border-radius: 0.5rem;
 }
-.registration-web button:disabled {
+.module-page button:disabled {
   cursor: not-allowed;
 }
-.registration-web th {
+.module-page th {
   white-space: nowrap;
 }
 @media (pointer: coarse) {
-  .registration-web :where(button, input:not([type="checkbox"]), select, a) {
+  .module-page :where(button, input:not([type="checkbox"]), select, a) {
     min-height: 2.75rem;
   }
-  .registration-web :where(button, a) {
+  .module-page :where(button, a) {
     min-width: 2.75rem;
   }
 }

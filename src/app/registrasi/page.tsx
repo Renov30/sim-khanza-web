@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
+import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
@@ -538,7 +539,7 @@ export default function HalamanRegistrasi() {
     return <PatientMasterSelect jenis={label} label={label} value={value} items={items} onChange={(id)=>change(id)} />;
   };
   return (
-    <div className="registration-web flex flex-col h-full w-full overflow-y-auto lg:overflow-hidden bg-slate-50 p-2 sm:p-3 space-y-2.5">
+    <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Registrasi & Pendaftaran Pasien"
@@ -551,7 +552,7 @@ export default function HalamanRegistrasi() {
         judul=".: Input Data"
       >
         <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="max-h-[46vh] overflow-y-auto font-sans text-xs font-normal text-slate-700">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)] gap-x-8 gap-y-3">
+          <GridFormulirModul>
             <section className="space-y-1.5" aria-label="Informasi kunjungan">
               <RegistrationField label="No. Reg."><div className="w-full max-w-60">{input('No. Registrasi',noReg,undefined,true,'Otomatis')}</div></RegistrationField>
               <RegistrationField label="No. Rawat"><div className="w-full max-w-[28rem]">{input('No. Rawat',noRawat,undefined,true,'YYYY/MM/DD/000001')}</div></RegistrationField>
@@ -615,8 +616,7 @@ export default function HalamanRegistrasi() {
               </RegistrationField>
               <RegistrationField label="Asal Rujukan" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">{input('Asal rujukan',asalRujukan,setAsalRujukan)}</RegistrationField>
             </section>
-            <div aria-hidden="true" className="hidden lg:block" />
-          </div>
+          </GridFormulirModul>
         </fieldset>
       </PanelInputData>
 
@@ -718,9 +718,10 @@ export default function HalamanRegistrasi() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* 4. Panel Bawah (panelGlass6, 7, 8 di DlgReg.java) */}
-        <PanelBawah
+      {/* 4. Panel Bawah (panelGlass6, 7, 8 di DlgReg.java) */}
+      <PanelBawah
           tampilan="web"
           aksiUtama={terpilih ? "ganti" : "simpan"}
           onKeluar={() => router.push('/')}
@@ -779,8 +780,7 @@ export default function HalamanRegistrasi() {
           }
           tampilkanRecord={false}
           memuat={memuat || sedangMenyimpan || sedangMenghapus}
-        />
-      </div>
+      />
 
       {/* Modal Dialog Pencarian Pasien (BtnPasien di DlgReg.java) */}
       {modalPasienBuka && (

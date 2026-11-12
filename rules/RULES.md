@@ -60,6 +60,8 @@ Mengikuti instruksi spesifik:
 
 Setiap halaman modul baru (contoh: Registrasi Pasien, Rawat Jalan, Apotek, Kasir) **WAJIB** mengikuti struktur 4-bagian seragam:
 
+Template umum berikut berlaku untuk halaman modul generik. Untuk halaman master/transaksi dengan formulir dan tabel, pola yang lebih spesifik pada bagian **3.1** berlaku sebagai acuan utama.
+
 ```tsx
 // CONTOH TEMPLATE RESMI HALAMAN MODUL
 export default function ModulePage() {
@@ -97,6 +99,27 @@ export default function ModulePage() {
   );
 }
 ```
+
+### 3.1 Pola Baku Halaman Master dan Transaksi
+
+Untuk halaman operasional seperti Registrasi dan Data Pasien, struktur JSX tingkat atas **WAJIB** konsisten dan mudah dipindai:
+
+1. `HeaderModul`.
+2. Navigasi konteks opsional, misalnya tab Input/Data.
+3. Formulir input (`PanelInputData`), atau `tabpanel` input bila modul memang menggunakan pola tab dari referensi.
+4. Panel tabel/konten utama.
+5. `PanelBawah` sebagai saudara panel konten, bukan ditanam di dalam panel tabel.
+6. Dialog, modal, dan `Toast` ditempatkan paling akhir agar tidak memutus alur konten utama.
+
+Ketentuan tambahan:
+
+- Root halaman modul menggunakan pola padat yang sama: `module-page`, `flex`, tinggi penuh, latar `slate-50`, padding responsif `p-2 sm:p-3`, dan jarak antarbagiannya `space-y-2.5`.
+- Formulir desktop menggunakan [`GridFormulirModul`](src/components/modul/GridFormulirModul.tsx): dua kolom pertama aktif dan kolom ketiga sengaja dicadangkan untuk pengembangan berikutnya. Pada layar kecil formulir kembali menjadi satu kolom.
+- Jika modul memakai tab Input/Data, tab menggantikan perilaku buka/tutup `PanelInputData`; tab harus memakai `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls`, serta navigasi keyboard.
+- Tabel data wajib memiliki `caption` aksesibel (boleh `sr-only`), setiap header memakai `scope="col"`, dan state terpilih tidak boleh mengubah bobot font atau ukuran kolom.
+- Filter dan aksi memakai `PanelBawah` varian yang sama. Perbedaan antarhalaman dinyatakan lewat props/slot, bukan menyalin markup panel.
+- Urutan isi file halaman: tipe dan helper murni, state, effects/pemuatan data, reset/seleksi, mutasi simpan–ubah–hapus, helper tampilan, lalu JSX. Hindari `any`, satukan payload yang dipakai beberapa mutasi, dan gunakan komponen bersama untuk markup yang berulang.
+- Perbedaan yang berasal dari aturan bisnis atau pola referensi (misalnya Data Pasien memakai dua tab sedangkan Registrasi menampilkan input dan tabel bersamaan) boleh dipertahankan, tetapi kerangka tingkat atas dan komponen dasarnya tetap mengikuti pola ini.
 
 ---
 

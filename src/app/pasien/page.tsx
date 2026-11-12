@@ -7,6 +7,7 @@ import { additionalPatientFields, emptyPatientDetails, fullPatientAge } from '@/
 import { registrationDate } from '@/lib/registrasi/date';
 import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
@@ -45,6 +46,15 @@ export interface PasienData {
   nip?: string;
 }
 
+interface PenjaminOption {
+  kd_pj: string;
+  png_jawab: string;
+}
+
+function pesanError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function PatientField({ label, children }: { label?: string; children: React.ReactNode }) {
   return <div className="flex min-h-7 items-center gap-1.5 font-sans text-xs font-normal">
     <span className="w-28 shrink-0 text-right font-normal text-slate-700">{label ? `${label} :` : ''}</span>
@@ -72,7 +82,7 @@ export default function HalamanDataPasien() {
 
   // Filter States
   const [kataKunci, setKataKunci] = useState("");
-  const [daftarPenjab, setDaftarPenjab] = useState<any[]>([]);
+  const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
 
   // Form Input Data Pasien (sesuai DlgPasien.java)
   const [noRm, setNoRm] = useState("");
@@ -135,8 +145,8 @@ export default function HalamanDataPasien() {
       } else {
         tampilkanToast(json.error || "Gagal memuat data pasien", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Terjadi kesalahan jaringan", "error");
+    } catch (error: unknown) {
+      tampilkanToast(pesanError(error, "Terjadi kesalahan jaringan"), "error");
     } finally {
       setMemuat(false);
     }
@@ -210,6 +220,32 @@ export default function HalamanDataPasien() {
     setNoPeserta(p.no_peserta || "-");
   };
 
+  const buatPayloadPasien = () => ({
+    ...detail,
+    anggota_tni: anggota.tni,
+    anggota_polri: anggota.polri,
+    no_rkm_medis: noRm,
+    nm_pasien: nmPasien,
+    no_ktp: noKtp,
+    jk,
+    tmp_lahir: tmpLahir,
+    tgl_lahir: tglLahir,
+    nm_ibu: nmIbu,
+    alamat,
+    gol_darah: golDarah,
+    pekerjaan,
+    stts_nikah: sttsNikah,
+    agama,
+    no_tlp: noTlp,
+    pnd: pendidikan,
+    keluarga: keluargaPj,
+    namakeluarga: namaPj,
+    kd_pj: kdPj,
+    no_peserta: noPeserta,
+    pekerjaanpj: pekerjaanPj,
+    alamatpj: alamatPj,
+  });
+
   // Simpan Pasien Baru (BtnSimpan di DlgPasien.java)
   const handleSimpan = async () => {
     if (!noRm.trim() || !nmPasien.trim()) {
@@ -223,42 +259,19 @@ export default function HalamanDataPasien() {
       const res = await fetch("/api/pasien", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...detail,
-          anggota_tni: anggota.tni, anggota_polri: anggota.polri,
-          no_rkm_medis: noRm,
-          nm_pasien: nmPasien,
-          no_ktp: noKtp,
-          jk,
-          tmp_lahir: tmpLahir,
-          tgl_lahir: tglLahir,
-          nm_ibu: nmIbu,
-          alamat,
-          gol_darah: golDarah,
-          pekerjaan,
-          stts_nikah: sttsNikah,
-          agama,
-          no_tlp: noTlp,
-          pnd: pendidikan,
-          keluarga: keluargaPj,
-          namakeluarga: namaPj,
-          kd_pj: kdPj,
-          no_peserta: noPeserta,
-          pekerjaanpj: pekerjaanPj,
-          alamatpj: alamatPj,
-        }),
+        body: JSON.stringify(buatPayloadPasien()),
       });
 
       const json = await res.json();
       if (json.success) {
         tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil disimpan!`, "sukses");
-        muatData();
+        void muatData();
         if (!terpilih) resetForm();
       } else {
         tampilkanToast(json.error || "Gagal menyimpan data pasien", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menghubungi server", "error");
+    } catch (error: unknown) {
+      tampilkanToast(pesanError(error, "Gagal menghubungi server"), "error");
     } finally {
       setSedangMenyimpan(false);
     }
@@ -281,43 +294,20 @@ export default function HalamanDataPasien() {
       const res = await fetch("/api/pasien", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...detail,
-          anggota_tni: anggota.tni, anggota_polri: anggota.polri,
-          no_rkm_medis: noRm,
-          nm_pasien: nmPasien,
-          no_ktp: noKtp,
-          jk,
-          tmp_lahir: tmpLahir,
-          tgl_lahir: tglLahir,
-          nm_ibu: nmIbu,
-          alamat,
-          gol_darah: golDarah,
-          pekerjaan,
-          stts_nikah: sttsNikah,
-          agama,
-          no_tlp: noTlp,
-          pnd: pendidikan,
-          keluarga: keluargaPj,
-          namakeluarga: namaPj,
-          kd_pj: kdPj,
-          no_peserta: noPeserta,
-          pekerjaanpj: pekerjaanPj,
-          alamatpj: alamatPj,
-        }),
+        body: JSON.stringify(buatPayloadPasien()),
       });
 
       const json = await res.json();
       if (json.success) {
         tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil diperbarui!`, "sukses");
-        muatData();
+        void muatData();
         resetForm();
         setTabAktif("data");
       } else {
         tampilkanToast(json.error || "Gagal memperbarui data pasien", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menghubungi server", "error");
+    } catch (error: unknown) {
+      tampilkanToast(pesanError(error, "Gagal menghubungi server"), "error");
     } finally {
       setSedangMenyimpan(false);
     }
@@ -348,13 +338,13 @@ export default function HalamanDataPasien() {
           "sukses"
         );
         resetForm();
-        muatData();
+        void muatData();
         setDialogHapusBuka(false);
       } else {
         tampilkanToast(json.error || "Gagal menghapus data pasien", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menghapus pasien", "error");
+    } catch (error: unknown) {
+      tampilkanToast(pesanError(error, "Gagal menghapus pasien"), "error");
     } finally {
       setSedangMenghapus(false);
     }
@@ -396,7 +386,7 @@ export default function HalamanDataPasien() {
   const umurParts = fullPatientAge(tglLahir,registrationDate()).match(/^(\d+) Th (\d+) Bl (\d+) Hr$/)?.slice(1) || ['','',''];
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-2 sm:p-3 space-y-2.5">
+    <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Data Pasien & Rekam Medis"
@@ -437,7 +427,7 @@ export default function HalamanDataPasien() {
         className={tabAktif === "input" ? "flex-1 min-h-0 overflow-auto bg-white rounded-lg border border-slate-200 p-3" : "hidden"}
       >
         <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="font-sans text-xs font-normal text-slate-700">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)] gap-x-7 gap-y-4 max-w-[1500px]">
+          <GridFormulirModul>
             <div className="space-y-1.5">
               <PatientField label="No. Rekam Medis"><div className="w-full max-w-60">{input('No. Rekam Medis',noRm,setNoRm,'text',!!terpilih)}</div></PatientField>
               <PatientField label="Nama Pasien">{input('Nama Pasien',nmPasien,setNmPasien)}</PatientField>
@@ -508,17 +498,15 @@ export default function HalamanDataPasien() {
                 </div>
               </PatientField>
             </div>
-            <div aria-hidden="true" className="hidden lg:block" />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)] gap-7 max-w-[1500px] mt-5 pt-3 border-t border-slate-100">
+          </GridFormulirModul>
+          <GridFormulirModul className="mt-5 border-t border-slate-100 pt-3">
             {(['tni','polri'] as const).map((group)=>(
               <div key={group}>
                 <label className="inline-flex items-center gap-2 text-slate-600"><input type="checkbox" checked={anggota[group]} onChange={(event)=>setAnggota((old)=>({...old,[group]:event.target.checked}))} />Anggota {group.toUpperCase()}</label>
                 {anggota[group] && <div className="mt-3 space-y-2">{['golongan','satuan','pangkat','jabatan'].map((kind)=><PatientField key={kind} label={kind === 'satuan' ? 'Kesatuan' : kind.charAt(0).toUpperCase()+kind.slice(1)}>{master(`${kind}_${group}`,`${kind} ${group.toUpperCase()}`)}</PatientField>)}</div>}
               </div>
             ))}
-            <div aria-hidden="true" className="hidden lg:block" />
-          </div>
+          </GridFormulirModul>
         </fieldset>
       </section>
 
@@ -528,24 +516,25 @@ export default function HalamanDataPasien() {
         role="tabpanel"
         aria-labelledby="tab-pasien-data"
         tabIndex={0}
-        className={tabAktif === "data" ? "flex-1 min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col" : "hidden"}
+        className={tabAktif === "data" ? "flex h-[32rem] flex-none flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs lg:h-auto lg:min-h-0 lg:flex-1" : "hidden"}
       >
         <div className="flex-1 overflow-auto">
           <table className="w-full text-left text-xs border-collapse">
+            <caption className="sr-only">Daftar pasien. Pilih baris untuk memuat data pasien ke formulir.</caption>
             <thead className="bg-slate-100/90 sticky top-0 z-10 text-slate-700 font-bold border-b border-slate-200 shadow-2xs">
               <tr>
-                <th className="py-2 px-2.5 text-center w-16">No. RM</th>
-                <th className="py-2 px-2.5">Nama Pasien</th>
-                <th className="py-2 px-2.5">No. KTP / NIK</th>
-                <th className="py-2 px-2.5 text-center w-10">JK</th>
-                <th className="py-2 px-2.5">Tmp / Tgl Lahir</th>
-                <th className="py-2 px-2.5">Nama Ibu</th>
-                <th className="py-2 px-2.5">Alamat Pasien</th>
-                <th className="py-2 px-2.5">Gol</th>
-                <th className="py-2 px-2.5">Agama</th>
-                <th className="py-2 px-2.5">No. Telp</th>
-                <th className="py-2 px-2.5">Penjamin / Asuransi</th>
-                <th className="py-2 px-2.5">No. Peserta</th>
+                <th scope="col" className="py-2 px-2.5 text-center w-16">No. RM</th>
+                <th scope="col" className="py-2 px-2.5">Nama Pasien</th>
+                <th scope="col" className="py-2 px-2.5">No. KTP / NIK</th>
+                <th scope="col" className="py-2 px-2.5 text-center w-10">JK</th>
+                <th scope="col" className="py-2 px-2.5">Tmp / Tgl Lahir</th>
+                <th scope="col" className="py-2 px-2.5">Nama Ibu</th>
+                <th scope="col" className="py-2 px-2.5">Alamat Pasien</th>
+                <th scope="col" className="py-2 px-2.5">Gol</th>
+                <th scope="col" className="py-2 px-2.5">Agama</th>
+                <th scope="col" className="py-2 px-2.5">No. Telp</th>
+                <th scope="col" className="py-2 px-2.5">Penjamin / Asuransi</th>
+                <th scope="col" className="py-2 px-2.5">No. Peserta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
