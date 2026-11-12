@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { registrationAccess } from "@/lib/registrasi/access";
 import { executeQuery } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
+    const denied = await registrationAccess();
+    if (denied) return denied;
     const { searchParams } = new URL(req.url);
     const jenis = searchParams.get("jenis"); // "dokter", "poli", "penjab", "pasien"
     const cari = searchParams.get("cari") || "";
@@ -47,31 +50,32 @@ export async function GET(req: NextRequest) {
     }
 
     if (jenis === "pasien") {
+      const rm = searchParams.get("rm")?.trim();
       const sql = `
-        SELECT no_rkm_medis, nm_pasien, jk, alamat, namakeluarga, keluarga, kd_pj, no_peserta, no_tlp
+        SELECT no_rkm_medis, nm_pasien, jk, alamat, namakeluarga, keluarga, kd_pj, no_peserta, no_tlp, DATE_FORMAT(tgl_daftar, '%Y-%m-%d') AS tgl_daftar
         FROM pasien 
-        ${cari ? "WHERE no_rkm_medis LIKE ? OR nm_pasien LIKE ?" : ""}
+        ${rm ? "WHERE no_rkm_medis = ?" : cari ? "WHERE no_rkm_medis LIKE ? OR nm_pasien LIKE ? OR no_ktp LIKE ? OR alamat LIKE ?" : ""}
         ORDER BY no_rkm_medis DESC LIMIT 50
       `;
-      const params = cari ? [`%${cari}%`, `%${cari}%`] : [];
+      const params = rm ? [rm] : cari ? Array(4).fill(`%${cari}%`) : [];
       const data = await executeQuery(sql, params);
       return NextResponse.json({ success: true, data });
     }
 
     if (jenis === "next-rm" || jenis === "next_rm") {
-      const rows = await executeQuery<any>(
+      const rows = await executeQuery<{ next_rm: number }>(
         "SELECT IFNULL(MAX(CAST(no_rkm_medis AS UNSIGNED)), 0) + 1 AS next_rm FROM pasien"
       );
-      const nextNum = (rows as any[])[0]?.next_rm || 1;
+      const nextNum = rows[0]?.next_rm || 1;
       const nextRm = String(nextNum).padStart(6, "0");
       return NextResponse.json({ success: true, data: { next_rm: nextRm } });
     }
 
     // Default: kembalikan opsi ringkas dokter & poli & penjab untuk dropdown langsung
     const [dokter, poli, penjab] = await Promise.all([
-      executeQuery<any[]>("SELECT kd_dokter, nm_dokter FROM dokter WHERE status = '1' ORDER BY nm_dokter ASC"),
-      executeQuery<any[]>("SELECT kd_poli, nm_poli, registrasi, registrasilama FROM poliklinik WHERE status = '1' ORDER BY nm_poli ASC"),
-      executeQuery<any[]>("SELECT kd_pj, png_jawab FROM penjab WHERE status = '1' ORDER BY png_jawab ASC"),
+      executeQuery<Record<string, unknown>>("SELECT kd_dokter, nm_dokter FROM dokter WHERE status = '1' ORDER BY nm_dokter ASC"),
+      executeQuery<Record<string, unknown>>("SELECT kd_poli, nm_poli, registrasi, registrasilama FROM poliklinik WHERE status = '1' ORDER BY nm_poli ASC"),
+      executeQuery<Record<string, unknown>>("SELECT kd_pj, png_jawab FROM penjab WHERE status = '1' ORDER BY png_jawab ASC"),
     ]);
 
     return NextResponse.json({
@@ -82,10 +86,10 @@ export async function GET(req: NextRequest) {
         penjab,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/registrasi/options:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat opsi registrasi" },
+      { success: false, error: "Gagal memuat opsi registrasi" },
       { status: 500 }
     );
   }

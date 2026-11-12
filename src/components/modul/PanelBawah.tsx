@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faFloppyDisk,
   faFileCirclePlus,
@@ -14,14 +15,12 @@ import {
   faMagnifyingGlass,
   faXmark,
   faCalendarDays,
-  faChevronDown,
-  faChevronUp,
-  faSliders,
+  faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 
 export interface TombolAksiCustom {
   label: string;
-  ikon?: any;
+  ikon?: IconProp;
   onClick: () => void;
   disabled?: boolean;
   varian?: "primer" | "sekunder" | "bahaya" | "peringatan";
@@ -29,6 +28,9 @@ export interface TombolAksiCustom {
 }
 
 export interface PanelBawahProps {
+  tampilan?: "standar" | "khanza" | "web";
+  aksiUtama?: "simpan" | "ganti";
+  filterUtama?: React.ReactNode;
   // Action Handlers
   onSimpan?: () => void;
   onBaru?: () => void;
@@ -59,9 +61,11 @@ export interface PanelBawahProps {
 
   // Additional Filter Slots (e.g. Dokter, Poli, Status, etc.)
   filterTambahan?: React.ReactNode;
+  pagination?: React.ReactNode;
 
   // Record Count
   jumlahRecord?: number;
+  tampilkanRecord?: boolean;
   totalLabel?: string;
   nilaiTotal?: string | number;
 
@@ -76,6 +80,8 @@ export interface PanelBawahProps {
  * - Baris 2: Tombol Aksi (Simpan, Baru, Hapus, Ganti, Cetak, Nota, Semua, Record Count, Keluar)
  */
 export function PanelBawah({
+  tampilan = "standar",
+  filterUtama,
   onSimpan,
   onBaru,
   onHapus,
@@ -99,18 +105,67 @@ export function PanelBawah({
   onCari,
   placeholderCari = "Key Word pencarian...",
   filterTambahan,
+  pagination,
   jumlahRecord = 0,
+  tampilkanRecord = true,
   totalLabel,
   nilaiTotal,
   memuat = false,
 }: PanelBawahProps) {
-  const [bukaFilterLanjutan, setBukaFilterLanjutan] = useState(false);
 
   const handleKeyDownKataKunci = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && onCari) {
       onCari();
     }
   };
+
+  if (tampilan === "khanza" || tampilan === "web") {
+    const hasPeriod = Boolean(onGantiTanggalMulai || onGantiTanggalSelesai);
+    const hasFilters = Boolean(hasPeriod || onGantiKataKunci || filterTambahan);
+    const actions = [
+      { label: 'Simpan', icon: faFloppyDisk, click: onSimpan, disabled: disabledSimpan, color: 'text-blue-600' },
+      { label: 'Baru', icon: faFileCirclePlus, click: onBaru, color: 'text-sky-600' },
+      { label: 'Ganti', icon: faPenToSquare, click: onGanti, disabled: disabledGanti, color: 'text-amber-600' },
+      { label: 'Hapus', icon: faTrashCan, click: onHapus, disabled: disabledHapus, color: 'text-red-600' },
+      { label: 'Cetak', icon: faPrint, click: onCetak, disabled: disabledCetak, color: 'text-slate-600' },
+      { label: 'Nota', icon: faReceipt, click: onNota, disabled: disabledNota, color: 'text-slate-600' },
+      { label: 'Semua', icon: faMagnifyingGlass, click: onSemua, color: 'text-sky-600' },
+    ];
+    return (
+      <footer className="shrink-0 rounded-b-xl border-t border-slate-200 bg-white font-sans text-xs font-normal text-slate-700">
+        {filterUtama && <div className={tampilan === 'web' ? 'px-2.5 py-2 border-b border-slate-200' : 'px-3 py-3 border-b border-slate-200'}>{filterUtama}</div>}
+        {hasFilters && <div className={`flex flex-wrap items-center border-b border-slate-200 ${tampilan === 'web' ? 'gap-2 px-2.5 py-2' : 'gap-3 px-3 py-3'}`}>
+          {(onGantiTanggalMulai || onGantiTanggalSelesai) && <div className="flex flex-wrap items-center gap-1.5">
+            <span className="shrink-0 whitespace-nowrap text-left font-normal text-slate-700">Periode :</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+            <input aria-label="Tanggal mulai" type="date" value={tanggalMulai || ''} onChange={(event)=>onGantiTanggalMulai?.(event.target.value)} className="h-7 w-[7.5rem] rounded-md border border-slate-300 bg-white px-2 text-slate-800 focus:outline-none focus:border-emerald-600" />
+            <span className="text-slate-600">s.d.</span>
+            <input aria-label="Tanggal selesai" type="date" value={tanggalSelesai || ''} onChange={(event)=>onGantiTanggalSelesai?.(event.target.value)} className="h-7 w-[7.5rem] rounded-md border border-slate-300 bg-white px-2 text-slate-800 focus:outline-none focus:border-emerald-600" />
+            </div>
+          </div>}
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {onGantiKataKunci && <div className="flex w-full max-w-[28rem] min-w-48 items-center gap-1.5">
+              <span className="shrink-0 whitespace-nowrap text-left font-normal text-slate-700">Kata kunci :</span>
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+              <input aria-label="Kata kunci pencarian" value={kataKunci} onChange={(event)=>onGantiKataKunci(event.target.value)} onKeyDown={handleKeyDownKataKunci} placeholder={placeholderCari} className="h-7 w-full min-w-0 rounded-full border border-slate-300 px-2.5 text-slate-800 focus:outline-none focus:border-emerald-600" />
+              {onCari && <button type="button" onClick={onCari} disabled={memuat} aria-label="Cari data" title="Cari data (Enter)" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-emerald-600 hover:bg-slate-100 disabled:opacity-40"><FontAwesomeIcon icon={faCheck} className="w-3.5 h-3.5" /></button>}
+              </div>
+            </div>}
+            {filterTambahan}
+          </div>
+        </div>}
+        <div className={`flex flex-wrap items-center ${tampilan === 'web' ? 'gap-2 px-2.5 py-2' : 'gap-3 px-3 py-3'}`}>
+          <div className={tampilan === 'web' ? 'flex flex-wrap items-center gap-1.5' : 'flex flex-wrap items-center gap-2'} role="group" aria-label="Aksi registrasi">
+            {actions.filter((action)=>action.click).map((action)=><button key={action.label} type="button" onClick={action.click} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 min-w-24 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed`}><FontAwesomeIcon icon={action.icon} className={`${tampilan === 'web' ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${action.color}`} />{action.label}</button>)}
+            {tombolTambahan?.map((action)=><button key={action.label} type="button" onClick={action.onClick} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 px-3' : 'h-9 px-4'} rounded-full bg-slate-50 text-slate-800 disabled:opacity-40`}>{action.label}</button>)}
+            {onKeluar && <button type="button" onClick={onKeluar} disabled={memuat} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />Keluar</button>}
+          </div>
+          {tampilkanRecord && <span className="ml-auto text-slate-600">Record : {jumlahRecord}</span>}
+          {pagination && <nav aria-label="Pagination data" className="ml-auto flex flex-wrap items-center justify-end gap-2 text-slate-600">{pagination}</nav>}
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="shrink-0 bg-white border-t border-slate-200/90 shadow-xs rounded-b-xl select-none flex flex-col text-xs z-10">
@@ -193,10 +248,10 @@ export function PanelBawah({
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200">
+          {tampilkanRecord && <div className="flex items-center gap-1.5 text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200">
             <span className="text-[11px] font-medium text-slate-500">Record:</span>
             <span className="font-mono font-bold text-emerald-700">{jumlahRecord}</span>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -317,6 +372,12 @@ export function PanelBawah({
               </button>
             ))}
         </div>
+
+        {pagination && (
+          <div className="flex flex-wrap items-center justify-end gap-2 text-slate-600 ml-auto" role="navigation" aria-label="Pagination data">
+            {pagination}
+          </div>
+        )}
 
         {/* Tombol Keluar (Sisi Kanan) */}
         {onKeluar && (

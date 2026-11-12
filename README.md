@@ -31,3 +31,22 @@ Nilai bawaan adalah `dokter + poli` dan `booking`, sesuai `setting/database.xml`
 Membuka halaman atau menekan Baru hanya menampilkan nomor berikutnya, tanpa memesan atau menghabiskan nomor. Server menghitung ulang saat menyimpan dengan lock antar-penyimpanan web. Nomor yang akhirnya tersimpan dapat berbeda dari pratinjau bila petugas lain lebih dahulu mendaftar. Benturan primary key dengan desktop dicoba ulang tanpa menimpa data lama; lock web tidak mengunci proses antrean pada aplikasi desktop.
 
 Jalankan `npm run test:registrasi` untuk memeriksa penomoran, tanggal, serta penanganan benturan nomor dan lock.
+
+## Validasi dan keamanan registrasi
+
+- Semua API registrasi, pencarian pasien, dan pratinjau nomor memerlukan sesi dengan izin registrasi.
+- Server menghitung umur pada tanggal kunjungan. Status pasien Baru/Lama mengikuti tanggal daftar pasien seperti `DlgReg.isCekPasien()`, sedangkan status poli mengikuti riwayat pasien pada poli tersebut.
+- Tarif dihitung server dari `registrasi` atau `registrasilama`. Edit yang tidak mengganti pasien, poli, atau tanggal mempertahankan tarif tersimpan; isian tarif dari browser tidak digunakan.
+- Simpan/edit beserta asal rujukan dilakukan dalam satu transaksi. Edit menyimpan tanggal, jam, pasien, dokter, poli, penjamin, penanggung jawab, dan status. No. Rawat dipertahankan sebagai identitas relasi, sedangkan No. Reg dihitung ulang bila tanggal/dokter/poli berubah.
+- Registrasi yang sudah dibayar tidak dapat diedit atau dihapus melalui halaman ini. Registrasi dengan data pelayanan terkait tidak dapat dihapus atau diganti pasiennya. Pemeriksaan relasi FK dan penghapusan dijalankan setelah mengunci baris registrasi dalam transaksi.
+- Asal rujukan disimpan di `rujuk_masuk`; pengeditan nama perujuk mempertahankan nomor bridging dan detail rujukan desktop yang sudah ada.
+- Filter status bayar diterapkan sebelum pagination di database. Tombol Semua menghapus filter; gunakan Sebelumnya/Berikutnya untuk menjangkau seluruh hasil, 100 registrasi per halaman. Cetak menggunakan halaman hasil yang sedang ditampilkan.
+- Pencarian pasien mencakup No. RM, nama, NIK, dan alamat. Permintaan lama dibatalkan saat pencarian berubah; pencarian pasien memakai jeda 200 ms untuk mengurangi permintaan saat mengetik.
+
+`npm run test:registrasi` juga menguji validasi data, tarif, umur, rujukan, akses API, pagination, rollback, dan pengamanan penghapusan. Pengujian HTTP menggunakan koneksi tiruan, bukan data pasien nyata.
+
+## Input pasien
+
+Tab Input Pasien mencakup field master `pasien` pada `DlgPasien`: identitas, tanggal pertama daftar, umur terhitung, wilayah pasien/P.J., kontak, pekerjaan P.J., instansi, suku, bahasa, cacat fisik, email, NIP/NRP, serta keanggotaan TNI/POLRI. Pilihan master dicari melalui `/api/pasien/options` dengan batas hasil agar tidak memuat seluruh data wilayah sekaligus. Wilayah pasien memakai ID master, sedangkan wilayah P.J. menyimpan nama sesuai skema Khanza.
+
+Tambah memakai POST dan edit memakai PUT. Nomor RM pasien yang dipilih tidak diubah dari formulir edit. Penyimpanan pasien dan keanggotaan berjalan dalam satu transaksi, dan field tambahan yang tidak dikirim klien lama dipertahankan. Jalankan `npm run test:pasien` untuk memeriksa pemetaan field, umur, validasi, serta keanggotaan.

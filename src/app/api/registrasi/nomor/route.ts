@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { registrationAccess } from "@/lib/registrasi/access";
 import { pool } from "@/lib/db";
 import { getRegistrationNumbers } from "@/lib/registrasi/numbering";
 import { isRegistrationDate } from "@/lib/registrasi/date";
 
 export async function GET(req: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ success: false, error: "Silakan login kembali." }, { status: 401 });
-  if (!session.isAdmin && !session.permissions.registrasi) {
-    return NextResponse.json({ success: false, error: "Akses registrasi tidak diizinkan." }, { status: 403 });
-  }
+  const denied = await registrationAccess();
+  if (denied) return denied;
   const input = {
     tanggal: req.nextUrl.searchParams.get("tanggal") || "",
     dokter: req.nextUrl.searchParams.get("dokter")?.trim() || "",

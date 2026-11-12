@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useTransition } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { HeaderModul } from "@/components/modul/HeaderModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
+import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
@@ -14,15 +16,18 @@ import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHospitalUser,
-  faCircleExclamation,
-  faCheckCircle,
   faMagnifyingGlass,
-  faUserTie,
-  faBuilding,
   faPlus,
   faXmark,
   faSpinner,
+  faChevronLeft,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+
+interface DokterOption { kd_dokter: string; nm_dokter: string }
+interface PoliOption { kd_poli: string; nm_poli: string; registrasi: number; registrasilama: number }
+interface PenjaminOption { kd_pj: string; png_jawab: string }
+interface PasienOption { no_rkm_medis: string; nm_pasien: string; alamat: string; namakeluarga: string; keluarga: string; kd_pj: string; jk: string; no_tlp: string; no_peserta: string; tgl_daftar: string }
 
 interface PasienReg {
   no_reg: string;
@@ -46,9 +51,21 @@ interface PasienReg {
   biaya_reg: number;
   stts: string;
   status_bayar: string;
+  asal_rujukan: string;
+  stts_daftar: string;
+  no_peserta: string;
+  tgl_daftar_pasien: string;
+}
+
+function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minmax(0,1fr)]"}:{label:string;children:React.ReactNode;labelWidth?:string}) {
+  return <div className={`grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[7.5rem_minmax(0,1fr)] ${labelWidth} min-w-0`} role="group" aria-label={label}>
+    <span className="font-sans text-xs font-normal text-slate-700 sm:text-right whitespace-nowrap">{label} :</span>
+    <div className="flex min-w-0 items-center gap-2">{children}</div>
+  </div>;
 }
 
 export default function HalamanRegistrasi() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [data, setData] = useState<PasienReg[]>([]);
   const [terpilih, setTerpilih] = useState<PasienReg | null>(null);
@@ -70,44 +87,61 @@ export default function HalamanRegistrasi() {
   const [filterDokter, setFilterDokter] = useState("");
   const [filterPoli, setFilterPoli] = useState("");
   const [statusBayar, setStatusBayar] = useState("Semua");
+  const [halaman, setHalaman] = useState(1);
+  const [totalData, setTotalData] = useState(0);
+  const [versiTabel, setVersiTabel] = useState(0);
+  const permintaanTabel = useRef<AbortController | null>(null);
+  const permintaanPasien = useRef<AbortController | null>(null);
+  const permintaanIdentitas = useRef<AbortController | null>(null);
+  const timerPasien = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    permintaanTabel.current?.abort();
+    permintaanPasien.current?.abort();
+    permintaanIdentitas.current?.abort();
+    if (timerPasien.current) clearTimeout(timerPasien.current);
+  }, []);
 
   // Options dari database
-  const [daftarDokter, setDaftarDokter] = useState<any[]>([]);
-  const [daftarPoli, setDaftarPoli] = useState<any[]>([]);
-  const [daftarPenjab, setDaftarPenjab] = useState<any[]>([]);
+  const [daftarDokter, setDaftarDokter] = useState<DokterOption[]>([]);
+  const [daftarPoli, setDaftarPoli] = useState<PoliOption[]>([]);
+  const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
 
   // Form Input Data States (sesuai DlgReg.java)
-  const [nomorBerikutnya, setNomorBerikutnya] = useState<(RegistrationNumbers & { kunci: string }) | null>(null);
+  const [nomorBerikutnya, setNomorBerikutnya] = useState<(RegistrationNumbers & { tanggal: string; versi: number }) | null>(null);
   const [versiNomor, setVersiNomor] = useState(0);
   const [tglReg, setTglReg] = useState(hariIni);
   const [jamReg, setJamReg] = useState("");
+  const [jamOtomatis, setJamOtomatis] = useState(true);
   const [noRm, setNoRm] = useState("");
   const [nmPasien, setNmPasien] = useState("");
+  const [tanggalDaftarPasien, setTanggalDaftarPasien] = useState("");
+  const [noKartu, setNoKartu] = useState("");
   const [kdDokter, setKdDokter] = useState("");
-  const [nmDokter, setNmDokter] = useState("");
   const [kdPoli, setKdPoli] = useState("");
-  const [nmPoli, setNmPoli] = useState("");
   const [kdPj, setKdPj] = useState("A09");
-  const [nmPj, setNmPj] = useState("Umum / Personal");
   const [penanggungJawab, setPenanggungJawab] = useState("-");
   const [almtPj, setAlmtPj] = useState("-");
   const [hubunganPj, setHubunganPj] = useState("DIRI SENDIRI");
-  const [biayaReg, setBiayaReg] = useState("0");
-  const [statusPoli, setStatusPoli] = useState("Belum");
+  const [statusRawat, setStatusRawat] = useState("Belum");
   const [sttsBayar, setSttsBayar] = useState("Belum Bayar");
   const [asalRujukan, setAsalRujukan] = useState("-");
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
 
   // Mode pencarian live pasien
-  const [daftarPasienCari, setDaftarPasienCari] = useState<any[]>([]);
+  const [daftarPasienCari, setDaftarPasienCari] = useState<PasienOption[]>([]);
   const [modalPasienBuka, setModalPasienBuka] = useState(false);
   const [kataCariPasien, setKataCariPasien] = useState("");
   const [sedangMemuatPasien, setSedangMemuatPasien] = useState(false);
 
-  const kunciNomor = JSON.stringify([tglReg, kdDokter, kdPoli, versiNomor]);
-  const nomorSiap = nomorBerikutnya?.kunci === kunciNomor;
+  // Pertahankan pratinjau saat dokter/poli berubah agar input dan tombol tidak
+  // berkedip. Server tetap menentukan nomor final saat registrasi disimpan.
+  const nomorSiap = nomorBerikutnya?.tanggal === tglReg && nomorBerikutnya.versi === versiNomor;
   const noRawat = terpilih?.no_rawat || (nomorSiap ? nomorBerikutnya.no_rawat : "");
   const noReg = terpilih?.no_reg || (nomorSiap ? nomorBerikutnya.no_reg : "");
+  const statusPasien = !noRm || !nmPasien ? ""
+    : terpilih && terpilih.no_rkm_medis === noRm && terpilih.tgl_registrasi === tglReg
+      ? terpilih.stts_daftar
+      : tanggalDaftarPasien ? (tanggalDaftarPasien === tglReg ? "Baru" : "Lama") : "";
 
   useEffect(() => {
     if (terpilih || !isAuthenticated || !tglReg || !kdDokter || !kdPoli) return;
@@ -120,7 +154,9 @@ export default function HalamanRegistrasi() {
         });
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || "Gagal memuat nomor registrasi");
-        if (!controller.signal.aborted) setNomorBerikutnya({ ...json.data, kunci: kunciNomor });
+        if (!controller.signal.aborted) {
+          setNomorBerikutnya({ ...json.data, tanggal: tglReg, versi: versiNomor });
+        }
       } catch (error) {
         if (!controller.signal.aborted) {
           tampilkanToast(error instanceof Error ? error.message : "Gagal memuat nomor registrasi", "error");
@@ -129,10 +165,11 @@ export default function HalamanRegistrasi() {
     }
     void muatNomor();
     return () => controller.abort();
-  }, [terpilih, isAuthenticated, tglReg, kdDokter, kdPoli, kunciNomor, tampilkanToast]);
+  }, [terpilih, isAuthenticated, tglReg, kdDokter, kdPoli, versiNomor, tampilkanToast]);
 
   // Muat opsi dokter, poli, penjab sekali di awal
   useEffect(() => {
+    if (!isAuthenticated) return;
     async function muatOpsi() {
       try {
         const res = await fetch("/api/registrasi/options");
@@ -141,18 +178,15 @@ export default function HalamanRegistrasi() {
           setDaftarDokter(json.data.dokter || []);
           setDaftarPoli(json.data.poli || []);
           setDaftarPenjab(json.data.penjab || []);
-          if (json.data.dokter?.length > 0 && !kdDokter) {
+          if (json.data.dokter?.length > 0) {
             setKdDokter(json.data.dokter[0].kd_dokter);
-            setNmDokter(json.data.dokter[0].nm_dokter);
           }
-          if (json.data.poli?.length > 0 && !kdPoli) {
+          if (json.data.poli?.length > 0) {
             setKdPoli(json.data.poli[0].kd_poli);
-            setNmPoli(json.data.poli[0].nm_poli);
-            setBiayaReg(String(json.data.poli[0].registrasi || 0));
+
           }
           if (json.data.penjab?.length > 0) {
             setKdPj(json.data.penjab[0].kd_pj);
-            setNmPj(json.data.penjab[0].png_jawab);
           }
         }
       } catch (e) {
@@ -160,18 +194,18 @@ export default function HalamanRegistrasi() {
       }
     }
     muatOpsi();
-  }, []);
+  }, [isAuthenticated]);
 
   // Update jam otomatis jika form baru
   useEffect(() => {
-    if (terpilih) return;
+    if (terpilih || !jamOtomatis) return;
 
     const perbaruiJam = () => setJamReg(new Date().toTimeString().slice(0, 8));
     // Sinkronkan dengan jam browser saat mount, tanpa menunggu tick pertama.
     perbaruiJam();
     const timer = setInterval(perbaruiJam, 1000);
     return () => clearInterval(timer);
-  }, [terpilih]);
+  }, [terpilih, jamOtomatis]);
 
   // Fungsi Reset / Baru (emptTeks() di DlgReg.java - mereset text & combobox)
   const resetForm = useCallback(() => {
@@ -179,93 +213,106 @@ export default function HalamanRegistrasi() {
     const tgl = registrationDate(sekarang);
     const jam = sekarang.toTimeString().slice(0, 8);
 
+    permintaanIdentitas.current?.abort();
     setTerpilih(null);
     setVersiNomor((versi) => versi + 1);
     setTglReg(tgl);
     setJamReg(jam);
+    setJamOtomatis(true);
     setNoRm("");
     setNmPasien("");
+    setNoKartu("");
+    setTanggalDaftarPasien("");
     setPenanggungJawab("-");
     setAlmtPj("-");
     setAsalRujukan("-");
-    setStatusPoli("Belum");
+    setStatusRawat("Belum");
 
     // Reset seluruh pilihan dropdown / combobox ke nilai default awal
     setHubunganPj("DIRI SENDIRI");
     setSttsBayar("Belum Bayar");
     if (daftarDokter.length > 0) {
       setKdDokter(daftarDokter[0].kd_dokter);
-      setNmDokter(daftarDokter[0].nm_dokter);
     }
     if (daftarPoli.length > 0) {
       setKdPoli(daftarPoli[0].kd_poli);
-      setNmPoli(daftarPoli[0].nm_poli);
-      setBiayaReg(String(daftarPoli[0].registrasi || 0));
+
     }
     if (daftarPenjab.length > 0) {
       setKdPj(daftarPenjab[0].kd_pj);
-      setNmPj(daftarPenjab[0].png_jawab);
     }
   }, [daftarDokter, daftarPoli, daftarPenjab]);
 
   // Fetch Data Tabel
   const muatData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    permintaanTabel.current?.abort();
+    const controller = new AbortController();
+    permintaanTabel.current = controller;
     setMemuat(true);
     try {
       const url = new URL("/api/registrasi", window.location.origin);
-      if (tanggalMulai && tanggalSelesai) {
-        url.searchParams.set("tanggal_mulai", tanggalMulai);
-        url.searchParams.set("tanggal_selesai", tanggalSelesai);
-      }
+      if (tanggalMulai) url.searchParams.set("tanggal_mulai", tanggalMulai);
+      if (tanggalSelesai) url.searchParams.set("tanggal_selesai", tanggalSelesai);
+      url.searchParams.set("status_bayar", statusBayar);
+      url.searchParams.set("page", String(halaman));
       if (filterDokter.trim()) url.searchParams.set("kd_dokter", filterDokter.trim());
       if (filterPoli.trim()) url.searchParams.set("kd_poli", filterPoli.trim());
       if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
       url.searchParams.set("limit", "100");
 
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), { signal: controller.signal });
       const json = await res.json();
+      if (controller.signal.aborted) return;
       if (json.success) {
         setData(json.data || []);
+        setTotalData(json.total);
+        setHalaman(json.page);
       } else {
         tampilkanToast(json.error || "Gagal memuat data registrasi", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Terjadi kesalahan jaringan", "error");
+    } catch (err: unknown) {
+      if (!controller.signal.aborted) tampilkanToast(err instanceof Error ? err.message : "Terjadi kesalahan jaringan", "error");
     } finally {
-      setMemuat(false);
+      if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, tampilkanToast]);
+  }, [isAuthenticated, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, statusBayar, halaman, tampilkanToast]);
 
   useEffect(() => {
-    muatData();
-  }, [muatData]);
+    permintaanTabel.current?.abort();
+    const timer = setTimeout(() => { void muatData(); }, 150);
+    return () => { clearTimeout(timer); permintaanTabel.current?.abort(); };
+  }, [muatData, versiTabel]);
 
   // Handle Klik Baris Tabel (getData() di DlgReg.java)
   const handlePilihData = (item: PasienReg) => {
+    if (sedangMenyimpan || sedangMenghapus) return;
+    permintaanIdentitas.current?.abort();
     setTerpilih(item);
     setTglReg(item.tgl_registrasi);
     setJamReg(item.jam_reg);
+    setJamOtomatis(false);
     setNoRm(item.no_rkm_medis);
     setNmPasien(item.nm_pasien);
+    setNoKartu(item.no_peserta || "");
+    setTanggalDaftarPasien(item.tgl_daftar_pasien || "");
     setKdDokter(item.kd_dokter);
-    setNmDokter(item.nm_dokter);
     setKdPoli(item.kd_poli);
-    setNmPoli(item.nm_poli);
     setKdPj(item.kd_pj || "A09");
-    setNmPj(item.png_jawab || "Umum");
     setPenanggungJawab(item.p_jawab || "-");
     setAlmtPj(item.almt_pj || "-");
     setHubunganPj(item.hubunganpj || "Keluarga");
-    setBiayaReg(String(item.biaya_reg || 0));
-    setStatusPoli(item.stts || "Belum");
+
+    setStatusRawat(item.stts || "Belum");
     setSttsBayar(item.status_bayar || "Belum Bayar");
+    setAsalRujukan(item.asal_rujukan || "-");
   };
 
   // Simpan Data Baru (BtnSimpanActionPerformed di DlgReg.java)
   const handleSimpan = async () => {
     if (terpilih || !nomorSiap || sedangMenyimpan) return;
-    if (!noRm.trim() || !kdDokter.trim() || !kdPoli.trim()) {
-      tampilkanToast("No. RM, Dokter, dan Unit Poli harus terisi lengkap!", "error");
+    if (!noRm.trim() || !nmPasien.trim() || !kdDokter.trim() || !kdPoli.trim()) {
+      tampilkanToast("Pilih pasien yang valid, dokter, dan unit poli terlebih dahulu!", "error");
       return;
     }
 
@@ -287,8 +334,8 @@ export default function HalamanRegistrasi() {
           p_jawab: penanggungJawab,
           almt_pj: almtPj,
           hubunganpj: hubunganPj,
-          biaya_reg: Number(biayaReg) || 0,
-          stts: statusPoli,
+          asal_rujukan: asalRujukan,
+          stts: statusRawat,
           status_bayar: sttsBayar,
         }),
       });
@@ -301,8 +348,8 @@ export default function HalamanRegistrasi() {
       } else {
         tampilkanToast(json.error || "Gagal menyimpan data registrasi", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menyimpan ke server", "error");
+    } catch (err: unknown) {
+      tampilkanToast(err instanceof Error ? err.message : "Gagal menyimpan ke server", "error");
     } finally {
       setSedangMenyimpan(false);
     }
@@ -315,8 +362,8 @@ export default function HalamanRegistrasi() {
       tampilkanToast("Pilih data registrasi pada tabel yang ingin diubah terlebih dahulu!", "error");
       return;
     }
-    if (!noRm.trim() || !kdDokter.trim() || !kdPoli.trim()) {
-      tampilkanToast("No. RM, Dokter, dan Unit Poli harus terisi lengkap!", "error");
+    if (!noRm.trim() || !nmPasien.trim() || !kdDokter.trim() || !kdPoli.trim()) {
+      tampilkanToast("Pilih pasien yang valid, dokter, dan unit poli terlebih dahulu!", "error");
       return;
     }
 
@@ -338,8 +385,8 @@ export default function HalamanRegistrasi() {
           p_jawab: penanggungJawab,
           almt_pj: almtPj,
           hubunganpj: hubunganPj,
-          biaya_reg: Number(biayaReg) || 0,
-          stts: statusPoli,
+          asal_rujukan: asalRujukan,
+          stts: statusRawat,
           status_bayar: sttsBayar,
         }),
       });
@@ -350,12 +397,13 @@ export default function HalamanRegistrasi() {
           `Data registrasi No. Rawat ${noRawat} (${nmPasien || terpilih.nm_pasien}) berhasil diperbarui!`,
           "sukses"
         );
+        resetForm();
         muatData();
       } else {
         tampilkanToast(json.error || "Gagal memperbarui data registrasi", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menghubungi server", "error");
+    } catch (err: unknown) {
+      tampilkanToast(err instanceof Error ? err.message : "Gagal menghubungi server", "error");
     } finally {
       setSedangMenyimpan(false);
     }
@@ -372,7 +420,7 @@ export default function HalamanRegistrasi() {
 
   // Eksekusi Hapus Data (BtnHapusActionPerformed di DlgReg.java)
   const handleKonfirmasiHapus = async () => {
-    if (!terpilih) return;
+    if (!terpilih || sedangMenghapus || sedangMenyimpan) return;
     setSedangMenghapus(true);
 
     try {
@@ -391,8 +439,8 @@ export default function HalamanRegistrasi() {
       } else {
         tampilkanToast(json.error || "Gagal menghapus data", "error");
       }
-    } catch (err: any) {
-      tampilkanToast(err.message || "Gagal menghapus data", "error");
+    } catch (err: unknown) {
+      tampilkanToast(err instanceof Error ? err.message : "Gagal menghapus data", "error");
     } finally {
       setSedangMenghapus(false);
     }
@@ -408,20 +456,27 @@ export default function HalamanRegistrasi() {
   };
 
   // Cari Pasien untuk tombol BtnPasien (langsung memuat saat kosong)
-  const handleCariPasien = async (query: string = "") => {
+  const handleCariPasien = (query: string = "") => {
     setKataCariPasien(query);
+    permintaanPasien.current?.abort();
+    if (timerPasien.current) clearTimeout(timerPasien.current);
+    const controller = new AbortController();
+    permintaanPasien.current = controller;
     setSedangMemuatPasien(true);
-    try {
-      const res = await fetch(`/api/registrasi/options?jenis=pasien&cari=${encodeURIComponent(query)}`);
-      const json = await res.json();
-      if (json.success) {
+    setDaftarPasienCari([]);
+    timerPasien.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/registrasi/options?jenis=pasien&cari=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const json = await res.json();
+        if (controller.signal.aborted) return;
+        if (!res.ok || !json.success) throw new Error(json.error || "Gagal mencari pasien");
         setDaftarPasienCari(json.data || []);
+      } catch (error) {
+        if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal mencari pasien", "error");
+      } finally {
+        if (!controller.signal.aborted) setSedangMemuatPasien(false);
       }
-    } catch (e) {
-      console.error("Gagal mencari pasien:", e);
-    } finally {
-      setSedangMemuatPasien(false);
-    }
+    }, query ? 200 : 0);
   };
 
   const handleBukaModalPasien = () => {
@@ -429,27 +484,61 @@ export default function HalamanRegistrasi() {
     handleCariPasien(noRm || "");
   };
 
-  const handlePilihPasienCari = (p: any) => {
+  const isiPasien = (p: PasienOption) => {
     setNoRm(p.no_rkm_medis);
     setNmPasien(p.nm_pasien);
+    setNoKartu(p.no_peserta || "");
+    setTanggalDaftarPasien(p.tgl_daftar || "");
     setPenanggungJawab(p.namakeluarga || p.nm_pasien || "-");
     setAlmtPj(p.alamat || "-");
     setHubunganPj(p.keluarga || "DIRI SENDIRI");
     if (p.kd_pj) {
       setKdPj(p.kd_pj);
-      const pjMatch = daftarPenjab.find((item) => item.kd_pj === p.kd_pj);
-      if (pjMatch) setNmPj(pjMatch.png_jawab);
     }
+  };
+
+  const handlePilihPasienCari = (p: PasienOption) => {
+    permintaanIdentitas.current?.abort();
+    isiPasien(p);
     setModalPasienBuka(false);
   };
 
-  const dataTersaring = data.filter((item) => {
-    if (statusBayar === "Semua") return true;
-    return item.status_bayar === statusBayar;
-  });
+  const cariIdentitas = async () => {
+    permintaanIdentitas.current?.abort();
+    if (!noRm.trim() || nmPasien) return;
+    const controller = new AbortController();
+    permintaanIdentitas.current = controller;
+    try {
+      const res = await fetch(`/api/registrasi/options?jenis=pasien&rm=${encodeURIComponent(noRm.trim())}`, { signal: controller.signal });
+      const json = await res.json();
+      if (controller.signal.aborted) return;
+      if (!res.ok || !json.success) throw new Error(json.error || "Gagal memuat identitas pasien");
+      if (!json.data?.[0]) throw new Error("No. Rekam Medis tidak ditemukan.");
+      isiPasien(json.data[0]);
+    } catch (error) {
+      if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal memuat pasien", "error");
+    }
+  };
 
+  const dataTersaring = data;
+
+  const inputClass = "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-emerald-600";
+  const input = (label:string,value:string,change?: (value:string)=>void,readOnly=false,placeholder='') => (
+    <input aria-label={label} type="text" value={value} onChange={change ? (event)=>change(event.target.value) : undefined} readOnly={readOnly} placeholder={placeholder} className={`${inputClass} w-full`} />
+  );
+  const select = (label:string,value:string,change:(value:string)=>void,options:[string,string][],fallback?:string) => (
+    <CustomSelect aria-label={label} value={value} onChange={(event)=>change(event.target.value)} className="h-7 py-0.5 rounded-md font-normal">
+      {value && !options.some(([id])=>id===value) && <option value={value}>{fallback || value}</option>}
+      {options.map(([id,name])=><option key={id} value={id}>{name}</option>)}
+    </CustomSelect>
+  );
+  const lookup = (label:string,value:string,change:(value:string)=>void,options:[string,string][],fallback?:string) => {
+    const items=options.map(([id,name])=>({id,label:name}));
+    if(value && !items.some((item)=>item.id===value)) items.unshift({id:value,label:fallback || value});
+    return <PatientMasterSelect jenis={label} label={label} value={value} items={items} onChange={(id)=>change(id)} />;
+  };
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-2 sm:p-3 space-y-2.5">
+    <div className="registration-web flex flex-col h-full w-full overflow-y-auto lg:overflow-hidden bg-slate-50 p-2 sm:p-3 space-y-2.5">
       {/* 1. Header Modul */}
       <HeaderModul
         judul="Registrasi & Pendaftaran Pasien"
@@ -457,289 +546,99 @@ export default function HalamanRegistrasi() {
         memuat={memuat}
       />
 
-      {/* 2. Panel Input Data (3 Kolom: Kolom 1 & 2 berisi inputan sesuai DlgReg, Kolom 3 kosong untuk fitur/ekspansi) */}
+      {/* Dua kolom aktif dan satu kolom cadangan untuk pengembangan berikutnya. */}
       <PanelInputData
         judul=".: Input Data"
       >
-        <div className="space-y-2.5 text-xs text-slate-700">
-          {/* Baris 1: No. Reg | No. Rekam Medik + Pasien | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
-            {/* Kolom 1: No. Reg */}
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">No. Reg. :</label>
-              <input
-                type="text"
-                value={noReg}
-                readOnly
-                className="w-28 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600"
-                placeholder="Otomatis"
-              />
-            </div>
-
-            {/* Kolom 2: No. Rekam Medik & Nama Pasien */}
-            <div className="flex items-center gap-2">
-              <label className="w-28 font-semibold text-slate-600 shrink-0">No. Rekam Medik :</label>
-              <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                <input
-                  type="text"
-                  value={noRm}
-                  onChange={(e) => setNoRm(e.target.value)}
-                  placeholder="No. RM..."
-                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 focus:outline-none focus:border-emerald-600 shrink-0"
-                />
-                <input
-                  type="text"
-                  value={nmPasien}
-                  onChange={(e) => setNmPasien(e.target.value)}
-                  placeholder="Nama Pasien..."
-                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:border-emerald-600 truncate"
-                />
-                <button
-                  type="button"
-                  onClick={handleBukaModalPasien}
-                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-2xs font-medium cursor-pointer shrink-0"
-                  title="Cari Data Pasien (BtnPasien Alt+1)"
-                >
-                  <FontAwesomeIcon icon={faMagnifyingGlass} className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-
-            {/* Kolom 3: Kosong untuk ekspansi fitur mendatang */}
-            <div className="hidden lg:block"></div>
-          </div>
-
-          {/* Baris 2: No. Rawat | Penanggung Jawab & Hubungan | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
-            {/* Kolom 1: No. Rawat */}
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">No. Rawat :</label>
-              <input
-                type="text"
-                value={noRawat}
-                readOnly
-                className="w-56 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-medium text-slate-800 focus:outline-none focus:border-emerald-600"
-                placeholder="YYYY/MM/DD/000001"
-              />
-            </div>
-
-            {/* Kolom 2: Penanggung Jawab & Hubungan */}
-            <div className="flex items-center gap-2">
-              <label className="w-28 font-semibold text-slate-600 shrink-0">P. Jawab :</label>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <input
-                  type="text"
-                  value={penanggungJawab}
-                  onChange={(e) => setPenanggungJawab(e.target.value)}
-                  placeholder="Nama Penanggung Jawab"
-                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-                />
-                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Hubungan :</label>
-                <div className="w-32 shrink-0">
-                  <CustomSelect
-                    value={hubunganPj}
-                    onChange={(e) => setHubunganPj(e.target.value)}
-                  >
-                    <option value="DIRI SENDIRI">Diri Sendiri</option>
-                    <option value="KELUARGA">Keluarga</option>
-                    <option value="AYAH">Ayah</option>
-                    <option value="IBU">Ibu</option>
-                    <option value="ISTRI">Istri</option>
-                    <option value="SUAMI">Suami</option>
-                    <option value="ANAK">Anak</option>
-                    <option value="SAUDARA">Saudara</option>
-                  </CustomSelect>
-                </div>
-              </div>
-            </div>
-
-            {/* Kolom 3: Kosong */}
-            <div className="hidden lg:block"></div>
-          </div>
-
-          {/* Baris 3: Tgl. Reg & Jam | Alamat P.J. & Status | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
-            {/* Kolom 1: Tgl. Reg & Jam */}
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Tgl. Reg. :</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={tglReg}
-                  onChange={(e) => setTglReg(e.target.value)}
-                  className="px-2 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-                />
-                <label className="font-semibold text-slate-600 shrink-0">Jam :</label>
-                <input
-                  type="text"
-                  value={jamReg}
-                  onChange={(e) => setJamReg(e.target.value)}
-                  className="w-20 px-2 py-1 text-xs bg-white border border-slate-300 rounded text-center font-mono text-slate-700 focus:outline-none focus:border-emerald-600"
-                  title="Jam:Menit:Detik"
-                />
-              </div>
-            </div>
-
-            {/* Kolom 2: Alamat P.J. & Status */}
-            <div className="flex items-center gap-2">
-              <label className="w-28 font-semibold text-slate-600 shrink-0">Alamat P.J. :</label>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <input
-                  type="text"
-                  value={almtPj}
-                  onChange={(e) => setAlmtPj(e.target.value)}
-                  placeholder="Alamat Penanggung Jawab"
-                  className="flex-1 min-w-0 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-                />
-                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Status :</label>
-                <div className="w-32 shrink-0">
-                  <CustomSelect
-                    value={statusPoli}
-                    onChange={(e) => setStatusPoli(e.target.value)}
-                  >
-                    <option value="Belum">Belum</option>
-                    <option value="Sudah">Sudah</option>
-                    <option value="Batal">Batal</option>
-                  </CustomSelect>
-                </div>
-              </div>
-            </div>
-
-            {/* Kolom 3: Kosong */}
-            <div className="hidden lg:block"></div>
-          </div>
-
-          {/* Baris 4: Dr Dituju | Jenis Bayar & Status Bayar | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
-            {/* Kolom 1: Dr Dituju */}
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Dr Dituju :</label>
-              <div className="flex-1 max-w-sm">
-                <CustomSelect
-                  value={kdDokter}
-                  onChange={(e) => {
-                    setKdDokter(e.target.value);
-                    const sel = daftarDokter.find((d) => d.kd_dokter === e.target.value);
-                    if (sel) setNmDokter(sel.nm_dokter);
-                  }}
-                >
-                  {daftarDokter.map((d) => (
-                    <option key={d.kd_dokter} value={d.kd_dokter}>
-                      {d.nm_dokter} ({d.kd_dokter})
-                    </option>
-                  ))}
-                </CustomSelect>
-              </div>
-            </div>
-
-            {/* Kolom 2: Jenis Bayar & Status Bayar */}
-            <div className="flex items-center gap-2">
-              <label className="w-28 font-semibold text-slate-600 shrink-0">Jenis Bayar :</label>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="flex-1 min-w-0">
-                  <CustomSelect
-                    value={kdPj}
-                    onChange={(e) => {
-                      setKdPj(e.target.value);
-                      const sel = daftarPenjab.find((pj) => pj.kd_pj === e.target.value);
-                      if (sel) setNmPj(sel.png_jawab);
+        <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="max-h-[46vh] overflow-y-auto font-sans text-xs font-normal text-slate-700">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)] gap-x-8 gap-y-3">
+            <section className="space-y-1.5" aria-label="Informasi kunjungan">
+              <RegistrationField label="No. Reg."><div className="w-full max-w-60">{input('No. Registrasi',noReg,undefined,true,'Otomatis')}</div></RegistrationField>
+              <RegistrationField label="No. Rawat"><div className="w-full max-w-[28rem]">{input('No. Rawat',noRawat,undefined,true,'YYYY/MM/DD/000001')}</div></RegistrationField>
+              <RegistrationField label="Tgl. Reg.">
+                <div className="flex flex-wrap xl:flex-nowrap items-center gap-2 w-full">
+                  <input aria-label="Tanggal registrasi" type="date" value={tglReg} onChange={(event)=>setTglReg(event.target.value)} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-600" />
+                  <span className="text-slate-600">Jam :</span>
+                  <input
+                    aria-label="Jam registrasi"
+                    type="time"
+                    step="1"
+                    value={jamReg}
+                    onChange={(event) => {
+                      setJamOtomatis(false);
+                      const value = event.target.value;
+                      setJamReg(value.length === 5 ? `${value}:00` : value);
                     }}
-                  >
-                    {daftarPenjab.map((pj) => (
-                      <option key={pj.kd_pj} value={pj.kd_pj}>
-                        {pj.png_jawab} ({pj.kd_pj})
-                      </option>
-                    ))}
-                  </CustomSelect>
+                    className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-emerald-600"
+                  />
+                  <input aria-label="Jam otomatis" title="Perbarui jam secara otomatis" type="checkbox" checked={jamOtomatis} disabled={!!terpilih} onChange={(event)=>setJamOtomatis(event.target.checked)} className="shrink-0 accent-emerald-700" />
                 </div>
-                <label className="w-20 font-semibold text-slate-600 shrink-0 text-right pr-1.5">Bayar :</label>
-                <div className="w-32 shrink-0">
-                  <CustomSelect
-                    value={sttsBayar}
-                    onChange={(e) => setSttsBayar(e.target.value)}
-                  >
-                    <option value="Belum Bayar">Belum Bayar</option>
-                    <option value="Sudah Bayar">Sudah Bayar</option>
-                  </CustomSelect>
+              </RegistrationField>
+              <RegistrationField label="Dr Dituju">
+                {lookup('Dokter dituju',kdDokter,setKdDokter,daftarDokter.map((item)=>[item.kd_dokter,item.nm_dokter]),terpilih?.nm_dokter)}
+              </RegistrationField>
+              <RegistrationField label="Unit">
+                <div className="w-20 shrink-0">{input('Kode unit',kdPoli,undefined,true)}</div>
+                {lookup('Unit poliklinik',kdPoli,setKdPoli,daftarPoli.map((item)=>[item.kd_poli,item.nm_poli]),terpilih?.nm_poli)}
+              </RegistrationField>
+            </section>
+            <section className="space-y-1.5" aria-label="Pasien dan penjamin">
+              <RegistrationField label="No. Rekam Medik" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
+                <input aria-label="No. Rekam Medis pasien" type="text" value={noRm} onChange={(event)=>{
+                  permintaanIdentitas.current?.abort();
+                  setNoRm(event.target.value); setNmPasien(''); setNoKartu(''); setTanggalDaftarPasien('');
+                  setPenanggungJawab('-'); setAlmtPj('-'); setHubunganPj('DIRI SENDIRI');
+                }} onBlur={()=>{void cariIdentitas();}} placeholder="No. RM" className={`${inputClass} w-28 shrink-0`} />
+                {input('Nama pasien',nmPasien,undefined,true,'Nama pasien')}
+                <button type="button" onClick={handleBukaModalPasien} aria-label="Cari data pasien" title="Cari Data Pasien" className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"><FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" /></button>
+              </RegistrationField>
+              <RegistrationField label="Penanggung Jawab" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,0.8fr)] gap-2 items-center w-full">
+                  {input('Penanggung jawab',penanggungJawab,setPenanggungJawab)}
+                  <span className="text-slate-600">Hubungan :</span>
+                  {select('Hubungan penanggung jawab',hubunganPj,setHubunganPj,['DIRI SENDIRI','AYAH','IBU','ISTRI','SUAMI','SAUDARA','ANAK','LAIN-LAIN','KELUARGA'].map((value)=>[value,value]))}
                 </div>
-              </div>
-            </div>
-
-            {/* Kolom 3: Kosong */}
-            <div className="hidden lg:block"></div>
+              </RegistrationField>
+              <RegistrationField label="Alamat P.J." labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,0.8fr)] gap-2 items-center w-full">
+                  {input('Alamat penanggung jawab',almtPj,setAlmtPj)}
+                  <span className="text-slate-600">Status :</span>
+                  {input('Status pasien',statusPasien,undefined,true)}
+                </div>
+              </RegistrationField>
+              <RegistrationField label="Jenis Bayar" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,0.8fr)] gap-2 items-center w-full">
+                  {lookup('Jenis bayar',kdPj,setKdPj,daftarPenjab.map((item)=>[item.kd_pj,item.png_jawab]),terpilih?.png_jawab)}
+                  <span className="text-slate-600 whitespace-nowrap">No. Ka :</span>
+                  {input('Nomor kartu peserta',noKartu,undefined,true)}
+                </div>
+              </RegistrationField>
+              <RegistrationField label="Asal Rujukan" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">{input('Asal rujukan',asalRujukan,setAsalRujukan)}</RegistrationField>
+            </section>
+            <div aria-hidden="true" className="hidden lg:block" />
           </div>
-
-          {/* Baris 5: Unit Poli + Biaya Reg | Asal Rujukan | Kolom 3 Kosong */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.25fr_0.75fr] gap-3 lg:gap-4 items-center">
-            {/* Kolom 1: Unit & Biaya Reg */}
-            <div className="flex items-center gap-2">
-              <label className="w-20 font-semibold text-slate-600 shrink-0">Unit :</label>
-              <div className="flex items-center gap-2 flex-1 max-w-sm">
-                <div className="flex-1">
-                  <CustomSelect
-                    value={kdPoli}
-                    onChange={(e) => {
-                      setKdPoli(e.target.value);
-                      const sel = daftarPoli.find((p) => p.kd_poli === e.target.value);
-                      if (sel) {
-                        setNmPoli(sel.nm_poli);
-                        setBiayaReg(String(sel.registrasi || 0));
-                      }
-                    }}
-                  >
-                    {daftarPoli.map((p) => (
-                      <option key={p.kd_poli} value={p.kd_poli}>
-                        {p.nm_poli}
-                      </option>
-                    ))}
-                  </CustomSelect>
-                </div>
-                <label className="font-semibold text-slate-600 shrink-0">Biaya :</label>
-                <input
-                  type="number"
-                  value={biayaReg}
-                  onChange={(e) => setBiayaReg(e.target.value)}
-                  className="w-24 px-2 py-1 text-xs bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 text-right focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-            </div>
-
-            {/* Kolom 2: Asal Rujukan */}
-            <div className="flex items-center gap-2">
-              <label className="w-28 font-semibold text-slate-600 shrink-0">Asal Rujukan :</label>
-              <input
-                type="text"
-                value={asalRujukan}
-                onChange={(e) => setAsalRujukan(e.target.value)}
-                placeholder="Asal rujukan (jika ada)..."
-                className="flex-1 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded text-slate-800 focus:outline-none focus:border-emerald-600"
-              />
-            </div>
-
-            {/* Kolom 3: Kosong */}
-            <div className="hidden lg:block"></div>
-          </div>
-        </div>
+        </fieldset>
       </PanelInputData>
 
       {/* 3. Tabel Data Registrasi (tbPetugas di DlgReg.java) */}
-      <div className="flex-1 min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+      <div className="flex-none h-[32rem] lg:h-auto lg:flex-1 lg:min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
         <div className="flex-1 overflow-auto">
           <table className="w-full text-left text-xs border-collapse">
+            <caption className="sr-only">Daftar registrasi pasien. Pilih nomor registrasi untuk memuat data ke formulir.</caption>
             <thead className="bg-slate-100/90 sticky top-0 z-10 text-slate-700 font-bold border-b border-slate-200 shadow-2xs">
               <tr>
-                <th className="py-2 px-2.5 text-center w-14">No.Reg</th>
-                <th className="py-2 px-2.5">No. Rawat</th>
-                <th className="py-2 px-2.5">Tgl & Jam Reg</th>
-                <th className="py-2 px-2.5">No. RM</th>
-                <th className="py-2 px-2.5">Nama Pasien</th>
-                <th className="py-2 px-2.5 text-center w-10">JK</th>
-                <th className="py-2 px-2.5">Umur</th>
-                <th className="py-2 px-2.5">Poliklinik / Unit</th>
-                <th className="py-2 px-2.5">Dokter Dituju</th>
-                <th className="py-2 px-2.5">Penanggung Jawab</th>
-                <th className="py-2 px-2.5 text-center">Status</th>
-                <th className="py-2 px-2.5 text-center">Status Bayar</th>
+                <th scope="col" className="py-2 px-2.5 text-center w-14">No.Reg</th>
+                <th scope="col" className="py-2 px-2.5">No. Rawat</th>
+                <th scope="col" className="py-2 px-2.5">Tgl & Jam Reg</th>
+                <th scope="col" className="py-2 px-2.5">No. RM</th>
+                <th scope="col" className="py-2 px-2.5">Nama Pasien</th>
+                <th scope="col" className="py-2 px-2.5 text-center w-10">JK</th>
+                <th scope="col" className="py-2 px-2.5">Umur</th>
+                <th scope="col" className="py-2 px-2.5">Poliklinik / Unit</th>
+                <th scope="col" className="py-2 px-2.5">Dokter Dituju</th>
+                <th scope="col" className="py-2 px-2.5">Penanggung Jawab</th>
+                <th scope="col" className="py-2 px-2.5 text-center">Status Rawat</th>
+                <th scope="col" className="py-2 px-2.5 text-center">Status Bayar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
@@ -763,12 +662,12 @@ export default function HalamanRegistrasi() {
                     onClick={() => handlePilihData(item)}
                     className={`cursor-pointer ${
                       terpilih?.no_rawat === item.no_rawat
-                        ? "bg-emerald-50/90 font-semibold text-emerald-950"
+                        ? "bg-emerald-50/90 text-slate-700"
                         : "hover:bg-slate-50/80 text-slate-700"
                     }`}
                   >
                     <td className="py-2 px-2.5 text-center font-bold text-slate-700">
-                      {item.no_reg}
+                      <button type="button" aria-label={`Pilih registrasi ${item.no_rawat} untuk ${item.nm_pasien}`} aria-pressed={terpilih?.no_rawat === item.no_rawat} onClick={(event)=>{event.stopPropagation();handlePilihData(item);}} className="rounded px-1 py-0.5 font-normal hover:underline">{item.no_reg}</button>
                     </td>
                     <td className="py-2 px-2.5 font-medium text-slate-800">
                       {item.no_rawat}
@@ -783,15 +682,7 @@ export default function HalamanRegistrasi() {
                       {item.nm_pasien}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          item.jk === "L"
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-pink-50 text-pink-700"
-                        }`}
-                      >
-                        {item.jk}
-                      </span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${item.jk === "L" ? "bg-blue-50 text-blue-700" : "bg-pink-50 text-pink-700"}`}>{item.jk}</span>
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">
                       {item.umurdaftar} {item.sttsumur}
@@ -830,8 +721,31 @@ export default function HalamanRegistrasi() {
 
         {/* 4. Panel Bawah (panelGlass6, 7, 8 di DlgReg.java) */}
         <PanelBawah
+          tampilan="web"
+          aksiUtama={terpilih ? "ganti" : "simpan"}
+          onKeluar={() => router.push('/')}
+          filterUtama={
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex w-full max-w-80 min-w-0 items-center gap-1.5 sm:w-80">
+                <span className="shrink-0 whitespace-nowrap text-left font-normal text-slate-700">Dokter :</span>
+                {lookup('Filter dokter',filterDokter,(id)=>{setFilterDokter(id);setHalaman(1);},[['','Semua Dokter'],...daftarDokter.map((item)=>[item.kd_dokter,item.nm_dokter] as [string,string])])}
+              </div>
+              <div className="flex w-full max-w-80 min-w-0 items-center gap-1.5 sm:w-80">
+                <span className="shrink-0 whitespace-nowrap text-left font-normal text-slate-700">Unit :</span>
+                {lookup('Filter unit',filterPoli,(id)=>{setFilterPoli(id);setHalaman(1);},[['','Semua Unit'],...daftarPoli.map((item)=>[item.kd_poli,item.nm_poli] as [string,string])])}
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="whitespace-nowrap font-normal text-slate-700">Status bayar :</span>
+                <div className="w-28">
+                  <CustomSelect aria-label="Filter status bayar" value={statusBayar} onChange={(event)=>{setStatusBayar(event.target.value);setHalaman(1);}} className="h-7 py-0.5 font-normal rounded-md">
+                    <option value="Semua">Semua</option><option value="Sudah Bayar">Sudah Bayar</option><option value="Belum Bayar">Belum Bayar</option>
+                  </CustomSelect>
+                </div>
+              </div>
+            </div>
+          }
           onSimpan={handleSimpan}
-          disabledSimpan={!!terpilih || !nomorSiap || sedangMenyimpan}
+          disabledSimpan={!!terpilih || !isAuthenticated || !nomorSiap || !nmPasien.trim() || !kdDokter || !kdPoli || sedangMenyimpan || sedangMenghapus}
           onBaru={resetForm}
           onHapus={handleBukaDialogHapus}
           onGanti={handleGanti}
@@ -843,72 +757,35 @@ export default function HalamanRegistrasi() {
             setFilterDokter("");
             setFilterPoli("");
             setStatusBayar("Semua");
-            muatData();
+            setHalaman(1);
+            setVersiTabel((versi) => versi + 1);
           }}
-          disabledHapus={!terpilih}
-          disabledGanti={!terpilih || sedangMenyimpan}
+          disabledHapus={!terpilih || terpilih.status_bayar === "Sudah Bayar" || sedangMenyimpan || sedangMenghapus}
+          disabledGanti={!terpilih || terpilih.status_bayar === "Sudah Bayar" || sedangMenyimpan || sedangMenghapus}
           tanggalMulai={tanggalMulai}
           tanggalSelesai={tanggalSelesai}
-          onGantiTanggalMulai={setTanggalMulai}
-          onGantiTanggalSelesai={setTanggalSelesai}
+          onGantiTanggalMulai={(value) => { setTanggalMulai(value); setHalaman(1); }}
+          onGantiTanggalSelesai={(value) => { setTanggalSelesai(value); setHalaman(1); }}
           kataKunci={kataKunci}
-          onGantiKataKunci={setKataKunci}
+          onGantiKataKunci={(value) => { setKataKunci(value); setHalaman(1); }}
           onCari={muatData}
           placeholderCari="Cari No.Rawat, RM, Pasien..."
-          filterTambahan={
-            <div className="flex items-center gap-2">
-              {/* Filter Dokter (panelGlass8 di DlgReg.java) */}
-              <div className="w-40">
-                <CustomSelect
-                  value={filterDokter}
-                  onChange={(e) => setFilterDokter(e.target.value)}
-                >
-                  <option value="">Semua Dokter</option>
-                  {daftarDokter.map((d) => (
-                    <option key={d.kd_dokter} value={d.kd_dokter}>
-                      {d.nm_dokter}
-                    </option>
-                  ))}
-                </CustomSelect>
-              </div>
-
-              {/* Filter Poli (panelGlass8 di DlgReg.java) */}
-              <div className="w-36">
-                <CustomSelect
-                  value={filterPoli}
-                  onChange={(e) => setFilterPoli(e.target.value)}
-                >
-                  <option value="">Semua Unit Poli</option>
-                  {daftarPoli.map((p) => (
-                    <option key={p.kd_poli} value={p.kd_poli}>
-                      {p.nm_poli}
-                    </option>
-                  ))}
-                </CustomSelect>
-              </div>
-
-              {/* Filter Status Bayar */}
-              <div className="w-32">
-                <CustomSelect
-                  value={statusBayar}
-                  onChange={(e) => setStatusBayar(e.target.value)}
-                >
-                  <option value="Semua">Semua Bayar</option>
-                  <option value="Sudah Bayar">Sudah Bayar</option>
-                  <option value="Belum Bayar">Belum Bayar</option>
-                </CustomSelect>
-              </div>
-            </div>
+          pagination={
+            <>
+              <span>{data.length} dari {totalData} registrasi · Halaman {halaman} / {Math.max(1, Math.ceil(totalData / 100))}</span>
+              <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman <= 1} onClick={() => setHalaman((page) => page - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman sebelumnya" title="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="w-3 h-3" aria-hidden="true" /></button>
+              <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman * 100 >= totalData} onClick={() => setHalaman((page) => page + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman berikutnya" title="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="w-3 h-3" aria-hidden="true" /></button>
+            </>
           }
-          jumlahRecord={dataTersaring.length}
-          memuat={memuat}
+          tampilkanRecord={false}
+          memuat={memuat || sedangMenyimpan || sedangMenghapus}
         />
       </div>
 
       {/* Modal Dialog Pencarian Pasien (BtnPasien di DlgReg.java) */}
       {modalPasienBuka && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
             {/* Modal Header */}
             <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2">
@@ -973,12 +850,12 @@ export default function HalamanRegistrasi() {
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 font-bold border-b sticky top-0 z-10 shadow-2xs">
                   <tr>
-                    <th className="p-2 w-24">No. RM</th>
-                    <th className="p-2">Nama Pasien</th>
-                    <th className="p-2 w-10 text-center">JK</th>
-                    <th className="p-2">Alamat</th>
-                    <th className="p-2 w-28">No. Telp</th>
-                    <th className="p-2 w-16 text-center">Pilih</th>
+                    <th scope="col" className="p-2 w-24">No. RM</th>
+                    <th scope="col" className="p-2">Nama Pasien</th>
+                    <th scope="col" className="p-2 w-10 text-center">JK</th>
+                    <th scope="col" className="p-2">Alamat</th>
+                    <th scope="col" className="p-2 w-28">No. Telp</th>
+                    <th scope="col" className="p-2 w-16 text-center">Pilih</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[11px]">
@@ -999,7 +876,7 @@ export default function HalamanRegistrasi() {
                         onClick={() => handlePilihPasienCari(p)}
                         className="hover:bg-emerald-50/70 cursor-pointer"
                       >
-                        <td className="p-2 font-mono font-bold text-slate-700">{p.no_rkm_medis}</td>
+                        <td className="p-2 font-mono font-normal text-slate-700">{p.no_rkm_medis}</td>
                         <td className="p-2 font-semibold text-slate-800">{p.nm_pasien}</td>
                         <td className="p-2 text-center text-slate-600">{p.jk}</td>
                         <td className="p-2 text-slate-500 truncate max-w-xs">{p.alamat || "-"}</td>
