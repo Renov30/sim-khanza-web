@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { faArrowLeft, faRotate } from "@fortawesome/free-solid-svg-icons";
@@ -19,16 +19,28 @@ export function HeaderModul({
   onMuatUlang,
   memuat = false,
 }: HeaderModulProps) {
+  const router = useRouter();
+
+  const handleKembali = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  };
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
       <div className="flex items-center gap-2.5">
-        <Link
-          href="/"
+        <button
+          type="button"
+          onClick={handleKembali}
           className="w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 flex items-center justify-center shadow-2xs"
-          title="Kembali ke Beranda"
+          aria-label="Kembali ke halaman sebelumnya"
+          title="Kembali ke halaman sebelumnya"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="w-3 h-3" />
-        </Link>
+        </button>
         <h1 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
           {judul}
         </h1>
