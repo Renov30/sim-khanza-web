@@ -62,6 +62,14 @@ test('filter bayar dan pagination diterapkan sebelum LIMIT; total bukan jumlah h
   assert.match(calls[1][0], /status_bayar = \?.*ORDER BY.*LIMIT \? OFFSET \?/s);
   assert.deepEqual(calls[1][1].slice(-2), [100, 200]);
 });
+test('rujukan internal memakai dokter dan poli tujuan dengan filter berparameter', async () => {
+  const { api, calls } = handler();
+  const url = 'http://localhost/api/registrasi?tampilan=rujukan_internal&kd_dokter=D002&kd_poli=P02&cari=ani';
+  assert.equal((await api.GET(new NextRequest(url))).status, 200);
+  assert.match(calls[0][0], /rujukan_internal_poli rip/);
+  assert.match(calls[0][0], /rip\.kd_dokter = \?.*rip\.kd_poli = \?/s);
+  assert.deepEqual(calls[0][1].slice(0, 2), ['D002', 'P02']);
+});
 test('edit menyimpan tanggal, jam, pasien, penjamin dan status poli dalam transaksi', async () => {
   const { api, calls } = handler();
   assert.equal((await api.PUT(request('PUT'))).status, 200);

@@ -58,6 +58,30 @@ interface PasienReg {
   tgl_daftar_pasien: string;
 }
 
+interface RujukanInternal {
+  no_rawat: string;
+  tgl_registrasi: string;
+  jam_reg: string;
+  kd_dokter: string;
+  nm_dokter: string;
+  no_rkm_medis: string;
+  nm_pasien: string;
+  jk: string;
+  umurdaftar: number | string;
+  sttsumur: string;
+  kd_poli: string;
+  nm_poli: string;
+  kd_pj: string;
+  png_jawab?: string;
+  p_jawab: string;
+  almt_pj: string;
+  hubunganpj: string;
+  stts_daftar: string;
+  no_tlp: string;
+  stts: string;
+  status_bayar: string;
+}
+
 function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minmax(0,1fr)]"}:{label:string;children:React.ReactNode;labelWidth?:string}) {
   return <div className={`grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[7.5rem_minmax(0,1fr)] ${labelWidth} min-w-0`} role="group" aria-label={label}>
     <span className="font-sans text-xs font-normal text-slate-700 sm:text-right whitespace-nowrap">{label} :</span>
@@ -68,19 +92,22 @@ function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minm
 export default function HalamanRegistrasi() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<PasienReg[]>([]);
+  const [dataRujukan, setDataRujukan] = useState<RujukanInternal[]>([]);
   const [terpilih, setTerpilih] = useState<PasienReg | null>(null);
+  const [rujukanTerpilih, setRujukanTerpilih] = useState<RujukanInternal | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
   const [dialogHapusBuka, setDialogHapusBuka] = useState(false);
   const [sedangMenghapus, setSedangMenghapus] = useState(false);
 
-  // Helper menampilkan Toast Feedback
+  // Notifikasi
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe, key: Date.now() });
   }, []);
 
-  // Filter States
+  // Filter
   const hariIni = registrationDate();
   const [tanggalMulai, setTanggalMulai] = useState(hariIni);
   const [tanggalSelesai, setTanggalSelesai] = useState(hariIni);
@@ -102,12 +129,12 @@ export default function HalamanRegistrasi() {
     if (timerPasien.current) clearTimeout(timerPasien.current);
   }, []);
 
-  // Options dari database
+  // Pilihan master
   const [daftarDokter, setDaftarDokter] = useState<DokterOption[]>([]);
   const [daftarPoli, setDaftarPoli] = useState<PoliOption[]>([]);
   const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
 
-  // Form Input Data States (sesuai DlgReg.java)
+  // Form registrasi
   const [nomorBerikutnya, setNomorBerikutnya] = useState<(RegistrationNumbers & { tanggal: string; versi: number }) | null>(null);
   const [versiNomor, setVersiNomor] = useState(0);
   const [tglReg, setTglReg] = useState(hariIni);
@@ -128,14 +155,13 @@ export default function HalamanRegistrasi() {
   const [asalRujukan, setAsalRujukan] = useState("-");
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
 
-  // Mode pencarian live pasien
+  // Pencarian pasien
   const [daftarPasienCari, setDaftarPasienCari] = useState<PasienOption[]>([]);
   const [modalPasienBuka, setModalPasienBuka] = useState(false);
   const [kataCariPasien, setKataCariPasien] = useState("");
   const [sedangMemuatPasien, setSedangMemuatPasien] = useState(false);
 
-  // Pertahankan pratinjau saat dokter/poli berubah agar input dan tombol tidak
-  // berkedip. Server tetap menentukan nomor final saat registrasi disimpan.
+  // Server menentukan nomor final saat penyimpanan.
   const nomorSiap = nomorBerikutnya?.tanggal === tglReg && nomorBerikutnya.versi === versiNomor;
   const noRawat = terpilih?.no_rawat || (nomorSiap ? nomorBerikutnya.no_rawat : "");
   const noReg = terpilih?.no_reg || (nomorSiap ? nomorBerikutnya.no_reg : "");
@@ -168,7 +194,7 @@ export default function HalamanRegistrasi() {
     return () => controller.abort();
   }, [terpilih, isAuthenticated, tglReg, kdDokter, kdPoli, versiNomor, tampilkanToast]);
 
-  // Muat opsi dokter, poli, penjab sekali di awal
+  // Muat pilihan master
   useEffect(() => {
     if (!isAuthenticated) return;
     async function muatOpsi() {
@@ -197,18 +223,17 @@ export default function HalamanRegistrasi() {
     muatOpsi();
   }, [isAuthenticated]);
 
-  // Update jam otomatis jika form baru
+  // Jam otomatis
   useEffect(() => {
     if (terpilih || !jamOtomatis) return;
 
     const perbaruiJam = () => setJamReg(new Date().toTimeString().slice(0, 8));
-    // Sinkronkan dengan jam browser saat mount, tanpa menunggu tick pertama.
     perbaruiJam();
     const timer = setInterval(perbaruiJam, 1000);
     return () => clearInterval(timer);
   }, [terpilih, jamOtomatis]);
 
-  // Fungsi Reset / Baru (emptTeks() di DlgReg.java - mereset text & combobox)
+  // Reset form (emptTeks)
   const resetForm = useCallback(() => {
     const sekarang = new Date();
     const tgl = registrationDate(sekarang);
@@ -229,7 +254,6 @@ export default function HalamanRegistrasi() {
     setAsalRujukan("-");
     setStatusRawat("Belum");
 
-    // Reset seluruh pilihan dropdown / combobox ke nilai default awal
     setHubunganPj("DIRI SENDIRI");
     setSttsBayar("Belum Bayar");
     if (daftarDokter.length > 0) {
@@ -244,7 +268,7 @@ export default function HalamanRegistrasi() {
     }
   }, [daftarDokter, daftarPoli, daftarPenjab]);
 
-  // Fetch Data Tabel
+  // Data tabel
   const muatData = useCallback(async () => {
     if (!isAuthenticated) return;
     permintaanTabel.current?.abort();
@@ -253,6 +277,7 @@ export default function HalamanRegistrasi() {
     setMemuat(true);
     try {
       const url = new URL("/api/registrasi", window.location.origin);
+      url.searchParams.set("tampilan", tabTabel);
       if (tanggalMulai) url.searchParams.set("tanggal_mulai", tanggalMulai);
       if (tanggalSelesai) url.searchParams.set("tanggal_selesai", tanggalSelesai);
       url.searchParams.set("status_bayar", statusBayar);
@@ -266,7 +291,11 @@ export default function HalamanRegistrasi() {
       const json = await res.json();
       if (controller.signal.aborted) return;
       if (json.success) {
-        setData(json.data || []);
+        if (tabTabel === "awal") {
+          setData(json.data || []);
+        } else {
+          setDataRujukan(json.data || []);
+        }
         setTotalData(json.total);
         setHalaman(json.page);
       } else {
@@ -277,7 +306,7 @@ export default function HalamanRegistrasi() {
     } finally {
       if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [isAuthenticated, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, statusBayar, halaman, tampilkanToast]);
+  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, statusBayar, halaman, tampilkanToast]);
 
   useEffect(() => {
     permintaanTabel.current?.abort();
@@ -285,7 +314,7 @@ export default function HalamanRegistrasi() {
     return () => { clearTimeout(timer); permintaanTabel.current?.abort(); };
   }, [muatData, versiTabel]);
 
-  // Handle Klik Baris Tabel (getData() di DlgReg.java)
+  // Pilih baris (getData)
   const handlePilihData = (item: PasienReg) => {
     if (sedangMenyimpan || sedangMenghapus) return;
     permintaanIdentitas.current?.abort();
@@ -309,7 +338,7 @@ export default function HalamanRegistrasi() {
     setAsalRujukan(item.asal_rujukan || "-");
   };
 
-  // Simpan Data Baru (BtnSimpanActionPerformed di DlgReg.java)
+  // Simpan
   const handleSimpan = async () => {
     if (terpilih || !nomorSiap || sedangMenyimpan) return;
     if (!noRm.trim() || !nmPasien.trim() || !kdDokter.trim() || !kdPoli.trim()) {
@@ -356,7 +385,7 @@ export default function HalamanRegistrasi() {
     }
   };
 
-  // Ganti / Edit Data Registrasi (BtnEditActionPerformed di DlgReg.java)
+  // Ubah
   const handleGanti = async () => {
     if (sedangMenyimpan) return;
     if (!terpilih) {
@@ -410,7 +439,7 @@ export default function HalamanRegistrasi() {
     }
   };
 
-  // Buka Dialog Konfirmasi Hapus
+  // Konfirmasi hapus
   const handleBukaDialogHapus = () => {
     if (!terpilih) {
       tampilkanToast("Pilih data registrasi pada tabel yang ingin dihapus terlebih dahulu!", "error");
@@ -419,7 +448,7 @@ export default function HalamanRegistrasi() {
     setDialogHapusBuka(true);
   };
 
-  // Eksekusi Hapus Data (BtnHapusActionPerformed di DlgReg.java)
+  // Hapus
   const handleKonfirmasiHapus = async () => {
     if (!terpilih || sedangMenghapus || sedangMenyimpan) return;
     setSedangMenghapus(true);
@@ -447,7 +476,7 @@ export default function HalamanRegistrasi() {
     }
   };
 
-  // Cetak Data Registrasi
+  // Cetak
   const handleCetak = () => {
     if (data.length === 0) {
       tampilkanToast("Tidak ada data registrasi untuk dicetak!", "info");
@@ -456,7 +485,7 @@ export default function HalamanRegistrasi() {
     window.print();
   };
 
-  // Cari Pasien untuk tombol BtnPasien (langsung memuat saat kosong)
+  // Cari pasien
   const handleCariPasien = (query: string = "") => {
     setKataCariPasien(query);
     permintaanPasien.current?.abort();
@@ -540,14 +569,14 @@ export default function HalamanRegistrasi() {
   };
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
-      {/* 1. Header Modul */}
+      {/* Header */}
       <HeaderModul
         judul="Registrasi & Pendaftaran Pasien"
         onMuatUlang={muatData}
         memuat={memuat}
       />
 
-      {/* Dua kolom aktif dan satu kolom cadangan untuk pengembangan berikutnya. */}
+      {/* Form */}
       <PanelInputData
         judul=".: Input Data"
       >
@@ -620,9 +649,45 @@ export default function HalamanRegistrasi() {
         </fieldset>
       </PanelInputData>
 
-      {/* 3. Tabel Data Registrasi (tbPetugas di DlgReg.java) */}
+      <div role="tablist" aria-label="Jenis data registrasi" className="flex shrink-0 border-b border-slate-200">
+        {(["awal", "rujukan_internal"] as const).map((tab) => (
+          <button
+            key={tab}
+            id={`tab-registrasi-${tab}`}
+            type="button"
+            role="tab"
+            aria-selected={tabTabel === tab}
+            aria-controls={`panel-registrasi-${tab}`}
+            tabIndex={tabTabel === tab ? 0 : -1}
+            onClick={() => {
+              setTabTabel(tab);
+              setHalaman(1);
+            }}
+            onKeyDown={(event) => {
+              if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+              event.preventDefault();
+              const next = event.key === "Home" ? "awal" : event.key === "End" ? "rujukan_internal" : tab === "awal" ? "rujukan_internal" : "awal";
+              setTabTabel(next);
+              setHalaman(1);
+              document.getElementById(`tab-registrasi-${next}`)?.focus();
+            }}
+            className={`border-b-2 px-4 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 ${tabTabel === tab ? "border-emerald-700 bg-white text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+          >
+            {tab === "awal" ? "Registrasi Awal" : "Rujukan Internal Poli"}
+          </button>
+        ))}
+      </div>
+
+      {/* Tabel */}
       <div className="flex-none h-[32rem] lg:h-auto lg:flex-1 lg:min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-auto">
+        <div
+          id={`panel-registrasi-${tabTabel}`}
+          role="tabpanel"
+          aria-labelledby={`tab-registrasi-${tabTabel}`}
+          tabIndex={0}
+          className="flex-1 overflow-auto"
+        >
+          {tabTabel === "awal" ? (
           <table className="w-full text-left text-xs border-collapse">
             <caption className="sr-only">Daftar registrasi pasien. Pilih nomor registrasi untuk memuat data ke formulir.</caption>
             <thead className="bg-slate-100/90 sticky top-0 z-10 text-slate-700 font-bold border-b border-slate-200 shadow-2xs">
@@ -717,10 +782,57 @@ export default function HalamanRegistrasi() {
               )}
             </tbody>
           </table>
+          ) : (
+            <table className="w-full border-collapse text-left text-xs">
+              <caption className="sr-only">Daftar rujukan internal poli.</caption>
+              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/90 font-bold text-slate-700 shadow-2xs">
+                <tr>
+                  <th scope="col" className="px-2.5 py-2">No. Rawat</th>
+                  <th scope="col" className="px-2.5 py-2">Tgl & Jam Reg</th>
+                  <th scope="col" className="px-2.5 py-2">Dokter Rujukan</th>
+                  <th scope="col" className="px-2.5 py-2">No. RM</th>
+                  <th scope="col" className="px-2.5 py-2">Nama Pasien</th>
+                  <th scope="col" className="w-10 px-2.5 py-2 text-center">JK</th>
+                  <th scope="col" className="px-2.5 py-2">Umur</th>
+                  <th scope="col" className="px-2.5 py-2">Poliklinik Rujukan</th>
+                  <th scope="col" className="px-2.5 py-2">Jenis Bayar</th>
+                  <th scope="col" className="px-2.5 py-2">Penanggung Jawab</th>
+                  <th scope="col" className="px-2.5 py-2 text-center">Status</th>
+                  <th scope="col" className="px-2.5 py-2 text-center">Stts Rawat</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
+                {memuat ? (
+                  <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-500">Memuat rujukan internal poli...</td></tr>
+                ) : dataRujukan.length === 0 ? (
+                  <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-400">Tidak ada rujukan internal poli yang sesuai</td></tr>
+                ) : dataRujukan.map((item) => (
+                  <tr
+                    key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
+                    onClick={() => setRujukanTerpilih(item)}
+                    className={`cursor-pointer ${rujukanTerpilih?.no_rawat === item.no_rawat && rujukanTerpilih.kd_dokter === item.kd_dokter && rujukanTerpilih.kd_poli === item.kd_poli ? "bg-emerald-50/90" : "hover:bg-slate-50/80"} text-slate-700`}
+                  >
+                    <td className="px-2.5 py-2">{item.no_rawat}</td>
+                    <td className="px-2.5 py-2 text-slate-600">{item.tgl_registrasi} <span className="text-slate-400">{item.jam_reg}</span></td>
+                    <td className="px-2.5 py-2 font-sans">{item.nm_dokter}</td>
+                    <td className="px-2.5 py-2">{item.no_rkm_medis}</td>
+                    <td className="px-2.5 py-2 font-sans">{item.nm_pasien}</td>
+                    <td className="px-2.5 py-2 text-center">{item.jk}</td>
+                    <td className="px-2.5 py-2">{item.umurdaftar} {item.sttsumur}</td>
+                    <td className="px-2.5 py-2 font-sans">{item.nm_poli}</td>
+                    <td className="px-2.5 py-2 font-sans">{item.png_jawab || item.kd_pj}</td>
+                    <td className="px-2.5 py-2 font-sans">{item.p_jawab || "-"} ({item.hubunganpj || "-"})</td>
+                    <td className="px-2.5 py-2 text-center">{item.stts_daftar}</td>
+                    <td className="px-2.5 py-2 text-center">{item.stts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* 4. Panel Bawah (panelGlass6, 7, 8 di DlgReg.java) */}
+      {/* Filter dan aksi */}
       <PanelBawah
           tampilan="web"
           aksiUtama={terpilih ? "ganti" : "simpan"}
@@ -745,11 +857,11 @@ export default function HalamanRegistrasi() {
               </div>
             </div>
           }
-          onSimpan={handleSimpan}
+          onSimpan={tabTabel === "awal" ? handleSimpan : undefined}
           disabledSimpan={!!terpilih || !isAuthenticated || !nomorSiap || !nmPasien.trim() || !kdDokter || !kdPoli || sedangMenyimpan || sedangMenghapus}
-          onBaru={resetForm}
-          onHapus={handleBukaDialogHapus}
-          onGanti={handleGanti}
+          onBaru={tabTabel === "awal" ? resetForm : undefined}
+          onHapus={tabTabel === "awal" ? handleBukaDialogHapus : undefined}
+          onGanti={tabTabel === "awal" ? handleGanti : undefined}
           onCetak={handleCetak}
           onSemua={() => {
             setKataKunci("");
@@ -773,7 +885,7 @@ export default function HalamanRegistrasi() {
           placeholderCari="Cari No.Rawat, RM, Pasien..."
           pagination={
             <>
-              <span>{data.length} dari {totalData} registrasi · Halaman {halaman} / {Math.max(1, Math.ceil(totalData / 100))}</span>
+              <span>{tabTabel === "awal" ? data.length : dataRujukan.length} dari {totalData} {tabTabel === "awal" ? "registrasi" : "rujukan"} · Halaman {halaman} / {Math.max(1, Math.ceil(totalData / 100))}</span>
               <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman <= 1} onClick={() => setHalaman((page) => page - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman sebelumnya" title="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="w-3 h-3" aria-hidden="true" /></button>
               <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman * 100 >= totalData} onClick={() => setHalaman((page) => page + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman berikutnya" title="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="w-3 h-3" aria-hidden="true" /></button>
             </>
@@ -782,11 +894,11 @@ export default function HalamanRegistrasi() {
           memuat={memuat || sedangMenyimpan || sedangMenghapus}
       />
 
-      {/* Modal Dialog Pencarian Pasien (BtnPasien di DlgReg.java) */}
+      {/* Pencarian pasien */}
       {modalPasienBuka && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            {/* Modal Header */}
+            {/* Header */}
             <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2">
                 <FontAwesomeIcon icon={faHospitalUser} className="w-3.5 h-3.5 text-emerald-200" />
@@ -812,7 +924,7 @@ export default function HalamanRegistrasi() {
               </div>
             </div>
 
-            {/* Input Pencarian Pasien */}
+            {/* Pencarian */}
             <div className="p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
               <div className="relative flex-1">
                 <input
@@ -843,7 +955,7 @@ export default function HalamanRegistrasi() {
               )}
             </div>
 
-            {/* Tabel Pasien Langsung Tampil */}
+            {/* Hasil */}
             <div className="flex-1 overflow-auto p-2">
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 font-bold border-b sticky top-0 z-10 shadow-2xs">
@@ -898,7 +1010,7 @@ export default function HalamanRegistrasi() {
               </table>
             </div>
 
-            {/* Footer Modal */}
+            {/* Ringkasan */}
             <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex justify-between items-center">
               <span>Menampilkan {daftarPasienCari.length} pasien</span>
               <span>Klik baris untuk langsung memilih pasien</span>
@@ -907,7 +1019,7 @@ export default function HalamanRegistrasi() {
         </div>
       )}
 
-      {/* Dialog Konfirmasi Hapus Data */}
+      {/* Konfirmasi hapus */}
       <KonfirmasiDialog
         terbuka={dialogHapusBuka}
         judul="Hapus Registrasi Pasien"
@@ -920,7 +1032,7 @@ export default function HalamanRegistrasi() {
         sedangMemproses={sedangMenghapus}
       />
 
-      {/* Toast Notifikasi (Simpan, Edit, Hapus, Error, Info) */}
+      {/* Notifikasi */}
       <Toast
         key={toast?.key}
         message={toast?.pesan || null}

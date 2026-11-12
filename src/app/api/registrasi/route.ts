@@ -16,16 +16,31 @@ export async function GET(req: NextRequest) {
     const cari = searchParams.get("cari") || "";
     const kdDokter = searchParams.get("kd_dokter") || "";
     const kdPoli = searchParams.get("kd_poli") || "";
+    const tampilan = searchParams.get("tampilan") || "awal";
     const limit = Math.max(1, Math.min(Math.trunc(Number(searchParams.get("limit"))) || 100, 200));
     const page = Math.max(1, Math.trunc(Number(searchParams.get("page"))) || 1);
     const statusBayar = searchParams.get("status_bayar") || "Semua";
     if ((tanggalMulai && !isRegistrationDate(tanggalMulai)) || (tanggalSelesai && !isRegistrationDate(tanggalSelesai))
       || (tanggalMulai && tanggalSelesai && tanggalMulai > tanggalSelesai)
-      || !["Semua", "Belum Bayar", "Sudah Bayar"].includes(statusBayar)) {
+      || !["Semua", "Belum Bayar", "Sudah Bayar"].includes(statusBayar)
+      || !["awal", "rujukan_internal"].includes(tampilan)) {
       return NextResponse.json({ success: false, error: "Filter registrasi tidak valid." }, { status: 400 });
     }
 
-    let sql = `
+    let sql = tampilan === "rujukan_internal" ? `
+      SELECT r.no_rawat, DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') AS tgl_registrasi,
+             r.jam_reg, rip.kd_dokter, d.nm_dokter, r.no_rkm_medis, p.nm_pasien,
+             p.jk, r.umurdaftar, r.sttsumur, rip.kd_poli, pol.nm_poli,
+             r.kd_pj, pj.png_jawab, r.p_jawab, r.almt_pj, r.hubunganpj,
+             r.stts_daftar, p.no_tlp, r.stts, r.status_bayar
+      FROM reg_periksa r
+      INNER JOIN rujukan_internal_poli rip ON rip.no_rawat = r.no_rawat
+      INNER JOIN pasien p ON r.no_rkm_medis = p.no_rkm_medis
+      INNER JOIN dokter d ON rip.kd_dokter = d.kd_dokter
+      INNER JOIN poliklinik pol ON rip.kd_poli = pol.kd_poli
+      LEFT JOIN penjab pj ON r.kd_pj = pj.kd_pj
+      WHERE 1=1
+    ` : `
       SELECT r.no_reg, r.no_rawat, DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') as tgl_registrasi, 
              r.jam_reg, r.kd_dokter, d.nm_dokter, r.no_rkm_medis, p.nm_pasien, 
              p.jk, p.no_peserta, DATE_FORMAT(p.tgl_daftar, '%Y-%m-%d') AS tgl_daftar_pasien, r.stts_daftar, r.umurdaftar, r.sttsumur, r.kd_poli, pol.nm_poli,
@@ -47,12 +62,12 @@ export async function GET(req: NextRequest) {
     if (statusBayar !== "Semua") { sql += " AND r.status_bayar = ?"; params.push(statusBayar); }
 
     if (kdDokter.trim()) {
-      sql += ` AND r.kd_dokter = ?`;
+      sql += tampilan === "rujukan_internal" ? " AND rip.kd_dokter = ?" : " AND r.kd_dokter = ?";
       params.push(kdDokter.trim());
     }
 
     if (kdPoli.trim()) {
-      sql += ` AND r.kd_poli = ?`;
+      sql += tampilan === "rujukan_internal" ? " AND rip.kd_poli = ?" : " AND r.kd_poli = ?";
       params.push(kdPoli.trim());
     }
 

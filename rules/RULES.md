@@ -193,5 +193,6 @@ khanza-web/
 - Untuk perubahan perilaku yang disengaja, jelaskan alasan perbaikan dan lakukan verifikasi yang relevan terhadap aturan bisnis serta integritas data. Jangan menambahkan abstraksi atau dependensi tanpa manfaat konkret.
 - Folder `../simitra-keluarga-merauke/` digunakan sebagai referensi baca dan tidak diubah kecuali diminta pengguna.
 - Jangan pernah mengulang kode duplikat (*DRY Principle*).
+- Komentar kode harus singkat dan menjelaskan alasan atau bagian penting; hindari komentar panjang yang hanya mengulang isi kode.
 - Utamakan performa tinggi dan aksesibilitas untuk petugas medis di rumah sakit/klinik.
 

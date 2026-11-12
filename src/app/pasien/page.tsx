@@ -75,16 +75,16 @@ export default function HalamanDataPasien() {
   const [dialogHapusBuka, setDialogHapusBuka] = useState(false);
   const [sedangMenghapus, setSedangMenghapus] = useState(false);
 
-  // Helper menampilkan Toast Feedback
+  // Notifikasi
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe, key: Date.now() });
   }, []);
 
-  // Filter States
+  // Filter
   const [kataKunci, setKataKunci] = useState("");
   const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
 
-  // Form Input Data Pasien (sesuai DlgPasien.java)
+  // Form pasien
   const [noRm, setNoRm] = useState("");
   const [nmPasien, setNmPasien] = useState("");
   const [noKtp, setNoKtp] = useState("");
@@ -100,7 +100,7 @@ export default function HalamanDataPasien() {
   const [alamat, setAlamat] = useState("");
   const [nmIbu, setNmIbu] = useState("-");
 
-  // Penanggung Jawab Pasien
+  // Penanggung jawab
   const [keluargaPj, setKeluargaPj] = useState("DIRI SENDIRI");
   const [namaPj, setNamaPj] = useState("");
   const [pekerjaanPj, setPekerjaanPj] = useState("-");
@@ -110,7 +110,7 @@ export default function HalamanDataPasien() {
 
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
 
-  // Ambil opsi penjab/asuransi
+  // Pilihan penjamin
   useEffect(() => {
     if (!isAuthenticated) return;
     async function muatPenjab() {
@@ -129,7 +129,7 @@ export default function HalamanDataPasien() {
     muatPenjab();
   }, [isAuthenticated]);
 
-  // Fetch Data Pasien
+  // Data pasien
   const muatData = useCallback(async () => {
     if (!isAuthenticated) return;
     setMemuat(true);
@@ -156,7 +156,7 @@ export default function HalamanDataPasien() {
     muatData();
   }, [muatData]);
 
-  // Reset / Form Baru (emptTeks di DlgPasien.java - mereset text & combobox)
+  // Reset form (emptTeks)
   const resetForm = useCallback(() => {
     setDetail(emptyPatientDetails(registrationDate()));
     setAnggota({tni:false,polri:false});
@@ -175,7 +175,6 @@ export default function HalamanDataPasien() {
     setAlamatPj("");
     setNoPeserta("-");
 
-    // Reset seluruh combobox / dropdown ke opsi default awal
     setJk("L");
     setGolDarah("-");
     setAgama("ISLAM");
@@ -190,7 +189,7 @@ export default function HalamanDataPasien() {
     }
   }, [daftarPenjab]);
 
-  // Handle Pilih Baris (getData() di DlgPasien.java)
+  // Pilih baris (getData)
   const handlePilihData = (p: PasienData) => {
     const values = Object.fromEntries(additionalPatientFields.map((field) => [field.key, String(p[field.key] ?? '')]));
     for(const group of ['tni','polri']) for(const kind of ['golongan','pangkat','satuan','jabatan']) values[`${kind}_${group}`]=String(p[`${kind}_${group}`] ?? '');
@@ -246,7 +245,7 @@ export default function HalamanDataPasien() {
     alamatpj: alamatPj,
   });
 
-  // Simpan Pasien Baru (BtnSimpan di DlgPasien.java)
+  // Simpan
   const handleSimpan = async () => {
     if (!noRm.trim() || !nmPasien.trim()) {
       tampilkanToast("No. Rekam Medis dan Nama Pasien wajib diisi!", "error");
@@ -277,7 +276,7 @@ export default function HalamanDataPasien() {
     }
   };
 
-  // Ganti / Edit Data Pasien (BtnEdit di DlgPasien.java)
+  // Ubah
   const handleGanti = async () => {
     if (!terpilih) {
       tampilkanToast("Pilih data pasien pada tabel yang ingin diubah terlebih dahulu!", "error");
@@ -313,7 +312,7 @@ export default function HalamanDataPasien() {
     }
   };
 
-  // Buka Dialog Konfirmasi Hapus Data Pasien
+  // Konfirmasi hapus
   const handleBukaDialogHapus = () => {
     if (!terpilih) {
       tampilkanToast("Pilih data pasien pada tabel yang ingin dihapus terlebih dahulu!", "error");
@@ -322,7 +321,7 @@ export default function HalamanDataPasien() {
     setDialogHapusBuka(true);
   };
 
-  // Eksekusi Hapus Data Pasien (BtnHapus di DlgPasien.java)
+  // Hapus
   const handleKonfirmasiHapus = async () => {
     if (!terpilih) return;
     setSedangMenghapus(true);
@@ -350,7 +349,7 @@ export default function HalamanDataPasien() {
     }
   };
 
-  // Cetak Data Pasien
+  // Cetak
   const handleCetak = () => {
     if (data.length === 0) {
       tampilkanToast("Tidak ada data pasien untuk dicetak!", "info");
@@ -387,7 +386,7 @@ export default function HalamanDataPasien() {
 
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
-      {/* 1. Header Modul */}
+      {/* Header */}
       <HeaderModul
         judul="Data Pasien & Rekam Medis"
         onMuatUlang={muatData}
@@ -510,7 +509,7 @@ export default function HalamanDataPasien() {
         </fieldset>
       </section>
 
-      {/* 3. Tabel Data Pasien (tbPasien di DlgPasien.java) */}
+      {/* Tabel */}
       <section
         id="panel-pasien-data"
         role="tabpanel"
@@ -620,7 +619,7 @@ export default function HalamanDataPasien() {
 
       </section>
 
-      {/* 4. Panel Bawah (panelGlass8 & 9 di DlgPasien.java) */}
+      {/* Filter dan aksi */}
       <PanelBawah
         tampilan="web"
         onSimpan={tabAktif === "input" ? handleSimpan : undefined}
@@ -643,7 +642,7 @@ export default function HalamanDataPasien() {
         memuat={(tabAktif === "data" && memuat) || sedangMenyimpan || sedangMenghapus}
       />
 
-      {/* Dialog Konfirmasi Hapus Data Pasien */}
+      {/* Konfirmasi hapus */}
       <KonfirmasiDialog
         terbuka={dialogHapusBuka}
         judul="Hapus Data Pasien"
@@ -656,7 +655,7 @@ export default function HalamanDataPasien() {
         sedangMemproses={sedangMenghapus}
       />
 
-      {/* Toast Notifikasi (Simpan, Edit, Hapus, Error, Info) */}
+      {/* Notifikasi */}
       <Toast
         key={toast?.key}
         message={toast?.pesan || null}

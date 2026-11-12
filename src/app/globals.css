@@ -12,7 +12,7 @@ body {
   color: var(--foreground);
 }
 
-/* Kontrol halaman modul: padat, konsisten, dan tanpa animasi. */
+/* Kontrol modul yang padat. */
 .module-page :where(input:not([type="checkbox"]), select) {
   min-height: 1.75rem;
   font-size: 0.75rem;

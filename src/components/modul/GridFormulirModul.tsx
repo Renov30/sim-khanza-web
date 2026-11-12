@@ -5,10 +5,7 @@ interface GridFormulirModulProps {
   className?: string;
 }
 
-/**
- * Grid baku formulir modul: dua kolom aktif dan satu kolom cadangan.
- * Pada layar kecil seluruh konten kembali menjadi satu kolom.
- */
+/** Grid formulir: dua kolom aktif dan satu kolom cadangan. */
 export function GridFormulirModul({
   children,
   className = "",
