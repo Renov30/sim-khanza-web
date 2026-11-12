@@ -4,7 +4,6 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthContext";
-import { HospitalSetting } from "@/lib/types/auth";
 import { UserAccountMenu } from "./UserAccountMenu";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -43,7 +42,6 @@ export function AppHeader({
 }: AppHeaderProps) {
   const pathname = usePathname();
   const { user, isAuthenticated, hasPermission, setIsLoginModalOpen } = useAuth();
-  const [setting, setSetting] = useState<HospitalSetting | null>(null);
   const [menuLabTerbuka, setMenuLabTerbuka] = useState(false);
   const [menuRadTerbuka, setMenuRadTerbuka] = useState(false);
   const [menuFarmasiTerbuka, setMenuFarmasiTerbuka] = useState(false);
@@ -70,17 +68,6 @@ export function AppHeader({
     };
   }, []);
 
-  useEffect(() => {
-    fetch("/api/system/info")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data?.setting) {
-          setSetting(data.data.setting);
-        }
-      })
-      .catch((err) => console.error("Error loading system info:", err));
-  }, []);
-
   const handleToolAction = (permKey: string, title: string) => {
     if (!isAuthenticated) {
       setIsLoginModalOpen(true);
@@ -103,20 +90,9 @@ export function AppHeader({
 
   return (
     <header className="bg-emerald-800 text-white border-b border-emerald-900 px-4 py-2 shrink-0 select-none shadow-sm">
-      <div className="grid grid-cols-[240px_1fr_240px] xl:grid-cols-[280px_1fr_280px] items-center gap-2">
-        {/* Sisi Kiri: Nama Instansi & Alamat Lengkap */}
-        <div className="flex flex-col min-w-0 pr-2">
-          <h1 className="text-xs lg:text-sm font-bold tracking-tight text-white uppercase truncate leading-tight">
-            {setting?.nama_instansi || "KLINIK MITRA KELUARGA PAPUA"}
-          </h1>
-          <p className="text-[11px] text-emerald-100/80 truncate leading-tight mt-0.5">
-            {setting?.alamat_instansi || "JL. Irian Seringgu Kelurahan Samkai"}
-            {setting?.kabupaten ? `, ${setting.kabupaten}` : ""}
-          </p>
-        </div>
-
-        {/* Sisi Tengah: Toolbar Modul Cepat (Registrasi, IGD, dll) */}
-        <div className="flex items-center justify-center space-x-1 px-1">
+      <div className="flex items-center gap-2">
+        {/* Toolbar modul cepat diratakan ke kiri. */}
+        <div className="flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-x-auto px-1 scrollbar-none">
           {/* 1. Menu Utama */}
           <button
             onClick={onToggleMenu}
@@ -475,7 +451,7 @@ export function AppHeader({
         </div>
 
         {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
-        <div className="flex items-center justify-end min-w-0">
+        <div className="ml-auto flex shrink-0 items-center justify-end min-w-0">
           {isAuthenticated && user ? (
             <UserAccountMenu
               onModuleClick={onModuleClick}
