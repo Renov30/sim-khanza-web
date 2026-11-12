@@ -795,10 +795,8 @@ export default function HalamanRegistrasi() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/pasien"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs no-underline"
-                  title="Buka Halaman Data Pasien & Rekam Medis untuk Input Pasien Baru"
+                  title="Buka Data Pasien & Rekam Medis di halaman ini"
                 >
                   <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
                   <span>Pasien Baru</span>
