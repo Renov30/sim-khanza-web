@@ -110,6 +110,25 @@ export default function HalamanDataPasien() {
 
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
 
+  const muatNomorRm = useCallback(async (tanggal: string) => {
+    if (!isAuthenticated) return;
+    try {
+      const url = new URL("/api/pasien/nomor", window.location.origin);
+      url.searchParams.set("tanggal", tanggal);
+      const res = await fetch(url.toString(), { cache: "no-store" });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Gagal membuat No. Rekam Medis.");
+      setNoRm(json.data.no_rkm_medis);
+    } catch (error) {
+      setNoRm("");
+      tampilkanToast(pesanError(error, "Gagal membuat No. Rekam Medis."), "error");
+    }
+  }, [isAuthenticated, tampilkanToast]);
+
+  useEffect(() => {
+    if (!terpilih) void muatNomorRm(detail.tgl_daftar);
+  }, [detail.tgl_daftar, muatNomorRm, terpilih]);
+
   // Pilihan penjamin
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -162,7 +181,7 @@ export default function HalamanDataPasien() {
     setAnggota({tni:false,polri:false});
     setNamaWilayah({});
     setTerpilih(null);
-    setNoRm("");
+    void muatNomorRm(registrationDate());
     setNmPasien("");
     setNoKtp("");
     setTmpLahir("");
@@ -187,7 +206,7 @@ export default function HalamanDataPasien() {
     } else {
       setKdPj("UMU");
     }
-  }, [daftarPenjab]);
+  }, [daftarPenjab, muatNomorRm]);
 
   // Pilih baris (getData)
   const handlePilihData = (p: PasienData) => {
@@ -247,8 +266,8 @@ export default function HalamanDataPasien() {
 
   // Simpan
   const handleSimpan = async () => {
-    if (!noRm.trim() || !nmPasien.trim()) {
-      tampilkanToast("No. Rekam Medis dan Nama Pasien wajib diisi!", "error");
+    if (!nmPasien.trim()) {
+      tampilkanToast("Nama Pasien wajib diisi!", "error");
       return;
     }
 
@@ -263,7 +282,8 @@ export default function HalamanDataPasien() {
 
       const json = await res.json();
       if (json.success) {
-        tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil disimpan!`, "sukses");
+        const savedNumber = json.data?.no_rkm_medis || noRm;
+        tampilkanToast(`Data pasien ${nmPasien} (${savedNumber}) berhasil disimpan!`, "sukses");
         void muatData();
         if (!terpilih) resetForm();
       } else {
@@ -428,7 +448,7 @@ export default function HalamanDataPasien() {
         <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="font-sans text-xs font-normal text-slate-700">
           <GridFormulirModul>
             <div className="space-y-1.5">
-              <PatientField label="No. Rekam Medis"><div className="w-full max-w-60">{input('No. Rekam Medis',noRm,setNoRm,'text',!!terpilih)}</div></PatientField>
+              <PatientField label="No. Rekam Medis"><div className="w-full max-w-60">{input('No. Rekam Medis',noRm,()=>{},'text',true)}</div></PatientField>
               <PatientField label="Nama Pasien">{input('Nama Pasien',nmPasien,setNmPasien)}</PatientField>
               <PatientField label="J.K.">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(4rem,0.6fr)] items-center gap-2 w-full">
@@ -639,7 +659,7 @@ export default function HalamanDataPasien() {
         onCari={tabAktif === "data" ? muatData : undefined}
         placeholderCari="Cari No.RM, Nama Pasien, NIK, No.Peserta..."
         jumlahRecord={data.length}
-        memuat={(tabAktif === "data" && memuat) || sedangMenyimpan || sedangMenghapus}
+        memuat={sedangMenyimpan || sedangMenghapus}
       />
 
       {/* Konfirmasi hapus */}

@@ -572,8 +572,7 @@ export default function HalamanRegistrasi() {
       {/* Header */}
       <HeaderModul
         judul="Registrasi & Pendaftaran Pasien"
-        onMuatUlang={muatData}
-        memuat={memuat}
+        ringkas
       />
 
       {/* Form */}
@@ -716,7 +715,6 @@ export default function HalamanRegistrasi() {
               ) : dataTersaring.length === 0 ? (
                 <tr>
                   <td colSpan={12} className="py-8 text-center text-slate-400 font-sans">
-                    <FontAwesomeIcon icon={faHospitalUser} className="w-8 h-8 text-slate-300 mb-2" />
                     <p>Tidak ada data registrasi yang sesuai</p>
                   </td>
                 </tr>
@@ -891,7 +889,7 @@ export default function HalamanRegistrasi() {
             </>
           }
           tampilkanRecord={false}
-          memuat={memuat || sedangMenyimpan || sedangMenghapus}
+          memuat={sedangMenyimpan || sedangMenghapus}
       />
 
       {/* Pencarian pasien */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
@@ -8,6 +8,7 @@ import { LoginModal } from "@/components/auth/LoginModal";
 import { AboutModal } from "@/components/common/AboutModal";
 import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
+import type { HospitalSetting } from "@/lib/types/auth";
 
 interface NavigationContextType {
   isMenuOpen: boolean;
@@ -33,6 +34,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [setting, setSetting] = useState<HospitalSetting | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function muatIdentitasInstansi() {
+      try {
+        const response = await fetch("/api/system/info", { signal: controller.signal });
+        const result = await response.json();
+        if (response.ok && result.success && result.data?.setting) {
+          setSetting(result.data.setting);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) console.error("Gagal memuat identitas instansi:", error);
+      }
+    }
+    void muatIdentitasInstansi();
+    return () => controller.abort();
+  }, []);
 
   const handleModuleClick = (title: string) => {
     if (title === "Keluar Aplikasi") {
@@ -123,6 +142,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             ) : (
               <main className="flex-1 overflow-hidden relative flex flex-col">
                 {children}
+                {pathname === "/" && (
+                  <section className="absolute bottom-5 left-6 max-w-md text-left" aria-label="Identitas instansi">
+                    <h1 className="text-sm font-bold uppercase tracking-tight text-slate-800">
+                      {setting?.nama_instansi || "KLINIK MITRA KELUARGA PAPUA"}
+                    </h1>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {setting?.alamat_instansi || "JL. Irian Seringgu Kelurahan Samkai"}
+                      {setting?.kabupaten ? `, ${setting.kabupaten}` : ""}
+                    </p>
+                  </section>
+                )}
               </main>
             )}
           </div>

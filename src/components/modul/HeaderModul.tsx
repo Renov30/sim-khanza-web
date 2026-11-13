@@ -12,12 +12,14 @@ interface HeaderModulProps {
   ikon?: IconDefinition;
   onMuatUlang?: () => void;
   memuat?: boolean;
+  ringkas?: boolean;
 }
 
 export function HeaderModul({
   judul,
   onMuatUlang,
   memuat = false,
+  ringkas = false,
 }: HeaderModulProps) {
   const router = useRouter();
 
@@ -41,7 +43,7 @@ export function HeaderModul({
         >
           <FontAwesomeIcon icon={faArrowLeft} className="w-3 h-3" />
         </button>
-        <h1 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+        <h1 className={`${ringkas ? "text-xs sm:text-sm" : "text-sm sm:text-base"} font-bold leading-tight text-slate-800`}>
           {judul}
         </h1>
       </div>
