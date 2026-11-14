@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "migrasi:khanza": "node --env-file=.env.migrasi.local scripts/migrasi-khanza.mjs",
     "test:registrasi": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/registrasi-tests src/lib/registrasi/date.ts src/lib/registrasi/numbering.ts tests/registrasi-numbering.test.ts && node --test .next/registrasi-tests/tests/registrasi-numbering.test.js tests/registrasi-api.test.mjs",
     "test:pasien": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/pasien-tests tests/pasien-fields.test.ts tests/pasien-numbering.test.ts && node --test .next/pasien-tests/tests/pasien-fields.test.js .next/pasien-tests/tests/pasien-numbering.test.js"
   },
