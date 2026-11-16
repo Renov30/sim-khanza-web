@@ -26,7 +26,7 @@ import {
 interface DokterOption { kd_dokter: string; nm_dokter: string }
 interface PoliOption { kd_poli: string; nm_poli: string; registrasi: number; registrasilama: number }
 interface PenjaminOption { kd_pj: string; png_jawab: string }
-interface PasienOption { no_rkm_medis: string; nm_pasien: string; alamat: string; namakeluarga: string; keluarga: string; kd_pj: string; jk: string; no_tlp: string; no_peserta: string; tgl_daftar: string }
+interface PasienOption { no_rkm_medis: string; nm_pasien: string; alamat: string; namakeluarga: string; keluarga: string; kd_pj: string; png_jawab: string | null; jk: string; no_tlp: string; no_peserta: string; tgl_daftar: string }
 
 interface PasienReg {
   no_reg: string;
@@ -143,7 +143,9 @@ export default function HalamanRegistrasi() {
   const [noKartu, setNoKartu] = useState("");
   const [kdDokter, setKdDokter] = useState("");
   const [kdPoli, setKdPoli] = useState("");
-  const [kdPj, setKdPj] = useState("A09");
+  const [kdPj, setKdPj] = useState("");
+  // Penjamin pasien bisa nonaktif dan tidak ada di daftar pilihan; simpan namanya agar field tidak menampilkan kode.
+  const [namaPenjab, setNamaPenjab] = useState("");
   const [penanggungJawab, setPenanggungJawab] = useState("-");
   const [almtPj, setAlmtPj] = useState("-");
   const [hubunganPj, setHubunganPj] = useState("DIRI SENDIRI");
@@ -211,6 +213,7 @@ export default function HalamanRegistrasi() {
           }
           if (json.data.penjab?.length > 0) {
             setKdPj(json.data.penjab[0].kd_pj);
+            setNamaPenjab("");
           }
         }
       } catch (e) {
@@ -262,7 +265,10 @@ export default function HalamanRegistrasi() {
     }
     if (daftarPenjab.length > 0) {
       setKdPj(daftarPenjab[0].kd_pj);
+    } else {
+      setKdPj("");
     }
+    setNamaPenjab("");
   }, [daftarDokter, daftarPoli, daftarPenjab]);
 
   // Data tabel
@@ -325,7 +331,8 @@ export default function HalamanRegistrasi() {
     setTanggalDaftarPasien(item.tgl_daftar_pasien || "");
     setKdDokter(item.kd_dokter);
     setKdPoli(item.kd_poli);
-    setKdPj(item.kd_pj || "A09");
+    setKdPj(item.kd_pj || "");
+    setNamaPenjab(item.png_jawab || "");
     setPenanggungJawab(item.p_jawab || "-");
     setAlmtPj(item.almt_pj || "-");
     setHubunganPj(item.hubunganpj || "Keluarga");
@@ -516,11 +523,12 @@ export default function HalamanRegistrasi() {
     setNmPasien(p.nm_pasien);
     setNoKartu(p.no_peserta || "");
     setTanggalDaftarPasien(p.tgl_daftar || "");
-    setPenanggungJawab(p.namakeluarga || p.nm_pasien || "-");
+    setPenanggungJawab(p.namakeluarga || "-");
     setAlmtPj(p.alamat || "-");
     setHubunganPj(p.keluarga || "DIRI SENDIRI");
     if (p.kd_pj) {
       setKdPj(p.kd_pj);
+      setNamaPenjab(p.png_jawab || "");
     }
   };
 
@@ -607,7 +615,7 @@ export default function HalamanRegistrasi() {
                 <input aria-label="No. Rekam Medis pasien" type="text" value={noRm} onChange={(event)=>{
                   permintaanIdentitas.current?.abort();
                   setNoRm(event.target.value); setNmPasien(''); setNoKartu(''); setTanggalDaftarPasien('');
-                  setPenanggungJawab('-'); setAlmtPj('-'); setHubunganPj('DIRI SENDIRI');
+                  setPenanggungJawab('-'); setAlmtPj('-'); setHubunganPj('DIRI SENDIRI'); setNamaPenjab('');
                 }} onBlur={()=>{void cariIdentitas();}} placeholder="No. RM" className={`${inputClass} w-28 shrink-0`} />
                 {input('Nama pasien',nmPasien,undefined,true,'Nama pasien')}
                 <button type="button" onClick={handleBukaModalPasien} aria-label="Cari data pasien" title="Cari Data Pasien" className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"><FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" /></button>
@@ -628,7 +636,7 @@ export default function HalamanRegistrasi() {
               </RegistrationField>
               <RegistrationField label="Jenis Bayar" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,0.8fr)] gap-2 items-center w-full">
-                  {lookup('Jenis bayar',kdPj,setKdPj,daftarPenjab.map((item)=>[item.kd_pj,item.png_jawab]),terpilih?.png_jawab)}
+                  {lookup('Jenis bayar',kdPj,setKdPj,daftarPenjab.map((item)=>[item.kd_pj,item.png_jawab]),terpilih?.png_jawab || namaPenjab || undefined)}
                   <span className="text-slate-600 whitespace-nowrap">No. Ka :</span>
                   {input('Nomor kartu peserta',noKartu,undefined,true)}
                 </div>

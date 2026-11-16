@@ -103,7 +103,9 @@ test('pencarian pasien mendukung NIK dan alamat dengan empat parameter', async (
   const { api, calls } = handler({}, 'src/app/api/registrasi/options/route.ts');
   const res = await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien&cari=123'));
   assert.equal(res.status, 200);
-  assert.match(calls[0][0], /no_ktp LIKE \? OR alamat LIKE \?/);
+  assert.match(calls[0][0], /penjab\.png_jawab/);
+  assert.match(calls[0][0], /LEFT JOIN penjab ON penjab\.kd_pj = pasien\.kd_pj/);
+  assert.match(calls[0][0], /no_ktp LIKE \? OR pasien\.alamat LIKE \?/);
   assert.deepEqual(calls[0][1], ['%123%', '%123%', '%123%', '%123%']);
 });
 test('API pencarian pasien menolak pengguna tanpa sesi', async () => {
@@ -115,6 +117,6 @@ test('API pencarian pasien menolak pengguna tanpa sesi', async () => {
 test('No. RM yang diketik dicari tepat, bukan pencarian sebagian', async () => {
   const { api, calls } = handler({}, 'src/app/api/registrasi/options/route.ts');
   await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien&rm=000001'));
-  assert.match(calls[0][0], /WHERE no_rkm_medis = \?/);
+  assert.match(calls[0][0], /WHERE pasien\.no_rkm_medis = \?/);
   assert.deepEqual(calls[0][1], ['000001']);
 });

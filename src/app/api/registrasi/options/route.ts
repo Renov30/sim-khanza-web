@@ -52,10 +52,12 @@ export async function GET(req: NextRequest) {
     if (jenis === "pasien") {
       const rm = searchParams.get("rm")?.trim();
       const sql = `
-        SELECT no_rkm_medis, nm_pasien, jk, alamat, namakeluarga, keluarga, kd_pj, no_peserta, no_tlp, DATE_FORMAT(tgl_daftar, '%Y-%m-%d') AS tgl_daftar
-        FROM pasien 
-        ${rm ? "WHERE no_rkm_medis = ?" : cari ? "WHERE no_rkm_medis LIKE ? OR nm_pasien LIKE ? OR no_ktp LIKE ? OR alamat LIKE ?" : ""}
-        ORDER BY no_rkm_medis DESC LIMIT 50
+        SELECT pasien.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.alamat, pasien.namakeluarga, pasien.keluarga,
+          pasien.kd_pj, penjab.png_jawab, pasien.no_peserta, pasien.no_tlp, DATE_FORMAT(pasien.tgl_daftar, '%Y-%m-%d') AS tgl_daftar
+        FROM pasien
+        LEFT JOIN penjab ON penjab.kd_pj = pasien.kd_pj
+        ${rm ? "WHERE pasien.no_rkm_medis = ?" : cari ? "WHERE pasien.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ? OR pasien.no_ktp LIKE ? OR pasien.alamat LIKE ?" : ""}
+        ORDER BY pasien.no_rkm_medis DESC LIMIT 50
       `;
       const params = rm ? [rm] : cari ? Array(4).fill(`%${cari}%`) : [];
       const data = await executeQuery(sql, params);
