@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (only .env.example with blank values is tracked)
 .env*.local
+.env.migrasi
 .env
 .env.production
 .env.development
