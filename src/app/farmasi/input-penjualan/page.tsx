@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { AksiHalaman } from "@/components/modul/AksiHalaman";
+import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -167,12 +168,9 @@ export default function HalamanInputPenjualan() {
           </table>
         </div>
 
-        {/* 4. Footer Modul */}
-        <div className="py-2 px-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <span>Form entri transaksi penjualan obat bebas & BHP apotek (DlgPenjualan).</span>
-          <span className="font-semibold text-slate-700">SIMRS Khanza Web</span>
-        </div>
       </div>
+
+      <PanelBawah tampilan="web" tampilkanRecord={false} />
     </div>
   );
 }

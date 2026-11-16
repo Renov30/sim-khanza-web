@@ -55,9 +55,9 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 
 ### 3.3 Judul halaman
 
-- Judul halaman hanya tampil di ujung kiri navbar global sebelum tombol Menu Utama.
+- Judul halaman hanya tampil di ujung kiri navbar global sebelum tombol Menu.
 - Gunakan judul yang pendek dan langsung pada nama modul atau aktivitas, misalnya `Data Pasien`, `Periksa Lab PK`, atau `Input Penjualan`.
-- Halaman `/` memakai judul `Home`; ketika panel menu utama dibuka, judul berubah menjadi `Menu Utama`.
+- Halaman `/` memakai judul `Home`; ketika panel menu dibuka, judul berubah menjadi `Daftar Menu`.
 - Area judul memiliki lebar tetap; ukuran teks menyesuaikan panjang judul tanpa menggeser posisi tombol antarhalaman.
 - Daftarkan judul rute di `src/lib/navigasi/judul-halaman.ts`. Rute yang belum terdaftar wajib tetap mendapat judul fallback dari segmen URL.
 
@@ -95,14 +95,14 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 
 Halaman generik mengikuti urutan:
 
-1. `AksiHalaman` untuk kembali/segarkan bila diperlukan.
+1. `AksiHalaman` untuk segarkan bila diperlukan.
 2. Filter/pencarian.
 3. Konten utama.
 4. Footer/status/pagination.
 
 Halaman master atau transaksi mengikuti urutan tingkat atas:
 
-1. `AksiHalaman` untuk kembali/segarkan bila diperlukan.
+1. `AksiHalaman` untuk segarkan bila diperlukan.
 2. Navigasi konteks atau tab opsional.
 3. Formulir `PanelInputData` atau panel tab input.
 4. Panel tabel/konten utama.
@@ -112,6 +112,7 @@ Halaman master atau transaksi mengikuti urutan tingkat atas:
 Ketentuan:
 
 - Root modul memakai pola padat: `module-page`, `flex`, tinggi penuh, `bg-slate-50`, `p-2 sm:p-3`, dan `space-y-2.5`.
+- Navigasi kembali menggunakan tombol `Kembali` di `PanelBawah`, bukan tombol di bagian atas. Tombol kembali memakai riwayat browser dan fallback ke `/` bila riwayat tidak tersedia.
 - Form desktop memakai [`GridFormulirModul`](src/components/modul/GridFormulirModul.tsx); dua kolom pertama aktif dan kolom ketiga disiapkan untuk pengembangan. Mobile kembali satu kolom.
 - Tab memakai `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls`, dan navigasi keyboard.
 - Tabel memiliki `caption` aksesibel, header `scope="col"`, dan state terpilih tidak boleh mengubah bobot font atau ukuran kolom.

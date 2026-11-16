@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -11,7 +12,6 @@ import {
   faPrint,
   faReceipt,
   faRotateRight,
-  faRightFromBracket,
   faMagnifyingGlass,
   faXmark,
   faCalendarDays,
@@ -39,7 +39,7 @@ export interface PanelBawahProps {
   onCetak?: () => void;
   onNota?: () => void;
   onSemua?: () => void;
-  onKeluar?: () => void;
+  onKembali?: () => void;
   tombolTambahan?: TombolAksiCustom[];
 
   // Disabled states
@@ -77,7 +77,7 @@ export interface PanelBawahProps {
  * Komponen Panel Bawah SIMRS Khanza
  * Mengadopsi struktur panelGlass / panelisi di SIMRS Khanza Java:
  * - Baris 1: Filter Periode (Tanggal 1 s.d Tanggal 2) + Keyword Pencarian + Filter Tambahan
- * - Baris 2: Tombol Aksi (Simpan, Baru, Hapus, Ganti, Cetak, Nota, Semua, Record Count, Keluar)
+ * - Baris 2: Tombol Aksi (Simpan, Baru, Hapus, Ganti, Cetak, Nota, Semua, Record Count, Kembali)
  */
 export function PanelBawah({
   tampilan = "standar",
@@ -89,7 +89,7 @@ export function PanelBawah({
   onCetak,
   onNota,
   onSemua,
-  onKeluar,
+  onKembali,
   tombolTambahan,
   disabledSimpan = false,
   disabledHapus = false,
@@ -112,6 +112,19 @@ export function PanelBawah({
   nilaiTotal,
   memuat = false,
 }: PanelBawahProps) {
+  const router = useRouter();
+
+  const handleKembali = () => {
+    if (onKembali) {
+      onKembali();
+      return;
+    }
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  };
 
   const handleKeyDownKataKunci = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && onCari) {
@@ -158,7 +171,7 @@ export function PanelBawah({
           <div className={tampilan === 'web' ? 'flex flex-wrap items-center gap-1.5' : 'flex flex-wrap items-center gap-2'} role="group" aria-label="Aksi registrasi">
             {actions.filter((action)=>action.click).map((action)=><button key={action.label} type="button" onClick={action.click} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 min-w-24 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed`}><FontAwesomeIcon icon={action.icon} className={`${tampilan === 'web' ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${action.color}`} />{action.label}</button>)}
             {tombolTambahan?.map((action)=><button key={action.label} type="button" onClick={action.onClick} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 px-3' : 'h-9 px-4'} rounded-full bg-slate-50 text-slate-800 disabled:opacity-40`}>{action.label}</button>)}
-            {onKeluar && <button type="button" onClick={onKeluar} disabled={memuat} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />Keluar</button>}
+            <button type="button" onClick={handleKembali} disabled={memuat} aria-label="Kembali ke halaman sebelumnya" title="Kembali ke halaman sebelumnya" className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />Kembali</button>
           </div>
           {tampilkanRecord && <span className="ml-auto text-slate-600">Record : {jumlahRecord}</span>}
           {pagination && <nav aria-label="Pagination data" className="ml-auto flex flex-wrap items-center justify-end gap-2 text-slate-600">{pagination}</nav>}
@@ -379,18 +392,17 @@ export function PanelBawah({
           </div>
         )}
 
-        {/* Tombol Keluar (Sisi Kanan) */}
-        {onKeluar && (
-          <button
-            type="button"
-            onClick={onKeluar}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 rounded-lg font-semibold text-xs border border-slate-200 hover:border-red-200 shadow-2xs flex items-center gap-1.5 cursor-pointer"
-            title="Keluar ke Menu Utama (Alt+K)"
-          >
-            <FontAwesomeIcon icon={faRightFromBracket} className="w-3.5 h-3.5 text-slate-500 hover:text-red-600" />
-            <span>Keluar</span>
-          </button>
-        )}
+        {/* Tombol Kembali (Sisi Kanan) */}
+        <button
+          type="button"
+          onClick={handleKembali}
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-2xs hover:bg-slate-200"
+          aria-label="Kembali ke halaman sebelumnya"
+          title="Kembali ke halaman sebelumnya"
+        >
+          <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 text-red-600" />
+          <span>Kembali</span>
+        </button>
       </div>
     </footer>
   );

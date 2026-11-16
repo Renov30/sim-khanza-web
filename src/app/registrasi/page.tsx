@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AksiHalaman } from "@/components/modul/AksiHalaman";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
@@ -90,7 +88,6 @@ function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minm
 }
 
 export default function HalamanRegistrasi() {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<PasienReg[]>([]);
@@ -569,9 +566,6 @@ export default function HalamanRegistrasi() {
   };
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
-      {/* Aksi Halaman */}
-      <AksiHalaman />
-
       {/* Form */}
       <PanelInputData
         judul=".: Input Data"
@@ -831,7 +825,6 @@ export default function HalamanRegistrasi() {
       <PanelBawah
           tampilan="web"
           aksiUtama={terpilih ? "ganti" : "simpan"}
-          onKeluar={() => router.push('/')}
           filterUtama={
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex w-full max-w-80 min-w-0 items-center gap-1.5 sm:w-80">

@@ -88,7 +88,7 @@ export function AppHeader({
   const isFarmasiActive = pathname.startsWith("/farmasi") || menuFarmasiTerbuka;
   const isRawatInapActive = pathname.startsWith("/rawat-inap");
   const isRawatJalanActive = pathname.startsWith("/rawat-jalan");
-  const judulHalaman = isMenuOpen && pathname === "/" ? "Menu Utama" : dapatkanJudulHalaman(pathname);
+  const judulHalaman = isMenuOpen && pathname === "/" ? "Daftar Menu" : dapatkanJudulHalaman(pathname);
   const ukuranJudul =
     judulHalaman.length > 46
       ? "text-[9px]"
@@ -112,7 +112,7 @@ export function AppHeader({
 
         {/* Toolbar modul cepat diratakan ke kiri. */}
         <div className="flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-x-auto px-1 scrollbar-none">
-          {/* 1. Menu Utama */}
+          {/* 1. Menu */}
           <button
             onClick={onToggleMenu}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
@@ -120,10 +120,10 @@ export function AppHeader({
                 ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
                 : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             }`}
-            title="Buka / Tutup Menu Utama (Alt+M)"
+            title="Buka / Tutup Daftar Menu (Alt+M)"
           >
             <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5 text-primary-300" />
-            <span>Menu Utama</span>
+            <span>Menu</span>
           </button>
 
           {/* Separator */}
