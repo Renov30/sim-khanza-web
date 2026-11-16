@@ -63,6 +63,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Panel rincian billing dihapus dari halaman daftar agar tabel registrasi memakai lebar penuh.
 - Menu/navbar Rawat Jalan membuka `/rawat-jalan`. Halaman tindakan hanya dibuka dari kolom `No. Reg` pada daftar kunjungan, dengan `no_rawat` pasien tersebut.
 - Halaman tindakan mengadaptasi tiga penanganan utama `DlgRawatJalan`: dokter, petugas, serta dokter dan petugas. Pencarian kunjungan/tarif dibatasi, riwayat dipaginasi, request lama dibatalkan, dan penyimpanan beberapa tindakan dilakukan dalam satu transaksi.
+- Tab `Pemeriksaan` mengadaptasi tanda vital dan SOAP `DlgRawatJalan`, menampilkan riwayat per kunjungan (maksimal 100 baris), serta mendukung tambah, ubah, dan hapus. Koreksi non-admin dibatasi untuk pencatat yang sama dalam 48 jam dan kunjungan yang belum diverifikasi billing.
 - Waktu tampil daftar dipercepat: filter non-kata-kunci langsung memuat, kata kunci ditunda 300 ms, count dan baris dijalankan paralel, serta index `reg_periksa (tgl_registrasi, jam_reg, no_rawat)` tersedia lewat `npm run db:index-kinerja`.
 
 ## Prioritas pengembangan berikutnya

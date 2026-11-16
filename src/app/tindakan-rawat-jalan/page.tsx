@@ -9,6 +9,8 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+import { SidebarTindakanRalan } from "@/components/tindakan-rawat-jalan/SidebarTindakanRalan";
 import { registrationDate } from "@/lib/registrasi/date";
 
 type ModeTindakan = "dokter" | "petugas" | "gabungan";
@@ -190,6 +192,7 @@ export default function HalamanTindakanRawatJalan() {
           setHasilPasien([]);
           setDokter(kunjungan.kd_dokter);
           setKodeTerpilih(new Set());
+          setTabAktif("pemeriksaan");
         }
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal memuat kunjungan", "error");
@@ -312,8 +315,21 @@ export default function HalamanTindakanRawatJalan() {
     setVersiData((versi) => versi + 1);
   };
 
+  const cetakTindakan = () => {
+    if (riwayat.length === 0) {
+      tampilkanToast("Belum ada data tindakan untuk dicetak.", "info");
+      return;
+    }
+    window.print();
+  };
+
+  const mintaPilihTindakan = () => tampilkanToast("Pilih baris tindakan yang akan diubah atau dihapus.", "info");
+
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
+      <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
+      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
+      <main className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden">
       <div role="tablist" aria-label="Jenis penanganan rawat jalan" className="flex shrink-0 overflow-x-auto border-b border-slate-200">
         {TAB_RAWAT.map((item) => (
           <button
@@ -457,16 +473,14 @@ export default function HalamanTindakanRawatJalan() {
         </table>
       </section>
 
-      </> : (
+      </> : tabAktif === "pemeriksaan" && pasien ? (
+        <PemeriksaanRalanTab pasien={pasien} />
+      ) : (
         <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200/80 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-100/90 px-3 py-2 text-xs font-semibold text-slate-800">{TAB_RAWAT.find((item) => item.id === tabAktif)?.label}</div>
           {!pasien ? <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-slate-500">Pilih kunjungan dari halaman Rawat Jalan terlebih dahulu.</div> : (
             <div className="min-h-0 flex-1 overflow-auto p-3">
               <div className="mb-3 rounded-lg border border-primary-200 bg-primary-50/50 px-3 py-2 text-xs text-slate-700"><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
-              {tabAktif === "pemeriksaan" && <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4"><Field label="Suhu (°C)" /><Field label="Tensi" /><Field label="Nadi (/menit)" /><Field label="Respirasi (/menit)" /><Field label="Tinggi (cm)" /><Field label="Berat (kg)" /><Field label="SpO₂ (%)" /><Field label="GCS" /><Pilihan label="Kesadaran" pilihan={["Compos Mentis", "Somnolence", "Sopor", "Coma", "Alert", "Confusion", "Voice", "Pain", "Unresponsive", "Apatis", "Delirium"]} /><Field label="Lingkar Perut (cm)" /><Field label="Alergi" /></div>
-                <div className="grid gap-2 lg:grid-cols-2"><CatatanPanjang label="Keluhan" /><CatatanPanjang label="Pemeriksaan" /><CatatanPanjang label="Penilaian" /><CatatanPanjang label="Rencana Tindak Lanjut" /><CatatanPanjang label="Instruksi" /><CatatanPanjang label="Evaluasi" /></div>
-              </div>}
               {tabAktif === "obstetri" && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <Field label="Tinggi Fundus" /><Pilihan label="Janin" pilihan={["Tunggal", "Gemelli", "-"]} /><Field label="Letak" /><Pilihan label="Panggul" pilihan={["-", "5/5", "4/5", "3/5", "2/5", "1/5"]} /><Field label="Denyut" /><Pilihan label="Kontraksi" pilihan={["+", "-"]} /><Field label="Kualitas Menit" /><Field label="Kualitas Detik" /><Pilihan label="Fluksus" pilihan={["+", "-"]} /><Pilihan label="Albus" pilihan={["+", "-"]} /><Field label="Vulva" /><Field label="Portio" /><Pilihan label="Dalam" pilihan={["Kenyal", "Lunak"]} /><Field label="Tebal" /><Pilihan label="Arah" pilihan={["depan", "axial", "belakang"]} /><Field label="Pembukaan" /><Field label="Penurunan" /><Field label="Denominator" /><Pilihan label="Ketuban" pilihan={["-", "+"]} /><Pilihan label="Feto" pilihan={["Normal", "Susp.CPD-FPD", "CPD-FPD"]} />
               </div>}
@@ -480,7 +494,9 @@ export default function HalamanTindakanRawatJalan() {
         </section>
       )}
 
-      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); }} placeholderCari="No. Rawat, RM, pasien, tindakan, pelaksana..." onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
+      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); }} placeholderCari="No. Rawat, RM, pasien, tindakan, pelaksana..." onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
+      </main>
+      </div>
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );
