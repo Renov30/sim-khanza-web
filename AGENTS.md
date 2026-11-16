@@ -40,10 +40,10 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 
 - Latar utama: `bg-slate-50` atau `bg-white`.
 - Panel: `bg-white border border-slate-200/80 rounded-lg shadow-sm`.
-- Gunakan tiga warna merek bernuansa klinis melalui token semantik Tailwind: biru rumah sakit `primary`, teal `secondary`, dan hijau mint `tertiary`. Nilai palet hanya didefinisikan sebagai CSS variables di `src/app/globals.css`; `tailwind.config.ts` hanya menghubungkan token Tailwind ke variables tersebut.
-- `primary` dipakai untuk navigasi, tombol utama, tautan, pilihan aktif, dan fokus; `secondary` untuk aksi/aksen pendukung; `tertiary` untuk sorotan klinis nonbahaya.
+- Gunakan tiga warna merek melalui token semantik Tailwind: biru langit `primary`, lime `secondary`, dan charcoal `tertiary`. Nilai palet hanya didefinisikan sebagai CSS variables di `src/app/globals.css`; `tailwind.config.ts` hanya menghubungkan token Tailwind ke variables tersebut.
+- `primary` dipakai untuk navigasi, tombol utama, tautan, pilihan aktif, dan fokus; `secondary` untuk CTA, status positif, atau aksen kecil; `tertiary` untuk aksen gelap dan penyeimbang. Lime tidak dipakai sebagai latar luas atau teks data biasa.
 - Teks data: warna netral `text-slate-800`, `text-slate-700`, atau `text-slate-600`.
-- Warna status hanya untuk badge/kondisi: merah untuk bahaya/error, `primary` untuk informasi, serta `secondary` atau `tertiary` untuk kondisi positif. Kondisi tertunda memakai warna netral agar tidak terlihat sebagai kondisi sukses.
+- Warna status hanya untuk badge/kondisi: merah untuk bahaya/error, `primary` untuk informasi, dan `secondary` untuk kondisi positif. Kondisi tertunda memakai warna netral agar tidak terlihat sebagai kondisi sukses.
 - Sistem rumah sakit membutuhkan kepadatan tinggi: gunakan padding kompak, teks `text-xs` sampai `text-sm`, dan angka/tanggal tabular.
 
 ### 3.2 Larangan tampilan
