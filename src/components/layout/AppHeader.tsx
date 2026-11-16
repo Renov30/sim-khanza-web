@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthContext";
 import { UserAccountMenu } from "./UserAccountMenu";
+import { dapatkanJudulHalaman } from "@/lib/navigasi/judul-halaman";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -87,10 +88,28 @@ export function AppHeader({
   const isFarmasiActive = pathname.startsWith("/farmasi") || menuFarmasiTerbuka;
   const isRawatInapActive = pathname.startsWith("/rawat-inap");
   const isRawatJalanActive = pathname.startsWith("/rawat-jalan");
+  const judulHalaman = isMenuOpen && pathname === "/" ? "Menu Utama" : dapatkanJudulHalaman(pathname);
+  const ukuranJudul =
+    judulHalaman.length > 46
+      ? "text-[9px]"
+      : judulHalaman.length > 34
+        ? "text-[10px]"
+        : judulHalaman.length > 24
+          ? "text-[11px]"
+          : "text-sm";
 
   return (
     <header className="bg-primary-800 text-white border-b border-primary-900 px-4 py-2 shrink-0 select-none shadow-sm">
       <div className="flex items-center gap-2">
+        <div
+          className="flex h-8 w-52 shrink-0 items-center border-r border-primary-700/60 pr-3"
+          title={judulHalaman}
+        >
+          <h1 className={`line-clamp-2 w-full font-bold leading-[1.05] tracking-tight text-white ${ukuranJudul}`}>
+            {judulHalaman}
+          </h1>
+        </div>
+
         {/* Toolbar modul cepat diratakan ke kiri. */}
         <div className="flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-x-auto px-1 scrollbar-none">
           {/* 1. Menu Utama */}

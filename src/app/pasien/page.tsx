@@ -5,7 +5,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { additionalPatientFields, emptyPatientDetails, fullPatientAge } from '@/lib/pasien/fields';
 import { registrationDate } from '@/lib/registrasi/date';
-import { HeaderModul } from "@/components/modul/HeaderModul";
+import { AksiHalaman } from "@/components/modul/AksiHalaman";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -406,9 +406,8 @@ export default function HalamanDataPasien() {
 
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
-      {/* Header */}
-      <HeaderModul
-        judul="Data Pasien & Rekam Medis"
+      {/* Aksi Halaman */}
+      <AksiHalaman
         onMuatUlang={muatData}
         memuat={memuat}
       />

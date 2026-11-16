@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { HeaderModul } from "@/components/modul/HeaderModul";
+import { AksiHalaman } from "@/components/modul/AksiHalaman";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
@@ -569,11 +569,8 @@ export default function HalamanRegistrasi() {
   };
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
-      {/* Header */}
-      <HeaderModul
-        judul="Registrasi & Pendaftaran Pasien"
-        ringkas
-      />
+      {/* Aksi Halaman */}
+      <AksiHalaman />
 
       {/* Form */}
       <PanelInputData

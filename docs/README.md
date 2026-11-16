@@ -51,6 +51,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - `.env.migrasi` dikeluarkan dari tracking Git tanpa menghapus file lokal. Kredensial nyata yang pernah masuk riwayat perlu dirotasi.
 - Seluruh aturan proyek digabungkan ke `AGENTS.md`.
 - Warna antarmuka diseragamkan menjadi palet klinis: `primary` (biru rumah sakit), `secondary` (teal), dan `tertiary` (hijau mint). Seluruh nilai palet memiliki satu sumber di CSS variables, sedangkan merah tetap khusus untuk error atau tindakan berbahaya.
+- Judul halaman yang ringkas dipusatkan pada area berukuran tetap di navbar global; halaman utama menggunakan judul `Home` dan panel menu menggunakan `Menu Utama`.
 
 ## Prioritas pengembangan berikutnya
 

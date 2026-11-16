@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { HeaderModul } from "@/components/modul/HeaderModul";
+import { AksiHalaman } from "@/components/modul/AksiHalaman";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -48,9 +48,8 @@ export default function HalamanPermintaanLabPA() {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-3 sm:p-4 space-y-3">
-      {/* 1. Header Modul */}
-      <HeaderModul
-        judul="Permintaan Laboratorium Patologi Anatomi (PA)"
+      {/* 1. Aksi Halaman */}
+      <AksiHalaman
         onMuatUlang={muatData}
         memuat={memuat}
       />

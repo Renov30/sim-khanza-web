@@ -53,31 +53,39 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 - Jangan memakai animasi masuk, modal, menu, transisi layout, animasi dekoratif, atau transisi warna/opacity/hover/fokus. Indikator pemrosesan hanya dipakai saat proses benar-benar berjalan.
 - Jangan memberi warna pada teks data biasa seperti No. Rawat, No. RM, atau nama pasien, kecuali diminta pengguna atau berupa badge status.
 
-### 3.3 Dropdown
+### 3.3 Judul halaman
+
+- Judul halaman hanya tampil di ujung kiri navbar global sebelum tombol Menu Utama.
+- Gunakan judul yang pendek dan langsung pada nama modul atau aktivitas, misalnya `Data Pasien`, `Periksa Lab PK`, atau `Input Penjualan`.
+- Halaman `/` memakai judul `Home`; ketika panel menu utama dibuka, judul berubah menjadi `Menu Utama`.
+- Area judul memiliki lebar tetap; ukuran teks menyesuaikan panjang judul tanpa menggeser posisi tombol antarhalaman.
+- Daftarkan judul rute di `src/lib/navigasi/judul-halaman.ts`. Rute yang belum terdaftar wajib tetap mendapat judul fallback dari segmen URL.
+
+### 3.4 Dropdown
 
 - Jangan gunakan panah select bawaan browser yang mepet ke tepi.
 - Select memakai `appearance-none`, padding kanan proporsional, dan ikon `faChevronDown`.
 - Gunakan [`CustomSelect`](src/components/ui/CustomSelect.tsx) pada formulir, filter, dan tabel modul.
 
-### 3.4 Panel input
+### 3.5 Panel input
 
 - [`PanelInputData`](src/components/modul/PanelInputData.tsx) tertutup secara default.
 - Kondisi terbuka disimpan di `localStorage` berdasarkan rute atau `idPenyimpanan`.
 - Bila modul memakai tab Input/Data, tab menggantikan perilaku buka/tutup panel.
 
-### 3.5 Tombol Baru
+### 3.6 Tombol Baru
 
 - Tombol Baru/`emptTeks` mereset seluruh text input, dropdown, nilai default, dan pilihan baris (`setTerpilih(null)`).
 - Jangan hanya mengosongkan field teks.
 
-### 3.6 Notifikasi dan konfirmasi
+### 3.7 Notifikasi dan konfirmasi
 
 - Jangan memakai banner statis yang menggeser layout.
 - Gunakan [`Toast`](src/components/common/Toast.tsx) mengambang di kanan bawah, auto-dismiss, dapat ditutup, dan memiliki tipe `sukses`, `error`, atau `info`.
 - Jangan memakai `window.confirm()` atau `alert()` untuk aksi penting.
 - Gunakan [`KonfirmasiDialog`](src/components/common/KonfirmasiDialog.tsx), sebutkan data spesifik dan risikonya, serta dukung tombol Escape.
 
-### 3.7 Penguncian sesi
+### 3.8 Penguncian sesi
 
 - Saat logout/sesi berakhir, shell dikunci, diburamkan, dan tidak interaktif sampai login berhasil.
 - Modal login berada di lapisan terdepan, tidak dapat dibatalkan, dan tidak dapat ditutup dengan Escape saat terkunci.
@@ -87,14 +95,14 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 
 Halaman generik mengikuti urutan:
 
-1. Header halaman.
+1. `AksiHalaman` untuk kembali/segarkan bila diperlukan.
 2. Filter/pencarian.
 3. Konten utama.
 4. Footer/status/pagination.
 
 Halaman master atau transaksi mengikuti urutan tingkat atas:
 
-1. `HeaderModul`.
+1. `AksiHalaman` untuk kembali/segarkan bila diperlukan.
 2. Navigasi konteks atau tab opsional.
 3. Formulir `PanelInputData` atau panel tab input.
 4. Panel tabel/konten utama.
