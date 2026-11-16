@@ -99,7 +99,7 @@ export function AppHeader({
           : "text-sm";
 
   return (
-    <header className="bg-primary-800 text-white border-b border-primary-900 px-4 py-2 shrink-0 select-none shadow-sm">
+    <header className="shrink-0 select-none bg-primary-800 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
         <div
           className="flex h-8 w-52 shrink-0 items-center border-r border-primary-700/60 pr-3"

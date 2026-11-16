@@ -90,7 +90,7 @@ export default function HalamanTindakanRawatJalan() {
   const { isAuthenticated } = useAuth();
   const hariIni = registrationDate();
   const [mode, setMode] = useState<ModeTindakan>("dokter");
-  const [tabAktif, setTabAktif] = useState<TabRawatJalan>("dokter");
+  const [tabAktif, setTabAktif] = useState<TabRawatJalan>("pemeriksaan");
   const [tanggal, setTanggal] = useState(hariIni);
   const [jam, setJam] = useState(jamJayapura);
   const [pasien, setPasien] = useState<RegistrasiPilihan | null>(null);
@@ -192,7 +192,6 @@ export default function HalamanTindakanRawatJalan() {
           setHasilPasien([]);
           setDokter(kunjungan.kd_dokter);
           setKodeTerpilih(new Set());
-          setTabAktif("pemeriksaan");
         }
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal memuat kunjungan", "error");
