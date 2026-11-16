@@ -55,13 +55,14 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Tombol kembali dipindahkan ke `PanelBawah`, menggantikan tombol `Keluar`, dan mengikuti riwayat navigasi browser dengan fallback ke halaman utama.
 - Baris kosong bekas judul serta tombol segarkan dihapus agar filter, tab, atau konten langsung berada di bagian atas modul.
 
-### 16 November 2026 — kasir rawat jalan (baca)
+### 16 November 2026 — rawat jalan dan tindakan ralan
 
 - Halaman `/rawat-jalan` menampilkan daftar registrasi ralan dengan tab `Registrasi Awal` dan `Rujukan Internal Poli`.
 - Filter tanggal, penjamin, poliklinik, dokter, status periksa, status bayar, pencarian, dan pagination diterapkan di server.
-- Panel rincian billing menghitung registrasi, tindakan dokter/paramedis, laboratorium, radiologi, obat, operasi, tambahan, potongan, dan PPN obat dari tabel pelayanan.
 - Endpoint rawat jalan memakai pemeriksaan sesi/izin, validasi filter, query berparameter, dan tes `npm run test:rawat-jalan`.
-- Menu `Tindakan Rawat Jalan` dan `Kasir & Billing Ralan` diarahkan ke halaman ini. Pembayaran dan cetak nota belum diimplementasikan.
+- Panel rincian billing dihapus dari halaman daftar agar tabel registrasi memakai lebar penuh.
+- Menu/navbar Rawat Jalan membuka `/rawat-jalan`. Halaman tindakan hanya dibuka dari kolom `No. Reg` pada daftar kunjungan, dengan `no_rawat` pasien tersebut.
+- Halaman tindakan mengadaptasi tiga penanganan utama `DlgRawatJalan`: dokter, petugas, serta dokter dan petugas. Pencarian kunjungan/tarif dibatasi, riwayat dipaginasi, request lama dibatalkan, dan penyimpanan beberapa tindakan dilakukan dalam satu transaksi.
 - Waktu tampil daftar dipercepat: filter non-kata-kunci langsung memuat, kata kunci ditunda 300 ms, count dan baris dijalankan paralel, serta index `reg_periksa (tgl_registrasi, jam_reg, no_rawat)` tersedia lewat `npm run db:index-kinerja`.
 
 ## Prioritas pengembangan berikutnya

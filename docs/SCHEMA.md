@@ -57,12 +57,13 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Pasien | `/api/pasien`, `/api/pasien/nomor`, `/api/pasien/options` | Admin, izin pasien, atau izin registrasi. |
 | Registrasi | `/api/registrasi`, `/api/registrasi/nomor`, `/api/registrasi/options` | Admin atau izin registrasi. |
 | Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
+| Tindakan rawat jalan | `/api/tindakan-rawat-jalan` | Admin atau izin tindakan ralan. |
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
 Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
-Rawat jalan masih baca saja: daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar, serta rincian billing per kunjungan yang dihitung dari tabel pelayanan. Pembayaran, cetak nota, dan perubahan status belum tersedia.
+Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis, obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia.
 
 ### Eksperimental
 

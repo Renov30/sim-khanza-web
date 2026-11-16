@@ -4,6 +4,7 @@ const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/pasien": "Data Pasien",
   "/igd": "IGD / UGD",
   "/rawat-jalan": "Rawat Jalan",
+  "/tindakan-rawat-jalan": "Tindakan Ralan",
   "/rawat-inap": "Rawat Inap",
   "/laboratorium/periksa-pk": "Periksa Lab PK",
   "/laboratorium/periksa-pa": "Periksa Lab PA",

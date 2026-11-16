@@ -87,7 +87,7 @@ export function AppHeader({
   const isRadiologiActive = pathname.startsWith("/radiologi") || menuRadTerbuka;
   const isFarmasiActive = pathname.startsWith("/farmasi") || menuFarmasiTerbuka;
   const isRawatInapActive = pathname.startsWith("/rawat-inap");
-  const isRawatJalanActive = pathname.startsWith("/rawat-jalan");
+  const isRawatJalanActive = pathname.startsWith("/rawat-jalan") || pathname.startsWith("/tindakan-rawat-jalan");
   const judulHalaman = isMenuOpen && pathname === "/" ? "Daftar Menu" : dapatkanJudulHalaman(pathname);
   const ukuranJudul =
     judulHalaman.length > 46

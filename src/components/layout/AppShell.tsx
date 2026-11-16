@@ -98,8 +98,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       || title === "Rawat Jalan"
       || title === "Tindakan Ralan"
       || title === "Tindakan Rawat Jalan"
-      || title === "Kasir & Billing Ralan"
     ) {
+      router.push("/rawat-jalan");
+      return;
+    }
+    if (title === "Kasir & Billing Ralan") {
       router.push("/rawat-jalan");
       return;
     }

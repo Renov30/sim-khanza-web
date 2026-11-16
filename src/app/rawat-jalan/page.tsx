@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
+import { useRouter } from "next/navigation";
 import { registrationDate } from "@/lib/registrasi/date";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
-  faCircleExclamation,
   faReceipt,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -44,68 +44,15 @@ interface RawatJalanRow {
   no_tlp: string;
 }
 
-type KategoriBilling = "Registrasi" | "Ralan Dokter" | "Ralan Paramedis" | "Ralan Dokter Paramedis"
-  | "Laborat" | "Radiologi" | "Obat" | "Operasi" | "Tambahan" | "Potongan";
-
-interface BillingItem {
-  kategori: KategoriBilling;
-  nama: string;
-  jumlah: number;
-  total: number;
-}
-
-interface BillingData {
-  registrasi: {
-    no_rawat: string;
-    no_reg: string;
-    tgl_registrasi: string;
-    jam_reg: string;
-    no_rkm_medis: string;
-    nm_pasien: string;
-    jk: string;
-    umurdaftar: number | string;
-    sttsumur: string;
-    kd_poli: string;
-    nm_poli: string;
-    kd_dokter: string;
-    nm_dokter: string;
-    kd_pj: string;
-    png_jawab: string | null;
-    biaya_reg: number | string;
-    stts: string;
-    status_bayar: string;
-  };
-  items: BillingItem[];
-  ringkasan: {
-    registrasi: number;
-    ralanDokter: number;
-    ralanParamedis: number;
-    ralanDokterParamedis: number;
-    laborat: number;
-    radiologi: number;
-    obat: number;
-    operasi: number;
-    tambahan: number;
-    potongan: number;
-    total: number;
-  };
-  labelKategori: Record<string, string>;
-}
-
-const URUTAN_KATEGORI: KategoriBilling[] = [
-  "Registrasi", "Ralan Dokter", "Ralan Paramedis", "Ralan Dokter Paramedis",
-  "Laborat", "Radiologi", "Obat", "Operasi", "Tambahan", "Potongan",
-];
-
 const rupiah = (value: number | string) => `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
 
 export default function HalamanRawatJalan() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const hariIni = registrationDate();
 
   const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<RawatJalanRow[]>([]);
-  const [terpilih, setTerpilih] = useState<RawatJalanRow | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
 
@@ -126,10 +73,6 @@ export default function HalamanRawatJalan() {
   const [daftarDokter, setDaftarDokter] = useState<DokterOption[]>([]);
   const [daftarPoli, setDaftarPoli] = useState<PoliOption[]>([]);
   const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
-
-  const [billing, setBilling] = useState<BillingData | null>(null);
-  const [memuatBilling, setMemuatBilling] = useState(false);
-  const [errorBilling, setErrorBilling] = useState<string | null>(null);
 
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe, key: Date.now() });
@@ -213,60 +156,9 @@ export default function HalamanRawatJalan() {
     return () => { clearTimeout(timer); permintaanTabel.current?.abort(); };
   }, [muatData, versiTabel]);
 
-  // Rincian billing kunjungan terpilih; status muat diatur saat baris dipilih.
-  useEffect(() => {
-    if (!terpilih) return;
-    const controller = new AbortController();
-
-    async function muatBilling() {
-      try {
-        const res = await fetch(`/api/rawat-jalan/billing?no_rawat=${encodeURIComponent(terpilih!.no_rawat)}`, { signal: controller.signal, cache: "no-store" });
-        const json = await res.json();
-        if (!res.ok || !json.success) throw new Error(json.error || "Gagal memuat rincian billing");
-        if (!controller.signal.aborted) setBilling(json.data);
-      } catch (error: unknown) {
-        if (!controller.signal.aborted) {
-          setErrorBilling(error instanceof Error ? error.message : "Gagal memuat rincian billing");
-        }
-      } finally {
-        if (!controller.signal.aborted) setMemuatBilling(false);
-      }
-    }
-
-    void muatBilling();
-    return () => controller.abort();
-  }, [terpilih]);
-
-  const kelompokBilling = useMemo(() => {
-    if (!billing) return [];
-    return URUTAN_KATEGORI
-      .map((kategori) => {
-        const items = billing.items.filter((item) => item.kategori === kategori);
-        return {
-          kategori,
-          label: billing.labelKategori[kategori] || kategori,
-          items,
-          subtotal: items.reduce((jumlah, item) => jumlah + item.total, 0),
-        };
-      })
-      .filter((kelompok) => kelompok.items.length > 0);
-  }, [billing]);
-
-  const pilihBaris = (item: RawatJalanRow) => {
-    if (memuat || terpilih?.no_rawat === item.no_rawat) return;
-    setTerpilih(item);
-    setBilling(null);
-    setErrorBilling(null);
-    setMemuatBilling(true);
-  };
-
   const gantiTab = (tab: "awal" | "rujukan_internal") => {
     setTabTabel(tab);
     setHalaman(1);
-    setTerpilih(null);
-    setBilling(null);
-    setErrorBilling(null);
-    setMemuatBilling(false);
   };
 
   const resetFilter = () => {
@@ -280,10 +172,6 @@ export default function HalamanRawatJalan() {
     setStatusPeriksa("Semua");
     setStatusBayar("Semua");
     setHalaman(1);
-    setTerpilih(null);
-    setBilling(null);
-    setErrorBilling(null);
-    setMemuatBilling(false);
     setVersiTabel((versi) => versi + 1);
   };
 
@@ -314,7 +202,7 @@ export default function HalamanRawatJalan() {
         ))}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto lg:flex-row lg:overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-hidden">
         {/* Daftar registrasi */}
         <section className="flex h-[26rem] shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs lg:h-auto lg:min-h-0 lg:flex-1">
           <div
@@ -326,7 +214,7 @@ export default function HalamanRawatJalan() {
           >
             <table className="w-full border-collapse text-left text-xs">
               <caption className="sr-only">
-                Daftar registrasi rawat jalan. Pilih baris untuk melihat rincian billing kunjungan.
+                Daftar registrasi rawat jalan.
               </caption>
               <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/90 text-slate-700 shadow-2xs">
                 <tr>
@@ -359,16 +247,14 @@ export default function HalamanRawatJalan() {
                 ) : data.map((item) => (
                   <tr
                     key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
-                    onClick={() => pilihBaris(item)}
-                    className={`cursor-pointer ${terpilih?.no_rawat === item.no_rawat ? "bg-primary-50/90" : "hover:bg-slate-50/80"} text-slate-700`}
+                    className="text-slate-700 hover:bg-slate-50/80"
                   >
-                    <td className="px-2.5 py-2 text-center font-bold">
+                    <td className="px-2.5 py-2 text-center">
                       <button
                         type="button"
-                        aria-label={`Tampilkan billing registrasi ${item.no_rawat} untuk ${item.nm_pasien}`}
-                        aria-pressed={terpilih?.no_rawat === item.no_rawat}
-                        onClick={(event) => { event.stopPropagation(); pilihBaris(item); }}
-                        className="rounded px-1 py-0.5 font-normal hover:underline"
+                        onClick={() => router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
+                        aria-label={`Input tindakan untuk registrasi ${item.no_rawat}, pasien ${item.nm_pasien}`}
                       >
                         {item.no_reg}
                       </button>
@@ -408,83 +294,6 @@ export default function HalamanRawatJalan() {
           </div>
         </section>
 
-        {/* Rincian billing */}
-        <aside className="flex max-h-[26rem] shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs lg:max-h-none lg:w-[23rem] lg:shrink-0 xl:w-[27rem]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-slate-100/90 px-3 py-2">
-            <FontAwesomeIcon icon={faReceipt} className="h-3.5 w-3.5 text-primary-700" aria-hidden="true" />
-            <h2 className="text-xs font-semibold text-slate-800">Rincian Billing</h2>
-            {terpilih && <span className="ml-auto font-mono text-[10px] text-slate-600">{terpilih.no_rawat}</span>}
-          </div>
-
-          <div className="flex-1 overflow-auto p-3 text-xs">
-            {!terpilih ? (
-              <div className="flex h-full flex-col items-center justify-center py-10 text-center text-slate-400">
-                <FontAwesomeIcon icon={faReceipt} className="mb-2 h-8 w-8 text-slate-300" aria-hidden="true" />
-                <p>Pilih salah satu registrasi untuk menampilkan rincian biaya.</p>
-              </div>
-            ) : memuatBilling ? (
-              <p className="py-8 text-center text-slate-500">Memuat rincian billing...</p>
-            ) : errorBilling ? (
-              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-red-700">
-                <FontAwesomeIcon icon={faCircleExclamation} className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>{errorBilling}</span>
-              </div>
-            ) : billing ? (
-              <div className="space-y-3">
-                <div className="space-y-0.5">
-                  <p className="font-sans text-sm font-semibold text-slate-800">{billing.registrasi.nm_pasien}</p>
-                  <p className="font-mono text-[10px] text-slate-600">
-                    {billing.registrasi.no_rkm_medis} · {billing.registrasi.jk} · {billing.registrasi.umurdaftar} {billing.registrasi.sttsumur}
-                  </p>
-                  <p className="font-sans text-[11px] text-slate-600">
-                    {billing.registrasi.nm_poli} · {billing.registrasi.nm_dokter}
-                  </p>
-                  <p className="font-sans text-[11px] text-slate-600">
-                    {billing.registrasi.png_jawab || billing.registrasi.kd_pj || "-"} · {billing.registrasi.status_bayar}
-                  </p>
-                </div>
-
-                {kelompokBilling.length === 0 ? (
-                  <p className="py-6 text-center text-slate-400">Belum ada rincian biaya pada kunjungan ini.</p>
-                ) : (
-                  <table className="w-full border-collapse text-left text-[11px]">
-                    <caption className="sr-only">Rincian biaya kunjungan {billing.registrasi.no_rawat}</caption>
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-600">
-                        <th scope="col" className="py-1.5 pr-2 font-semibold">Uraian</th>
-                        <th scope="col" className="w-10 py-1.5 text-right font-semibold">Qty</th>
-                        <th scope="col" className="w-24 py-1.5 text-right font-semibold">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {kelompokBilling.map((kelompok) => (
-                        <React.Fragment key={kelompok.kategori}>
-                          <tr className="bg-slate-100/90">
-                            <th scope="colgroup" colSpan={2} className="px-1.5 py-1 text-left font-semibold text-slate-700">{kelompok.label}</th>
-                            <th scope="col" className="px-1.5 py-1 text-right font-semibold text-slate-700">{rupiah(kelompok.subtotal)}</th>
-                          </tr>
-                          {kelompok.items.map((item, index) => (
-                            <tr key={`${kelompok.kategori}-${item.nama}-${index}`} className="border-b border-slate-100 align-top">
-                              <td className="py-1 pr-2 font-sans text-slate-700">{item.nama}</td>
-                              <td className="py-1 text-right font-mono text-slate-600">{item.jumlah || "-"}</td>
-                              <td className="py-1 text-right font-mono text-slate-800">{rupiah(item.total)}</td>
-                            </tr>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t-2 border-slate-300 bg-primary-50/60">
-                        <th scope="row" colSpan={2} className="px-1.5 py-2 text-left text-xs font-bold text-slate-800">Total Tagihan</th>
-                        <td className="px-1.5 py-2 text-right font-mono text-sm font-bold text-slate-900">{rupiah(billing.ringkasan.total)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                )}
-              </div>
-            ) : null}
-          </div>
-        </aside>
       </div>
 
       <PanelBawah
