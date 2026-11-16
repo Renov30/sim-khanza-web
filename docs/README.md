@@ -53,6 +53,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Warna antarmuka diseragamkan menjadi palet referensi: `primary` (biru langit), `secondary` (lime), dan `tertiary` (charcoal). Seluruh nilai palet memiliki satu sumber di CSS variables, sedangkan merah tetap khusus untuk error atau tindakan berbahaya.
 - Judul halaman yang ringkas dipusatkan pada area berukuran tetap di navbar global; halaman utama menggunakan judul `Home` dan panel menu menggunakan `Daftar Menu`.
 - Tombol kembali dipindahkan ke `PanelBawah`, menggantikan tombol `Keluar`, dan mengikuti riwayat navigasi browser dengan fallback ke halaman utama.
+- Baris kosong bekas judul serta tombol segarkan dihapus agar filter, tab, atau konten langsung berada di bagian atas modul.
 
 ## Prioritas pengembangan berikutnya
 

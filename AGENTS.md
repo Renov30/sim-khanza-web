@@ -95,23 +95,22 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 
 Halaman generik mengikuti urutan:
 
-1. `AksiHalaman` untuk segarkan bila diperlukan.
-2. Filter/pencarian.
-3. Konten utama.
-4. Footer/status/pagination.
+1. Filter/pencarian.
+2. Konten utama.
+3. `PanelBawah` untuk aksi, kembali, status, atau pagination.
 
 Halaman master atau transaksi mengikuti urutan tingkat atas:
 
-1. `AksiHalaman` untuk segarkan bila diperlukan.
-2. Navigasi konteks atau tab opsional.
-3. Formulir `PanelInputData` atau panel tab input.
-4. Panel tabel/konten utama.
-5. `PanelBawah` sebagai saudara panel konten.
-6. Dialog, modal, dan `Toast` di bagian akhir JSX.
+1. Navigasi konteks atau tab opsional.
+2. Formulir `PanelInputData` atau panel tab input.
+3. Panel tabel/konten utama.
+4. `PanelBawah` sebagai saudara panel konten.
+5. Dialog, modal, dan `Toast` di bagian akhir JSX.
 
 Ketentuan:
 
 - Root modul memakai pola padat: `module-page`, `flex`, tinggi penuh, `bg-slate-50`, `p-2 sm:p-3`, dan `space-y-2.5`.
+- Jangan menyisakan baris header kosong di konten setelah judul dipindahkan ke navbar. Filter, tab, atau konten pertama harus langsung menempati bagian atas modul.
 - Navigasi kembali menggunakan tombol `Kembali` di `PanelBawah`, bukan tombol di bagian atas. Tombol kembali memakai riwayat browser dan fallback ke `/` bila riwayat tidak tersedia.
 - Form desktop memakai [`GridFormulirModul`](src/components/modul/GridFormulirModul.tsx); dua kolom pertama aktif dan kolom ketiga disiapkan untuk pengembangan. Mobile kembali satu kolom.
 - Tab memakai `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected`, `aria-controls`, dan navigasi keyboard.

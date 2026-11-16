@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { AksiHalaman } from "@/components/modul/AksiHalaman";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -48,13 +47,7 @@ export default function HalamanInputPenjualan() {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-3 sm:p-4 space-y-3">
-      {/* 1. Aksi Halaman */}
-      <AksiHalaman
-        onMuatUlang={muatData}
-        memuat={memuat}
-      />
-
-      {/* 2. Filter & Form Input Singkat */}
+      {/* 1. Filter & Form Input Singkat */}
       <div className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-2.5 shrink-0">
         <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
           <div className="relative flex-1 min-w-[200px] max-w-md">
@@ -97,7 +90,7 @@ export default function HalamanInputPenjualan() {
         </div>
       </div>
 
-      {/* 3. Konten Utama: Tabel Data Barang */}
+      {/* 2. Konten Utama: Tabel Data Barang */}
       <div className="flex-1 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
         {pesanError && (
           <div className="m-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-xs text-red-700">
