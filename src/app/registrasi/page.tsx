@@ -109,6 +109,7 @@ export default function HalamanRegistrasi() {
   const [tanggalMulai, setTanggalMulai] = useState(hariIni);
   const [tanggalSelesai, setTanggalSelesai] = useState(hariIni);
   const [kataKunci, setKataKunci] = useState("");
+  const [kataKunciFilter, setKataKunciFilter] = useState("");
   const [filterDokter, setFilterDokter] = useState("");
   const [filterPoli, setFilterPoli] = useState("");
   const [statusBayar, setStatusBayar] = useState("Semua");
@@ -287,7 +288,7 @@ export default function HalamanRegistrasi() {
       url.searchParams.set("page", String(halaman));
       if (filterDokter.trim()) url.searchParams.set("kd_dokter", filterDokter.trim());
       if (filterPoli.trim()) url.searchParams.set("kd_poli", filterPoli.trim());
-      if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
+      if (kataKunciFilter) url.searchParams.set("cari", kataKunciFilter);
       url.searchParams.set("limit", "100");
 
       const res = await fetch(url.toString(), { signal: controller.signal });
@@ -309,11 +310,22 @@ export default function HalamanRegistrasi() {
     } finally {
       if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunci, statusBayar, halaman, tampilkanToast]);
+  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunciFilter, statusBayar, halaman, tampilkanToast]);
+
+  // Hanya kata kunci yang ditunda; filter lain langsung memuat data.
+  useEffect(() => {
+    const berikutnya = kataKunci.trim();
+    if (berikutnya === kataKunciFilter) return;
+    const timer = setTimeout(() => {
+      setKataKunciFilter(berikutnya);
+      setHalaman(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [kataKunci, kataKunciFilter]);
 
   useEffect(() => {
-    permintaanTabel.current?.abort();
-    const timer = setTimeout(() => { void muatData(); }, 150);
+    // Dijadwalkan satu tick agar efek tidak memicu setState saat render; tanpa jeda buatan.
+    const timer = setTimeout(() => { void muatData(); }, 0);
     return () => { clearTimeout(timer); permintaanTabel.current?.abort(); };
   }, [muatData, versiTabel]);
 
@@ -861,6 +873,7 @@ export default function HalamanRegistrasi() {
           onCetak={handleCetak}
           onSemua={() => {
             setKataKunci("");
+            setKataKunciFilter("");
             setTanggalMulai("");
             setTanggalSelesai("");
             setFilterDokter("");
@@ -876,8 +889,8 @@ export default function HalamanRegistrasi() {
           onGantiTanggalMulai={(value) => { setTanggalMulai(value); setHalaman(1); }}
           onGantiTanggalSelesai={(value) => { setTanggalSelesai(value); setHalaman(1); }}
           kataKunci={kataKunci}
-          onGantiKataKunci={(value) => { setKataKunci(value); setHalaman(1); }}
-          onCari={muatData}
+          onGantiKataKunci={setKataKunci}
+          onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); setVersiTabel((versi) => versi + 1); }}
           placeholderCari="Cari No.Rawat, RM, Pasien..."
           pagination={
             <>

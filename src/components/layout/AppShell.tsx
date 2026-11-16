@@ -93,7 +93,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.push("/rawat-inap");
       return;
     }
-    if (title === "Rawat Jalan / Poliklinik" || title === "Rawat Jalan" || title === "Tindakan Ralan") {
+    if (
+      title === "Rawat Jalan / Poliklinik"
+      || title === "Rawat Jalan"
+      || title === "Tindakan Ralan"
+      || title === "Tindakan Rawat Jalan"
+      || title === "Kasir & Billing Ralan"
+    ) {
       router.push("/rawat-jalan");
       return;
     }

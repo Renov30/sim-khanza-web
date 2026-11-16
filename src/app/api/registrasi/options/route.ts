@@ -87,6 +87,8 @@ export async function GET(req: NextRequest) {
         poli,
         penjab,
       },
+    }, {
+      headers: { "Cache-Control": "private, max-age=300" },
     });
   } catch (error: unknown) {
     console.error("Error in api/registrasi/options:", error);

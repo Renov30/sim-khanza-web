@@ -56,15 +56,18 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Autentikasi | `/api/auth/login`, `/logout`, `/session` | Login publik; sesi disimpan di cookie HTTP-only. |
 | Pasien | `/api/pasien`, `/api/pasien/nomor`, `/api/pasien/options` | Admin, izin pasien, atau izin registrasi. |
 | Registrasi | `/api/registrasi`, `/api/registrasi/nomor`, `/api/registrasi/options` | Admin atau izin registrasi. |
+| Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
 Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
+Rawat jalan masih baca saja: daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar, serta rincian billing per kunjungan yang dihitung dari tabel pelayanan. Pembayaran, cetak nota, dan perubahan status belum tersedia.
+
 ### Eksperimental
 
 - `/api/igd`
-- `/api/rawat-jalan`, `/api/rawat-inap`
+- `/api/rawat-inap`
 - `/api/laboratorium/*`
 - `/api/radiologi/*`
 - `/api/farmasi/*`
@@ -151,6 +154,13 @@ Alamat dipisahkan karena pasien dapat mempunyai beberapa jenis alamat dan riwaya
 | `migrasi_masalah` | Data sumber yang perlu diperiksa. |
 | `migrasi_pasien`, `migrasi_kunjungan` | Pemetaan kunci Khanza ke ID baru. |
 
+## Kinerja query
+
+- Daftar registrasi dan rawat jalan menghitung `COUNT(*)` hanya dengan join yang dibutuhkan filter, lalu menjalankan count dan pengambilan baris secara paralel.
+- Endpoint opsi memakai `Cache-Control: private, max-age=300` agar dropdown tidak diambil ulang setiap navigasi.
+- Client memuat tabel langsung saat halaman dibuka; hanya perubahan kata kunci yang ditunda 300 ms.
+- Index `reg_periksa (tgl_registrasi, jam_reg, no_rawat)` mempercepat filter periode dan urutan daftar. Jalankan `npm run db:index-kinerja` sekali pada database Khanza setelah disetujui DBA. Index bersifat tambahan dan tidak mengubah data.
+
 ## Artefak database
 
 | Berkas | Fungsi | Status |
@@ -159,6 +169,7 @@ Alamat dipisahkan karena pasien dapat mempunyai beberapa jenis alamat dan riwaya
 | `database/migrations/0002_referensi_awal.sql` | Data referensi awal pengganti `ENUM`. | Rancangan |
 | `database/validasi/pasien_registrasi.sql` | Validasi duplikat, relasi yatim, wilayah, dan konsistensi. | Rancangan |
 | `scripts/migrasi-khanza.mjs` | Importir awal dari Khanza. | Prototipe, ditunda |
+| `scripts/db/index-kinerja.mjs` | Menambahkan index periode daftar pada database Khanza. | Opsional, perlu persetujuan DBA |
 
 ## Migrasi database — ditunda
 

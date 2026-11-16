@@ -27,19 +27,48 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Filter registrasi tidak valid." }, { status: 400 });
     }
 
-    let sql = tampilan === "rujukan_internal" ? `
+    const rujukan = tampilan === "rujukan_internal";
+    const kolomDokter = rujukan ? "rip.kd_dokter" : "r.kd_dokter";
+    const kolomPoli = rujukan ? "rip.kd_poli" : "r.kd_poli";
+    const joinRujukan = rujukan ? "INNER JOIN rujukan_internal_poli rip ON rip.no_rawat = r.no_rawat" : "";
+
+    const where: string[] = ["1=1"];
+    const params: (string | number)[] = [];
+
+    if (tanggalMulai) { where.push("r.tgl_registrasi >= ?"); params.push(tanggalMulai); }
+    if (tanggalSelesai) { where.push("r.tgl_registrasi <= ?"); params.push(tanggalSelesai); }
+    if (statusBayar !== "Semua") { where.push("r.status_bayar = ?"); params.push(statusBayar); }
+
+    if (kdDokter.trim()) {
+      where.push(`${kolomDokter} = ?`);
+      params.push(kdDokter.trim());
+    }
+
+    if (kdPoli.trim()) {
+      where.push(`${kolomPoli} = ?`);
+      params.push(kdPoli.trim());
+    }
+
+    if (cari.trim()) {
+      where.push(`(r.no_rawat LIKE ? OR r.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR d.nm_dokter LIKE ? OR pol.nm_poli LIKE ?)`);
+      const kw = `%${cari.trim()}%`;
+      params.push(kw, kw, kw, kw, kw);
+    }
+    const whereSql = `WHERE ${where.join(" AND ")}`;
+
+    const sql = rujukan ? `
       SELECT r.no_rawat, DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') AS tgl_registrasi,
-             r.jam_reg, rip.kd_dokter, d.nm_dokter, r.no_rkm_medis, p.nm_pasien,
-             p.jk, r.umurdaftar, r.sttsumur, rip.kd_poli, pol.nm_poli,
+             r.jam_reg, ${kolomDokter}, d.nm_dokter, r.no_rkm_medis, p.nm_pasien,
+             p.jk, r.umurdaftar, r.sttsumur, ${kolomPoli}, pol.nm_poli,
              r.kd_pj, pj.png_jawab, r.p_jawab, r.almt_pj, r.hubunganpj,
              r.stts_daftar, p.no_tlp, r.stts, r.status_bayar
       FROM reg_periksa r
-      INNER JOIN rujukan_internal_poli rip ON rip.no_rawat = r.no_rawat
+      ${joinRujukan}
       INNER JOIN pasien p ON r.no_rkm_medis = p.no_rkm_medis
-      INNER JOIN dokter d ON rip.kd_dokter = d.kd_dokter
-      INNER JOIN poliklinik pol ON rip.kd_poli = pol.kd_poli
+      INNER JOIN dokter d ON ${kolomDokter} = d.kd_dokter
+      INNER JOIN poliklinik pol ON ${kolomPoli} = pol.kd_poli
       LEFT JOIN penjab pj ON r.kd_pj = pj.kd_pj
-      WHERE 1=1
+      ${whereSql}
     ` : `
       SELECT r.no_reg, r.no_rawat, DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') as tgl_registrasi, 
              r.jam_reg, r.kd_dokter, d.nm_dokter, r.no_rkm_medis, p.nm_pasien, 
@@ -53,37 +82,33 @@ export async function GET(req: NextRequest) {
       INNER JOIN poliklinik pol ON r.kd_poli = pol.kd_poli
       LEFT JOIN penjab pj ON r.kd_pj = pj.kd_pj
       LEFT JOIN rujuk_masuk rm ON r.no_rawat = rm.no_rawat
-      WHERE 1=1
+      ${whereSql}
     `;
-    const params: (string | number)[] = [];
 
-    if (tanggalMulai) { sql += " AND r.tgl_registrasi >= ?"; params.push(tanggalMulai); }
-    if (tanggalSelesai) { sql += " AND r.tgl_registrasi <= ?"; params.push(tanggalSelesai); }
-    if (statusBayar !== "Semua") { sql += " AND r.status_bayar = ?"; params.push(statusBayar); }
+    // COUNT hanya memakai join yang dibutuhkan filter, bukan seluruh join tampilan.
+    const countJoins = cari.trim()
+      ? `${joinRujukan}
+         INNER JOIN pasien p ON r.no_rkm_medis = p.no_rkm_medis
+         INNER JOIN dokter d ON ${kolomDokter} = d.kd_dokter
+         INNER JOIN poliklinik pol ON ${kolomPoli} = pol.kd_poli`
+      : joinRujukan;
+    const countSql = `SELECT COUNT(*) AS total FROM reg_periksa r ${countJoins} ${whereSql}`;
 
-    if (kdDokter.trim()) {
-      sql += tampilan === "rujukan_internal" ? " AND rip.kd_dokter = ?" : " AND r.kd_dokter = ?";
-      params.push(kdDokter.trim());
-    }
-
-    if (kdPoli.trim()) {
-      sql += tampilan === "rujukan_internal" ? " AND rip.kd_poli = ?" : " AND r.kd_poli = ?";
-      params.push(kdPoli.trim());
-    }
-
-    if (cari.trim()) {
-      sql += ` AND (r.no_rawat LIKE ? OR r.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR d.nm_dokter LIKE ? OR pol.nm_poli LIKE ?)`;
-      const kw = `%${cari.trim()}%`;
-      params.push(kw, kw, kw, kw, kw);
-    }
-
-    const counts = await executeQuery<{ total: number }>(`SELECT COUNT(*) AS total FROM (${sql}) AS filtered`, params);
+    const offset = (page - 1) * limit;
+    const [counts, rows] = await Promise.all([
+      executeQuery<{ total: number }>(countSql, params),
+      executeQuery<Record<string, unknown>>(`${sql} ORDER BY r.tgl_registrasi DESC, r.jam_reg DESC, r.no_rawat DESC LIMIT ? OFFSET ?`, [...params, limit, offset]),
+    ]);
     const total = Number(counts[0].total);
     const currentPage = Math.min(page, Math.max(1, Math.ceil(total / limit)));
-    sql += ` ORDER BY r.tgl_registrasi DESC, r.jam_reg DESC, r.no_rawat DESC LIMIT ? OFFSET ?`;
-    params.push(limit, (currentPage - 1) * limit);
 
-    const rows = await executeQuery<Record<string, unknown>>(sql, params);
+    if (currentPage !== page) {
+      const rowsUlang = await executeQuery<Record<string, unknown>>(
+        `${sql} ORDER BY r.tgl_registrasi DESC, r.jam_reg DESC, r.no_rawat DESC LIMIT ? OFFSET ?`,
+        [...params, limit, (currentPage - 1) * limit],
+      );
+      return NextResponse.json({ success: true, data: rowsUlang, total, page: currentPage, limit });
+    }
 
     return NextResponse.json({
       success: true,
