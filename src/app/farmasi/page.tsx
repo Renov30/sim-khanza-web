@@ -71,7 +71,7 @@ export default function HalamanFarmasi() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari No. Rawat, No. RM, Pasien, Nama Obat, No. Batch..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {kataKunci && (
               <button
@@ -170,14 +170,14 @@ export default function HalamanFarmasi() {
                     <td className="py-2 px-2.5 text-right text-slate-600">
                       {Number(item.biaya_obat || 0).toLocaleString("id-ID")}
                     </td>
-                    <td className="py-2 px-2.5 text-right font-bold text-emerald-700">
+                    <td className="py-2 px-2.5 text-right font-bold text-primary-700">
                       {Number(item.total || 0).toLocaleString("id-ID")}
                     </td>
                     <td className="py-2 px-2.5 text-slate-500">
                       {item.no_batch || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
                         {item.status || "Ralan"}
                       </span>
                     </td>

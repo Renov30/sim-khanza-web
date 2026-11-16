@@ -65,7 +65,7 @@ export function KonfirmasiDialog({
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-              bahaya ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
+              bahaya ? "bg-red-100 text-red-600" : "bg-tertiary-100 text-tertiary-600"
             }`}>
               <FontAwesomeIcon icon={faTriangleExclamation} className="w-3.5 h-3.5" />
             </div>
@@ -112,7 +112,7 @@ export function KonfirmasiDialog({
             className={`px-3.5 py-1.5 text-xs font-semibold text-white rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
               bahaya
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-emerald-700 hover:bg-emerald-800"
+                : "bg-primary-700 hover:bg-primary-800"
             }`}
           >
             {bahaya && <FontAwesomeIcon icon={faTrashCan} className="w-3.5 h-3.5" />}

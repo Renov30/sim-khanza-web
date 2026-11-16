@@ -378,7 +378,7 @@ export default function HalamanDataPasien() {
     window.print();
   };
 
-  const inputClass = "h-7 w-full min-w-0 border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-emerald-600 read-only:bg-slate-50";
+  const inputClass = "h-7 w-full min-w-0 border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600 read-only:bg-slate-50";
   const input = (label: string, value: string, change: (value: string) => void, type = 'text', readOnly = false) => (
     <input aria-label={label} type={type} value={value} readOnly={readOnly} onChange={(event)=>change(event.target.value)} className={`${inputClass} ${type === 'date' ? 'rounded-md' : 'rounded-full'}`} />
   );
@@ -431,7 +431,7 @@ export default function HalamanDataPasien() {
               setTabAktif(next);
               document.getElementById(`tab-pasien-${next}`)?.focus();
             }}
-            className={`px-4 py-2 text-xs font-semibold border-b-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 ${tabAktif === tab ? "bg-white border-emerald-700 text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+            className={`px-4 py-2 text-xs font-semibold border-b-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === tab ? "bg-white border-primary-700 text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
           >
             {tab === "input" ? "Input Pasien" : "Data Pasien"}
           </button>
@@ -582,7 +582,7 @@ export default function HalamanDataPasien() {
                     }}
                     className={`cursor-pointer ${
                       terpilih?.no_rkm_medis === item.no_rkm_medis
-                        ? "bg-emerald-50/90 text-slate-700"
+                        ? "bg-primary-50/90 text-slate-700"
                         : "hover:bg-slate-50/80 text-slate-700"
                     }`}
                   >
@@ -599,8 +599,8 @@ export default function HalamanDataPasien() {
                       <span
                         className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           item.jk === "L"
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-pink-50 text-pink-700"
+                            ? "bg-primary-50 text-primary-700"
+                            : "bg-tertiary-50 text-tertiary-700"
                         }`}
                       >
                         {item.jk}

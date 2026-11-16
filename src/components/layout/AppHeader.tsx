@@ -89,7 +89,7 @@ export function AppHeader({
   const isRawatJalanActive = pathname.startsWith("/rawat-jalan");
 
   return (
-    <header className="bg-emerald-800 text-white border-b border-emerald-900 px-4 py-2 shrink-0 select-none shadow-sm">
+    <header className="bg-primary-800 text-white border-b border-primary-900 px-4 py-2 shrink-0 select-none shadow-sm">
       <div className="flex items-center gap-2">
         {/* Toolbar modul cepat diratakan ke kiri. */}
         <div className="flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-x-auto px-1 scrollbar-none">
@@ -98,17 +98,17 @@ export function AppHeader({
             onClick={onToggleMenu}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isMenuOpen
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             }`}
             title="Buka / Tutup Menu Utama (Alt+M)"
           >
-            <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5 text-emerald-300" />
+            <FontAwesomeIcon icon={faBars} className="w-3.5 h-3.5 text-primary-300" />
             <span>Menu Utama</span>
           </button>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
 
           {/* 2. Registrasi */}
           <button
@@ -116,12 +116,12 @@ export function AppHeader({
             disabled={isAuthenticated && !hasPermission("registrasi")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pendaftaran Pasien (Alt+R)"
           >
-            <FontAwesomeIcon icon={faUserPlus} className="w-3.5 h-3.5 text-emerald-300" />
+            <FontAwesomeIcon icon={faUserPlus} className="w-3.5 h-3.5 text-primary-300" />
             <span>Registrasi</span>
           </button>
 
@@ -131,8 +131,8 @@ export function AppHeader({
             disabled={isAuthenticated && !hasPermission("igd")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pelayanan IGD (Alt+D)"
           >
@@ -141,7 +141,7 @@ export function AppHeader({
           </button>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
 
           {/* 4. Laborat Dropdown */}
           <div className="relative shrink-0" ref={labRef}>
@@ -153,14 +153,14 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isLaboratActive
-                  ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                  : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Laboratorium (Alt+O)"
             >
-              <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-300" />
+              <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-tertiary-300" />
               <span>Laborat</span>
-              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-emerald-300 ml-0.5" />
+              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-primary-300 ml-0.5" />
             </button>
 
             {menuLabTerbuka && (
@@ -175,11 +175,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-pk"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Permintaan Lab PK</span>
                 </Link>
                 <Link
@@ -187,11 +187,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-pa"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Permintaan Lab PA</span>
                 </Link>
                 <Link
@@ -199,11 +199,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/permintaan-mb"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Permintaan Lab MB</span>
                 </Link>
 
@@ -217,11 +217,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-pk"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-tertiary-500 shrink-0" />
                   <span>Periksa Lab PK</span>
                 </Link>
                 <Link
@@ -229,11 +229,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-pa"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                  <FontAwesomeIcon icon={faMicroscope} className="w-3.5 h-3.5 text-primary-500 shrink-0" />
                   <span>Periksa Lab PA</span>
                 </Link>
                 <Link
@@ -241,11 +241,11 @@ export function AppHeader({
                   onClick={() => setMenuLabTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/laboratorium/periksa-mb"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                  <FontAwesomeIcon icon={faBacteria} className="w-3.5 h-3.5 text-tertiary-500 shrink-0" />
                   <span>Periksa Lab MB</span>
                 </Link>
               </div>
@@ -262,14 +262,14 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isRadiologiActive
-                  ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                  : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Radiologi (Alt+A)"
             >
-              <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-300" />
+              <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-primary-300" />
               <span>Radiologi</span>
-              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-emerald-300 ml-0.5" />
+              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-primary-300 ml-0.5" />
             </button>
 
             {menuRadTerbuka && (
@@ -284,11 +284,11 @@ export function AppHeader({
                   onClick={() => setMenuRadTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/radiologi/permintaan"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <FontAwesomeIcon icon={faFileMedical} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Permintaan Radiologi</span>
                 </Link>
                 <Link
@@ -296,11 +296,11 @@ export function AppHeader({
                   onClick={() => setMenuRadTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/radiologi/periksa"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <FontAwesomeIcon icon={faXRay} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Periksa Radiologi</span>
                 </Link>
               </div>
@@ -317,14 +317,14 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isFarmasiActive
-                  ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                  : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Farmasi (Alt+J)"
             >
-              <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-emerald-300" />
+              <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-primary-300" />
               <span>Farmasi</span>
-              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-emerald-300 ml-0.5" />
+              <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5 text-primary-300 ml-0.5" />
             </button>
 
             {menuFarmasiTerbuka && (
@@ -339,11 +339,11 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/input-penjualan"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faReceipt} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faReceipt} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Input Penjualan Obat & BHP</span>
                 </Link>
                 <Link
@@ -351,11 +351,11 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/penjualan-obat"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faBoxesStacked} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faBoxesStacked} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Data Penjualan Obat & BHP</span>
                 </Link>
                 <Link
@@ -363,8 +363,8 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/penyerahan-darah"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
                   <FontAwesomeIcon icon={faDroplet} className="w-3.5 h-3.5 text-red-500 shrink-0" />
@@ -375,11 +375,11 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/daftar-resep-dokter"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faFilePrescription} className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <FontAwesomeIcon icon={faFilePrescription} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Daftar Resep Dokter</span>
                 </Link>
                 <Link
@@ -387,11 +387,11 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi/resep-obat"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faPrescription} className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                  <FontAwesomeIcon icon={faPrescription} className="w-3.5 h-3.5 text-secondary-600 shrink-0" />
                   <span>No. Resep</span>
                 </Link>
 
@@ -405,11 +405,11 @@ export function AppHeader({
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
                     pathname === "/farmasi"
-                      ? "bg-emerald-50 text-emerald-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-emerald-900 font-medium"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
                   <span>Pemberian Obat (Dispensasi)</span>
                 </Link>
               </div>
@@ -417,7 +417,7 @@ export function AppHeader({
           </div>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-emerald-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
 
           {/* 7. Rawat Inap */}
           <button
@@ -425,12 +425,12 @@ export function AppHeader({
             disabled={isAuthenticated && !hasPermission("kamar_inap")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Inap (Alt+K)"
           >
-            <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-teal-300" />
+            <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Inap</span>
           </button>
 
@@ -440,12 +440,12 @@ export function AppHeader({
             disabled={isAuthenticated && !hasPermission("tindakan_ralan")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
-                ? "bg-emerald-950 text-white border-emerald-700 shadow-xs font-semibold"
-                : "text-emerald-100 hover:text-white hover:bg-emerald-700/70 border-transparent hover:border-emerald-600/50 font-medium"
+                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
+                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Jalan (Alt+S)"
           >
-            <FontAwesomeIcon icon={faStethoscope} className="w-3.5 h-3.5 text-indigo-300" />
+            <FontAwesomeIcon icon={faStethoscope} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Jalan</span>
           </button>
         </div>
@@ -460,7 +460,7 @@ export function AppHeader({
           ) : (
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white text-xs font-semibold shadow-xs"
             >
               <FontAwesomeIcon icon={faRightToBracket} className="w-3.5 h-3.5" />
               <span>Log In</span>

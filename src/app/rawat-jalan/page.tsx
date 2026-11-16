@@ -71,7 +71,7 @@ export default function HalamanRawatJalan() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari No. Rawat, No. RM, Pasien, Dokter, Tindakan, Poli..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {kataKunci && (
               <button
@@ -172,8 +172,8 @@ export default function HalamanRawatJalan() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           item.stts_bayar === "Sudah Bayar"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
                         }`}
                       >
                         {item.stts_bayar || "Belum Bayar"}

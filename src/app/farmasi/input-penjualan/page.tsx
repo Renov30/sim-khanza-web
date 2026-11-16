@@ -66,7 +66,7 @@ export default function HalamanInputPenjualan() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari Kode atau Nama Obat / Alkes..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {kataKunci && (
               <button
@@ -147,7 +147,7 @@ export default function HalamanInputPenjualan() {
                     <td className="py-2 px-2.5 font-sans text-slate-600">
                       {item.satuan || item.kode_sat || "-"}
                     </td>
-                    <td className="py-2 px-2.5 text-right font-bold text-emerald-700">
+                    <td className="py-2 px-2.5 text-right font-bold text-primary-700">
                       {Number(item.harga_jual || 0).toLocaleString("id-ID")}
                     </td>
                     <td className="py-2 px-2.5 text-center font-bold text-slate-700">
@@ -156,7 +156,7 @@ export default function HalamanInputPenjualan() {
                     <td className="py-2 px-2.5 text-center font-sans">
                       <button
                         onClick={() => alert(`Pilih item: ${item.nama_brng} (Fitur form entri transaksi siap digunakan)`)}
-                        className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white text-[10px] font-bold border border-emerald-200"
+                        className="px-2.5 py-1 rounded bg-primary-50 hover:bg-primary-600 text-primary-700 hover:text-white text-[10px] font-bold border border-primary-200"
                       >
                         Pilih Obat
                       </button>

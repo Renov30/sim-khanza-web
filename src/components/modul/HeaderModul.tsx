@@ -57,7 +57,7 @@ export function HeaderModul({
           >
             <FontAwesomeIcon
               icon={faRotate}
-              className={`w-3.5 h-3.5 text-emerald-700 ${memuat ? "animate-spin" : ""}`}
+              className={`w-3.5 h-3.5 text-primary-700 ${memuat ? "animate-spin" : ""}`}
             />
             <span>Segarkan</span>
           </button>

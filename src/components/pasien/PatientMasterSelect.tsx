@@ -38,7 +38,7 @@ export function PatientMasterSelect({ jenis, value, onChange, label, valueAsLabe
   }, [isAuthenticated, jenis, value, query, valueAsLabel, key, open, hasItems]);
   const show = () => { setQuery(''); setOpen(true); dialog.current?.showModal(); dialog.current?.querySelector('input')?.focus(); };
   return <div className="flex flex-1 min-w-0 items-center gap-1.5">
-    <input data-lookup-field tabIndex={-1} aria-label={label} value={valueAsLabel ? value : selected?.label || ''} placeholder={value ? 'Memuat...' : label} readOnly onClick={show} className="h-7 w-full min-w-0 rounded-full border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 cursor-pointer focus:outline-none focus:border-emerald-600" />
+    <input data-lookup-field tabIndex={-1} aria-label={label} value={valueAsLabel ? value : selected?.label || ''} placeholder={value ? 'Memuat...' : label} readOnly onClick={show} className="h-7 w-full min-w-0 rounded-full border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 cursor-pointer focus:outline-none focus:border-primary-600" />
     <button type="button" onClick={show} aria-label={`Pilih ${label}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={`${titleId}-dialog`} title={`Pilih ${label}`} className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100">
       <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
     </button>
@@ -47,7 +47,7 @@ export function PatientMasterSelect({ jenis, value, onChange, label, valueAsLabe
         <h2 id={titleId} className="text-sm font-semibold">Pilih {label}</h2>
         <button type="button" aria-label="Tutup pilihan" onClick={() => dialog.current?.close()} className="p-1 text-slate-600"><FontAwesomeIcon icon={faXmark} className="h-3 w-3" /></button>
       </div>
-      <div className="p-3"><input aria-label={`Cari ${label}`} placeholder={`Cari ${label.toLowerCase()}...`} value={query} onChange={(event) => setQuery(event.target.value)} className="h-8 w-full px-2.5 text-xs rounded-md border border-slate-300 focus:outline-none focus:border-emerald-600" /></div>
+      <div className="p-3"><input aria-label={`Cari ${label}`} placeholder={`Cari ${label.toLowerCase()}...`} value={query} onChange={(event) => setQuery(event.target.value)} className="h-8 w-full px-2.5 text-xs rounded-md border border-slate-300 focus:outline-none focus:border-primary-600" /></div>
       <div className="overflow-auto max-h-[45vh] pb-2">
         {!hasItems && result?.key !== key ? <p className="px-4 py-3 text-xs text-slate-500" role="status">Memuat pilihan...</p>
           : !hasItems && result?.error ? <p className="px-4 py-3 text-xs text-slate-600" role="alert">{result.error}</p>

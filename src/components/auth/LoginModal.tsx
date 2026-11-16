@@ -85,7 +85,7 @@ export function LoginModal() {
         {/* Modal Header */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center">
               <FontAwesomeIcon icon={faShieldHalved} className="w-4 h-4" />
             </div>
             <div>
@@ -131,7 +131,7 @@ export function LoginModal() {
                 value={idUser}
                 onChange={(e) => setIdUser(e.target.value)}
                 placeholder="Contoh: admin atau dr.medianto"
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
                 autoFocus
               />
             </div>
@@ -150,7 +150,7 @@ export function LoginModal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan kata sandi"
-                className="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                className="w-full pl-9 pr-10 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
               />
               <button
                 type="button"
@@ -179,7 +179,7 @@ export function LoginModal() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 rounded-lg shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2 text-xs font-semibold text-white bg-primary-700 hover:bg-primary-800 active:bg-primary-900 rounded-lg shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

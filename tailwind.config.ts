@@ -1,5 +1,16 @@
 import type { Config } from "tailwindcss";
 
+const tingkatWarna = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+
+function paletDariVariabelCss(nama: "primary" | "secondary" | "tertiary") {
+  return Object.fromEntries(
+    tingkatWarna.map((tingkat) => [
+      tingkat,
+      `rgb(var(--color-${nama}-${tingkat}) / <alpha-value>)`,
+    ]),
+  );
+}
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,18 +20,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: "#ecfdf5",
-          100: "#d1fae5",
-          200: "#a7f3d0",
-          300: "#6ee7b7",
-          400: "#34d399",
-          500: "#10b981",
-          600: "#059669",
-          700: "#047857",
-          800: "#065f46",
-          900: "#064e3b",
-        },
+        primary: paletDariVariabelCss("primary"),
+        secondary: paletDariVariabelCss("secondary"),
+        tertiary: paletDariVariabelCss("tertiary"),
       },
     },
   },

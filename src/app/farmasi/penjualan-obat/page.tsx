@@ -66,7 +66,7 @@ export default function HalamanPenjualanObat() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari No. Nota, No. RM, Pasien, Keterangan..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {kataKunci && (
               <button
@@ -157,7 +157,7 @@ export default function HalamanPenjualanObat() {
                     <td className="py-2 px-2.5 text-center font-bold text-slate-700">
                       {item.total_item}
                     </td>
-                    <td className="py-2 px-2.5 text-right font-bold text-emerald-700">
+                    <td className="py-2 px-2.5 text-right font-bold text-primary-700">
                       {Number(item.total_biaya || 0).toLocaleString("id-ID")}
                     </td>
                     <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
@@ -167,8 +167,8 @@ export default function HalamanPenjualanObat() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           item.status === "Sudah Bayar"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
                         }`}
                       >
                         {item.status || "Sudah Bayar"}

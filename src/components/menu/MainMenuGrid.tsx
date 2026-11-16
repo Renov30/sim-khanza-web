@@ -47,7 +47,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           {/* Category Dropdown (cmbMenu in Khanza) */}
           <div className="flex-1 max-w-xl flex items-center gap-2">
             <label className="text-xs font-semibold text-slate-700 shrink-0 flex items-center gap-1.5">
-              <FontAwesomeIcon icon={faFilter} className="w-3.5 h-3.5 text-emerald-700" />
+              <FontAwesomeIcon icon={faFilter} className="w-3.5 h-3.5 text-primary-700" />
               <span>Kategori Menu:</span>
             </label>
             <CustomSelect
@@ -76,7 +76,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari modul atau menu..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {searchQuery && (
               <button
@@ -95,7 +95,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
             onClick={() => setSelectedCategory("ALL")}
             className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
               selectedCategory === "ALL"
-                ? "bg-emerald-700 text-white shadow-2xs"
+                ? "bg-primary-700 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -107,7 +107,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               onClick={() => setSelectedCategory(cat.code)}
               className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
                 selectedCategory === cat.code
-                  ? "bg-emerald-700 text-white shadow-2xs"
+                  ? "bg-primary-700 text-white shadow-2xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
@@ -121,16 +121,16 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
         {/* Category Description Banner */}
         {activeCategoryObj && (
-          <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-xs text-emerald-900 flex items-start justify-between">
+          <div className="p-3 bg-primary-50/70 border border-primary-200/80 rounded-xl text-xs text-primary-900 flex items-start justify-between">
             <div>
-              <p className="font-bold text-emerald-800">
+              <p className="font-bold text-primary-800">
                 {activeCategoryObj.title}
               </p>
-              <p className="text-emerald-700 mt-0.5">
+              <p className="text-primary-700 mt-0.5">
                 {activeCategoryObj.description}
               </p>
             </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-primary-100 text-primary-800">
               {filteredItems.length} Modul
             </span>
           </div>
@@ -161,7 +161,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
                 setSelectedCategory("ALL");
                 setSearchQuery("");
               }}
-              className="mt-3 text-xs font-semibold text-emerald-700 hover:text-emerald-800 underline"
+              className="mt-3 text-xs font-semibold text-primary-700 hover:text-primary-800 underline"
             >
               Reset Filter Pencarian
             </button>

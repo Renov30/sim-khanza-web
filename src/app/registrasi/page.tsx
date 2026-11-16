@@ -552,7 +552,7 @@ export default function HalamanRegistrasi() {
 
   const dataTersaring = data;
 
-  const inputClass = "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-emerald-600";
+  const inputClass = "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600";
   const input = (label:string,value:string,change?: (value:string)=>void,readOnly=false,placeholder='') => (
     <input aria-label={label} type="text" value={value} onChange={change ? (event)=>change(event.target.value) : undefined} readOnly={readOnly} placeholder={placeholder} className={`${inputClass} w-full`} />
   );
@@ -586,7 +586,7 @@ export default function HalamanRegistrasi() {
               <RegistrationField label="No. Rawat"><div className="w-full max-w-[28rem]">{input('No. Rawat',noRawat,undefined,true,'YYYY/MM/DD/000001')}</div></RegistrationField>
               <RegistrationField label="Tgl. Reg.">
                 <div className="flex flex-wrap xl:flex-nowrap items-center gap-2 w-full">
-                  <input aria-label="Tanggal registrasi" type="date" value={tglReg} onChange={(event)=>setTglReg(event.target.value)} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-600" />
+                  <input aria-label="Tanggal registrasi" type="date" value={tglReg} onChange={(event)=>setTglReg(event.target.value)} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:outline-none focus:border-primary-600" />
                   <span className="text-slate-600">Jam :</span>
                   <input
                     aria-label="Jam registrasi"
@@ -598,9 +598,9 @@ export default function HalamanRegistrasi() {
                       const value = event.target.value;
                       setJamReg(value.length === 5 ? `${value}:00` : value);
                     }}
-                    className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-emerald-600"
+                    className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600"
                   />
-                  <input aria-label="Jam otomatis" title="Perbarui jam secara otomatis" type="checkbox" checked={jamOtomatis} disabled={!!terpilih} onChange={(event)=>setJamOtomatis(event.target.checked)} className="shrink-0 accent-emerald-700" />
+                  <input aria-label="Jam otomatis" title="Perbarui jam secara otomatis" type="checkbox" checked={jamOtomatis} disabled={!!terpilih} onChange={(event)=>setJamOtomatis(event.target.checked)} className="shrink-0 accent-primary-700" />
                 </div>
               </RegistrationField>
               <RegistrationField label="Dr Dituju">
@@ -670,7 +670,7 @@ export default function HalamanRegistrasi() {
               setHalaman(1);
               document.getElementById(`tab-registrasi-${next}`)?.focus();
             }}
-            className={`border-b-2 px-4 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 ${tabTabel === tab ? "border-emerald-700 bg-white text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+            className={`border-b-2 px-4 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabTabel === tab ? "border-primary-700 bg-white text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
           >
             {tab === "awal" ? "Registrasi Awal" : "Rujukan Internal Poli"}
           </button>
@@ -725,7 +725,7 @@ export default function HalamanRegistrasi() {
                     onClick={() => handlePilihData(item)}
                     className={`cursor-pointer ${
                       terpilih?.no_rawat === item.no_rawat
-                        ? "bg-emerald-50/90 text-slate-700"
+                        ? "bg-primary-50/90 text-slate-700"
                         : "hover:bg-slate-50/80 text-slate-700"
                     }`}
                   >
@@ -745,7 +745,7 @@ export default function HalamanRegistrasi() {
                       {item.nm_pasien}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${item.jk === "L" ? "bg-blue-50 text-blue-700" : "bg-pink-50 text-pink-700"}`}>{item.jk}</span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${item.jk === "L" ? "bg-primary-50 text-primary-700" : "bg-tertiary-50 text-tertiary-700"}`}>{item.jk}</span>
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">
                       {item.umurdaftar} {item.sttsumur}
@@ -768,8 +768,8 @@ export default function HalamanRegistrasi() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           item.status_bayar === "Sudah Bayar"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
                         }`}
                       >
                         {item.status_bayar}
@@ -808,7 +808,7 @@ export default function HalamanRegistrasi() {
                   <tr
                     key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
                     onClick={() => setRujukanTerpilih(item)}
-                    className={`cursor-pointer ${rujukanTerpilih?.no_rawat === item.no_rawat && rujukanTerpilih.kd_dokter === item.kd_dokter && rujukanTerpilih.kd_poli === item.kd_poli ? "bg-emerald-50/90" : "hover:bg-slate-50/80"} text-slate-700`}
+                    className={`cursor-pointer ${rujukanTerpilih?.no_rawat === item.no_rawat && rujukanTerpilih.kd_dokter === item.kd_dokter && rujukanTerpilih.kd_poli === item.kd_poli ? "bg-primary-50/90" : "hover:bg-slate-50/80"} text-slate-700`}
                   >
                     <td className="px-2.5 py-2">{item.no_rawat}</td>
                     <td className="px-2.5 py-2 text-slate-600">{item.tgl_registrasi} <span className="text-slate-400">{item.jam_reg}</span></td>
@@ -897,15 +897,15 @@ export default function HalamanRegistrasi() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
             {/* Header */}
-            <div className="px-4 py-3 bg-emerald-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
+            <div className="px-4 py-3 bg-primary-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faHospitalUser} className="w-3.5 h-3.5 text-emerald-200" />
+                <FontAwesomeIcon icon={faHospitalUser} className="w-3.5 h-3.5 text-primary-200" />
                 <span className="text-sm font-semibold tracking-wide">Cari Data Pasien (Rekam Medis)</span>
               </div>
               <div className="flex items-center gap-2">
                 <Link
                   href="/pasien"
-                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 border border-emerald-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs no-underline"
+                  className="px-2.5 py-1 bg-primary-600 hover:bg-primary-500 border border-primary-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs no-underline"
                   title="Buka Data Pasien & Rekam Medis di halaman ini"
                 >
                   <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
@@ -914,7 +914,7 @@ export default function HalamanRegistrasi() {
                 <button
                   type="button"
                   onClick={() => setModalPasienBuka(false)}
-                  className="text-white hover:text-emerald-200 p-1 font-bold text-sm leading-none ml-1 cursor-pointer"
+                  className="text-white hover:text-primary-200 p-1 font-bold text-sm leading-none ml-1 cursor-pointer"
                   title="Tutup"
                 >
                   <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
@@ -931,7 +931,7 @@ export default function HalamanRegistrasi() {
                   onChange={(e) => handleCariPasien(e.target.value)}
                   placeholder="Ketik No. RM, Nama Pasien, NIK, atau Alamat..."
                   autoFocus
-                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-primary-600 shadow-2xs"
                 />
                 <FontAwesomeIcon
                   icon={faMagnifyingGlass}
@@ -949,7 +949,7 @@ export default function HalamanRegistrasi() {
                 )}
               </div>
               {sedangMemuatPasien && (
-                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 text-emerald-600 animate-spin" />
+                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 text-primary-600 animate-spin" />
               )}
             </div>
 
@@ -982,7 +982,7 @@ export default function HalamanRegistrasi() {
                       <tr
                         key={p.no_rkm_medis}
                         onClick={() => handlePilihPasienCari(p)}
-                        className="hover:bg-emerald-50/70 cursor-pointer"
+                        className="hover:bg-primary-50/70 cursor-pointer"
                       >
                         <td className="p-2 font-mono font-normal text-slate-700">{p.no_rkm_medis}</td>
                         <td className="p-2 font-semibold text-slate-800">{p.nm_pasien}</td>
@@ -996,7 +996,7 @@ export default function HalamanRegistrasi() {
                               e.stopPropagation();
                               handlePilihPasienCari(p);
                             }}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold shadow-2xs cursor-pointer"
+                            className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-[10px] font-bold shadow-2xs cursor-pointer"
                           >
                             Pilih
                           </button>

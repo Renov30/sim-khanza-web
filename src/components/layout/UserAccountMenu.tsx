@@ -64,10 +64,10 @@ export function UserAccountMenu({
       {/* Tombol Akun di Header (Kompak, hanya nama & avatar) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-emerald-900/80 hover:bg-emerald-900 text-white pl-2.5 pr-2 py-1.5 rounded-lg border border-emerald-700/70 text-xs font-semibold shadow-xs"
+        className="flex items-center gap-2 bg-primary-900/80 hover:bg-primary-900 text-white pl-2.5 pr-2 py-1.5 rounded-lg border border-primary-700/70 text-xs font-semibold shadow-xs"
         title="Klik untuk membuka menu akun & modul sistem"
       >
-        <div className="w-5 h-5 rounded-full bg-emerald-700 flex items-center justify-center text-emerald-100 font-bold text-[11px]">
+        <div className="w-5 h-5 rounded-full bg-primary-700 flex items-center justify-center text-primary-100 font-bold text-[11px]">
           {user.fullName.charAt(0).toUpperCase()}
         </div>
         <span className="max-w-[120px] md:max-w-[160px] truncate leading-tight">
@@ -75,7 +75,7 @@ export function UserAccountMenu({
         </span>
         <FontAwesomeIcon
           icon={faChevronDown}
-          className={`w-3 h-3 text-emerald-300 ${
+          className={`w-3 h-3 text-primary-300 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -87,14 +87,14 @@ export function UserAccountMenu({
           {/* 1. Header Informasi Pegawai & Jenis Akun */}
           <div className="p-4 bg-slate-50 border-b border-slate-200">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-primary-700 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
                 {user.fullName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-xs font-bold text-slate-800 leading-snug truncate">
                   {user.fullName}
                 </h3>
-                <p className="text-[11px] font-medium text-emerald-700 mt-0.5">
+                <p className="text-[11px] font-medium text-primary-700 mt-0.5">
                   {user.isAdmin
                     ? "Administrator Utama"
                     : "Petugas / Dokter"}
@@ -109,7 +109,7 @@ export function UserAccountMenu({
               onClick={() => setActiveTab("presensi")}
               className={`px-2.5 py-1.5 rounded-t-lg shrink-0 ${
                 activeTab === "presensi"
-                  ? "bg-white text-emerald-800 border-t-2 border-emerald-600 font-bold"
+                  ? "bg-white text-primary-800 border-t-2 border-primary-600 font-bold"
                   : "text-slate-600 hover:text-slate-800"
               }`}
             >
@@ -119,7 +119,7 @@ export function UserAccountMenu({
               onClick={() => setActiveTab("info")}
               className={`px-2.5 py-1.5 rounded-t-lg shrink-0 ${
                 activeTab === "info"
-                  ? "bg-white text-emerald-800 border-t-2 border-emerald-600 font-bold"
+                  ? "bg-white text-primary-800 border-t-2 border-primary-600 font-bold"
                   : "text-slate-600 hover:text-slate-800"
               }`}
             >
@@ -129,7 +129,7 @@ export function UserAccountMenu({
               onClick={() => setActiveTab("tarif")}
               className={`px-2.5 py-1.5 rounded-t-lg shrink-0 ${
                 activeTab === "tarif"
-                  ? "bg-white text-emerald-800 border-t-2 border-emerald-600 font-bold"
+                  ? "bg-white text-primary-800 border-t-2 border-primary-600 font-bold"
                   : "text-slate-600 hover:text-slate-800"
               }`}
             >
@@ -139,7 +139,7 @@ export function UserAccountMenu({
               onClick={() => setActiveTab("dashboard")}
               className={`px-2.5 py-1.5 rounded-t-lg shrink-0 ${
                 activeTab === "dashboard"
-                  ? "bg-white text-emerald-800 border-t-2 border-emerald-600 font-bold"
+                  ? "bg-white text-primary-800 border-t-2 border-primary-600 font-bold"
                   : "text-slate-600 hover:text-slate-800"
               }`}
             >
@@ -149,7 +149,7 @@ export function UserAccountMenu({
               onClick={() => setActiveTab("antrian")}
               className={`px-2.5 py-1.5 rounded-t-lg shrink-0 ${
                 activeTab === "antrian"
-                  ? "bg-white text-emerald-800 border-t-2 border-emerald-600 font-bold"
+                  ? "bg-white text-primary-800 border-t-2 border-primary-600 font-bold"
                   : "text-slate-600 hover:text-slate-800"
               }`}
             >
@@ -166,7 +166,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faClock} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faClock} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Rekap Kehadiran Harian</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -176,7 +176,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faCalendarDays} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faCalendarDays} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Rekap Kehadiran Bulanan</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -186,7 +186,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faFileCircleCheck} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileCircleCheck} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Pengajuan Cuti Pegawai</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -201,7 +201,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Ketersediaan Kamar / Bed</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -211,7 +211,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faCalendarCheck} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faCalendarCheck} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Jadwal Praktek Dokter</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -221,7 +221,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faBookMedical} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faBookMedical} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Pencarian E-Book / Jurnal</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -236,7 +236,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Tarif Rawat Jalan</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -246,7 +246,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Tarif Rawat Inap</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -256,7 +256,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Tarif Laboratorium</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -266,7 +266,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Tarif Radiologi</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -281,7 +281,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Indikator Pelayanan (BOR)</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -291,7 +291,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faChartLine} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Kunjungan Poliklinik</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -306,7 +306,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Display Antrian Loket</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -316,7 +316,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faTv} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Display Antrian Poli</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -326,7 +326,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Display Antrian Apotek</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -336,7 +336,7 @@ export function UserAccountMenu({
                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center justify-between text-slate-700"
                 >
                   <div className="flex items-center gap-2.5">
-                    <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-emerald-700" />
+                    <FontAwesomeIcon icon={faVial} className="w-3.5 h-3.5 text-primary-700" />
                     <span>Display Antrian Laborat</span>
                   </div>
                   <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 text-slate-400" />
@@ -350,14 +350,14 @@ export function UserAccountMenu({
             <div className="flex items-center justify-between text-xs px-2 py-1 text-slate-600">
               <button
                 onClick={() => handleAction("Ganti Password Akun")}
-                className="flex items-center gap-1.5 hover:text-emerald-700"
+                className="flex items-center gap-1.5 hover:text-primary-700"
               >
                 <FontAwesomeIcon icon={faKey} className="w-3 h-3" />
                 <span>Ganti Password</span>
               </button>
               <button
                 onClick={handleAbout}
-                className="flex items-center gap-1.5 hover:text-emerald-700"
+                className="flex items-center gap-1.5 hover:text-primary-700"
               >
                 <FontAwesomeIcon icon={faCircleInfo} className="w-3 h-3" />
                 <span>Tentang Aplikasi</span>

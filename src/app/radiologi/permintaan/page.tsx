@@ -67,7 +67,7 @@ export default function HalamanPermintaanRadiologi() {
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari No. Order, No. Rawat, Pasien, Diagnosa..."
-              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-600"
             />
             {kataKunci && (
               <button
@@ -160,8 +160,8 @@ export default function HalamanPermintaanRadiologi() {
                       <span
                         className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           item.jk === "L"
-                            ? "bg-blue-50 text-blue-700"
-                            : "bg-pink-50 text-pink-700"
+                            ? "bg-primary-50 text-primary-700"
+                            : "bg-tertiary-50 text-tertiary-700"
                         }`}
                       >
                         {item.jk}
@@ -177,7 +177,7 @@ export default function HalamanPermintaanRadiologi() {
                       {item.informasi_tambahan || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
                         {item.status || "ralan"}
                       </span>
                     </td>

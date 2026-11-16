@@ -40,8 +40,8 @@ export default function LocationWidget() {
 
       {/* Header Widget */}
       <div className="relative z-10 flex items-start justify-between">
-        <div className="flex items-center gap-2 text-blue-600">
-          <div className="w-7 h-7 rounded-xl bg-blue-500/10 flex items-center justify-center text-xs text-blue-600 shadow-sm">
+        <div className="flex items-center gap-2 text-primary-600">
+          <div className="w-7 h-7 rounded-xl bg-primary-500/10 flex items-center justify-center text-xs text-primary-600 shadow-sm">
             <FontAwesomeIcon icon={faLocationDot} />
           </div>
           <div>
@@ -56,7 +56,7 @@ export default function LocationWidget() {
 
         <FontAwesomeIcon 
           icon={faCloudSun} 
-          className="text-amber-500 text-sm mt-1"
+          className="text-tertiary-500 text-sm mt-1"
         />
       </div>
 
@@ -85,8 +85,8 @@ export default function LocationWidget() {
             :{secondsStr || "00"}
           </span>
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-medium border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full bg-secondary-500/10 text-secondary-600 font-medium border border-secondary-500/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-secondary-500" />
           Online
         </span>
       </div>

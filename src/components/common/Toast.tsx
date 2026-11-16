@@ -45,10 +45,10 @@ export function Toast({ message, tipe = "info", onClose, duration = 4000 }: Toas
 
   const warnaIkon =
     tipe === "sukses"
-      ? "text-emerald-400"
+      ? "text-secondary-400"
       : tipe === "error"
       ? "text-rose-400"
-      : "text-sky-400";
+      : "text-secondary-400";
 
   const toastContent = (
     <div

@@ -81,7 +81,7 @@ export function PanelInputData({
         <div className="flex items-center gap-2">
           <FontAwesomeIcon
             icon={faPenClip}
-            className="w-3.5 h-3.5 text-emerald-700"
+            className="w-3.5 h-3.5 text-primary-700"
           />
           <span className="text-xs font-bold text-slate-800 tracking-tight">
             {judul}
@@ -120,7 +120,7 @@ export function PanelInputData({
                   type="button"
                   onClick={onSimpan}
                   disabled={sedangMenyimpan}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-primary-700 hover:bg-primary-800 rounded-lg shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   <FontAwesomeIcon icon={faCircleCheck} className="w-3.5 h-3.5" />
                   <span>{sedangMenyimpan ? "Menyimpan..." : teksSimpan}</span>
