@@ -111,7 +111,7 @@ export function AppHeader({
         </div>
 
         {/* Toolbar modul cepat diratakan ke kiri. */}
-        <div className="flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-x-auto px-1 scrollbar-none">
+        <div className="relative z-20 flex min-w-0 flex-1 items-center justify-start space-x-1 overflow-visible px-1 scrollbar-none">
           {/* 1. Menu */}
           <button
             onClick={onToggleMenu}
