@@ -167,6 +167,7 @@ async function daftarObat(params: URLSearchParams) {
   `, [kunjungan[0].kd_poli]);
   if (!depot[0]) throw new ResepError("Depo obat rawat jalan belum dikonfigurasi.", 409, "DEPO_BELUM_DIATUR");
   const seperti = `%${cari}%`;
+  const queryParams = [depot[0].kd_bangsal, seperti, seperti, seperti, seperti, 101, offset];
   const rows = await executeQuery(`
     SELECT db.kode_brng, db.nama_brng, db.kode_sat, COALESCE(js.nama, '-') AS jenis,
            db.letak_barang AS komposisi, db.ralan AS harga_ralan,
@@ -182,9 +183,26 @@ async function daftarObat(params: URLSearchParams) {
     HAVING SUM(gb.stok) > 0
     ORDER BY db.nama_brng
     LIMIT ? OFFSET ?
-  `, [depot[0].kd_bangsal, seperti, seperti, seperti, seperti, 101, offset]);
+  `, queryParams);
   const hasMore = rows.length > 100;
-  return NextResponse.json({ success: true, data: rows.slice(0, 100), meta: { depot: depot[0], hasMore, offset, limit: 100 } });
+  let total: number | undefined;
+  if (offset === 0) {
+    const totalRows = await executeQuery<{ total: number | string }>(`
+      SELECT COUNT(*) AS total
+      FROM (
+        SELECT db.kode_brng
+        FROM databarang db
+        INNER JOIN gudangbarang gb ON gb.kode_brng = db.kode_brng AND gb.kd_bangsal = ?
+        LEFT JOIN jenis js ON js.kdjns = db.kdjns
+        WHERE db.status = '1'
+          AND (db.kode_brng LIKE ? OR db.nama_brng LIKE ? OR js.nama LIKE ? OR db.letak_barang LIKE ?)
+        GROUP BY db.kode_brng
+        HAVING SUM(gb.stok) > 0
+      ) AS katalog
+    `, [depot[0].kd_bangsal, seperti, seperti, seperti, seperti]);
+    total = Number(totalRows[0]?.total || 0);
+  }
+  return NextResponse.json({ success: true, data: rows.slice(0, 100), meta: { depot: depot[0], hasMore, offset, limit: 100, ...(total === undefined ? {} : { total }) } });
 }
 
 async function daftarMetode() {

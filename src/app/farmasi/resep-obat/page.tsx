@@ -100,6 +100,7 @@ export default function HalamanInputResep() {
   const [memuatObatBerikutnya, setMemuatObatBerikutnya] = useState(false);
   const [offsetObat, setOffsetObat] = useState(0);
   const [adaObatBerikutnya, setAdaObatBerikutnya] = useState(false);
+  const [totalObat, setTotalObat] = useState(0);
   const [obat, setObat] = useState<ObatResep[]>([]);
   const [bahan, setBahan] = useState<BahanRacikan[]>([]);
   const [racikan, setRacikan] = useState<Racikan[]>([]);
@@ -119,6 +120,7 @@ export default function HalamanInputResep() {
     setHasilKunjungan([]);
     setCariObat("");
     setKatalog([]);
+    setTotalObat(0);
     setObat([]);
     setBahan([]);
     setRacikan([]);
@@ -192,15 +194,17 @@ export default function HalamanInputResep() {
       setMemuatObat(true);
       setOffsetObat(0);
       setAdaObatBerikutnya(false);
+      setTotalObat(0);
       try {
         const url = `/api/farmasi/resep-obat?resource=obat&no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&cari=${encodeURIComponent(cariObat.trim())}`;
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
-        const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { hasMore?: boolean } } = await response.json();
+        const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { hasMore?: boolean; total?: number } } = await response.json();
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat obat");
         const data = json.data || [];
         setKatalog(data);
         setOffsetObat(data.length);
         setAdaObatBerikutnya(Boolean(json.meta?.hasMore));
+        setTotalObat(Number(json.meta?.total || 0));
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat obat"), "error");
       } finally {
@@ -261,6 +265,7 @@ export default function HalamanInputResep() {
     setModeInput("nonracikan");
     setCariObat("");
     setKatalog([]);
+    setTotalObat(0);
     setObat([]);
     setBahan([]);
     setRacikan([]);
@@ -544,7 +549,7 @@ export default function HalamanInputResep() {
         onBaru={resetForm}
         disabledSimpan={menyimpan || !kunjungan || obat.length + racikan.length === 0}
         memuat={menyimpan}
-        jumlahRecord={katalog.length}
+        jumlahRecord={totalObat}
       />
       <KonfirmasiDialog terbuka={konfirmasi} judul="Simpan Resep" pesan={`Simpan resep untuk ${kunjungan?.nm_pasien || "pasien"}?`} subPesan="Resep akan mendapat nomor baru dan masuk ke antrean pelayanan farmasi." teksKonfirmasi="Simpan Resep" bahaya={false} sedangMemproses={menyimpan} onBatal={() => setKonfirmasi(false)} onKonfirmasi={() => void simpan()} />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
