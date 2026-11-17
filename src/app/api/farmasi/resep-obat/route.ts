@@ -149,6 +149,8 @@ async function daftarKunjungan(params: URLSearchParams) {
 async function daftarObat(params: URLSearchParams) {
   const noRawat = params.get("no_rawat")?.trim() || "";
   const cari = params.get("cari")?.trim().slice(0, 80) || "";
+  const offsetNilai = Number.parseInt(params.get("offset") || "0", 10);
+  const offset = Number.isFinite(offsetNilai) ? Math.min(Math.max(offsetNilai, 0), 100000) : 0;
   if (!noRawat || noRawat.length > 17) throw new ResepError("Pilih kunjungan terlebih dahulu.");
   const kunjungan = await executeQuery<{ kd_poli: string }>(
     "SELECT kd_poli FROM reg_periksa WHERE no_rawat = ? AND status_lanjut = 'Ralan' LIMIT 1",
@@ -179,9 +181,10 @@ async function daftarObat(params: URLSearchParams) {
              db.ralan, ind.nama_industri, db.kapasitas
     HAVING SUM(gb.stok) > 0
     ORDER BY db.nama_brng
-    LIMIT 100
-  `, [depot[0].kd_bangsal, seperti, seperti, seperti, seperti]);
-  return NextResponse.json({ success: true, data: rows, meta: { depot: depot[0] } });
+    LIMIT ? OFFSET ?
+  `, [depot[0].kd_bangsal, seperti, seperti, seperti, seperti, 101, offset]);
+  const hasMore = rows.length > 100;
+  return NextResponse.json({ success: true, data: rows.slice(0, 100), meta: { depot: depot[0], hasMore, offset, limit: 100 } });
 }
 
 async function daftarMetode() {

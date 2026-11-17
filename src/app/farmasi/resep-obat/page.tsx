@@ -97,6 +97,9 @@ export default function HalamanInputResep() {
   const [cariObat, setCariObat] = useState("");
   const [katalog, setKatalog] = useState<ObatKatalog[]>([]);
   const [memuatObat, setMemuatObat] = useState(false);
+  const [memuatObatBerikutnya, setMemuatObatBerikutnya] = useState(false);
+  const [offsetObat, setOffsetObat] = useState(0);
+  const [adaObatBerikutnya, setAdaObatBerikutnya] = useState(false);
   const [obat, setObat] = useState<ObatResep[]>([]);
   const [bahan, setBahan] = useState<BahanRacikan[]>([]);
   const [racikan, setRacikan] = useState<Racikan[]>([]);
@@ -187,12 +190,17 @@ export default function HalamanInputResep() {
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setMemuatObat(true);
+      setOffsetObat(0);
+      setAdaObatBerikutnya(false);
       try {
         const url = `/api/farmasi/resep-obat?resource=obat&no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&cari=${encodeURIComponent(cariObat.trim())}`;
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
-        const json: { success?: boolean; data?: ObatKatalog[]; error?: string } = await response.json();
+        const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { hasMore?: boolean } } = await response.json();
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat obat");
-        setKatalog(json.data || []);
+        const data = json.data || [];
+        setKatalog(data);
+        setOffsetObat(data.length);
+        setAdaObatBerikutnya(Boolean(json.meta?.hasMore));
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat obat"), "error");
       } finally {
@@ -201,6 +209,26 @@ export default function HalamanInputResep() {
     }, cariObat ? 250 : 0);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [cariObat, kunjungan, tampilkanToast]);
+
+  const muatObatBerikutnya = async () => {
+    if (!kunjungan || !adaObatBerikutnya || memuatObat || memuatObatBerikutnya) return;
+    setMemuatObatBerikutnya(true);
+    const offsetSaatIni = offsetObat;
+    try {
+      const url = `/api/farmasi/resep-obat?resource=obat&no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&cari=${encodeURIComponent(cariObat.trim())}&offset=${offsetSaatIni}`;
+      const response = await fetch(url, { cache: "no-store" });
+      const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { hasMore?: boolean } } = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat obat berikutnya");
+      const data = json.data || [];
+      setKatalog((lama) => [...lama, ...data]);
+      setOffsetObat(offsetSaatIni + data.length);
+      setAdaObatBerikutnya(Boolean(json.meta?.hasMore));
+    } catch (error) {
+      tampilkanToast(pesanDari(error, "Gagal memuat obat berikutnya"), "error");
+    } finally {
+      setMemuatObatBerikutnya(false);
+    }
+  };
 
   const tambahDariKatalog = (item: ObatKatalog) => {
     if (modeInput === "nonracikan") {
@@ -398,7 +426,16 @@ export default function HalamanInputResep() {
           </div>
         )}
 
-        <div id={`panel-resep-${modeInput}`} role="tabpanel" aria-labelledby={`tab-resep-${modeInput}`} className="min-h-0 flex-1 overflow-auto">
+        <div
+          id={`panel-resep-${modeInput}`}
+          role="tabpanel"
+          aria-labelledby={`tab-resep-${modeInput}`}
+          className="min-h-0 flex-1 overflow-auto"
+          onScroll={(event) => {
+            const target = event.currentTarget;
+            if (target.scrollTop + target.clientHeight >= target.scrollHeight - 320) void muatObatBerikutnya();
+          }}
+        >
           {modeInput === "nonracikan" ? (
             <table className="w-full min-w-[1320px] border-collapse text-center text-[11px] text-slate-700">
               <caption className="sr-only">Daftar obat umum yang tersedia di depo</caption>
@@ -442,6 +479,7 @@ export default function HalamanInputResep() {
                     </tr>
                   );
                 })}
+                {memuatObatBerikutnya && <tr><td colSpan={11} className="p-3 text-center text-slate-500">Memuat obat berikutnya...</td></tr>}
               </tbody>
             </table>
           ) : (
@@ -484,6 +522,7 @@ export default function HalamanInputResep() {
                     </tr>
                   );
                 })}
+                {memuatObatBerikutnya && <tr><td colSpan={10} className="p-3 text-center text-slate-500">Memuat bahan berikutnya...</td></tr>}
               </tbody>
             </table>
           )}
