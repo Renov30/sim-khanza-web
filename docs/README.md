@@ -80,6 +80,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Enter memindahkan fokus ke field aktif berikutnya pada login, registrasi, data pasien, dan tindakan rawat jalan; field baca-saja, nonaktif, serta kontrol pilihan biner dilewati.
 - Enter pada textarea tetap membuat baris baru, sedangkan Ctrl+Enter memindahkan fokus seperti Tab.
 - Pelaksana tindakan dan pemeriksaan otomatis menggunakan dokter tujuan/DPJP dari kunjungan terpilih; pilihan manual tetap tersedia dan otorisasi penyimpanan server tetap berlaku.
+- Tab Pemeriksaan menyediakan pencarian 5 SOAPIE terakhir seperti `RMCari5SOAPTerakhir`; riwayat difilter berdasarkan No. RM dan NIP pelaksana, lalu dapat dipakai untuk mengisi Subjek, Objek, Asesmen, Plan, Instruksi, dan Evaluasi.
 
 ## Prioritas pengembangan berikutnya
 

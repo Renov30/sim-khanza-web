@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDatabase, faFileMedical, faFlask, faHeartPulse, faTooth } from "@fortawesome/free-solid-svg-icons";
+import { faDatabase, faFileMedical, faFlask, faHeartPulse, faMagnifyingGlass, faTooth, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
@@ -24,6 +24,16 @@ interface Pemeriksaan {
   nadi: string; respirasi: string; tinggi: string; berat: string; spo2: string; gcs: string;
   kesadaran: string; keluhan: string; pemeriksaan: string; alergi: string; lingkar_perut: string;
   rtl: string; penilaian: string; instruksi: string; evaluasi: string; nip: string; nama: string; jbtn: string;
+}
+interface SoapieTerakhir {
+  tgl_perawatan: string;
+  jam_rawat: string;
+  keluhan: string | null;
+  pemeriksaan: string | null;
+  penilaian: string | null;
+  rtl: string | null;
+  instruksi: string | null;
+  evaluasi: string | null;
 }
 
 interface FormPemeriksaan {
@@ -47,6 +57,9 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const [form, setForm] = useState<FormPemeriksaan>(() => formKosong(pasien.kd_dokter));
   const [data, setData] = useState<Pemeriksaan[]>([]);
   const [pegawai, setPegawai] = useState<Pegawai[]>([]);
+  const [soapie, setSoapie] = useState<SoapieTerakhir[]>([]);
+  const [memuatSoapie, setMemuatSoapie] = useState(false);
+  const [soapieBuka, setSoapieBuka] = useState(false);
   const [terpilih, setTerpilih] = useState<Pemeriksaan | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
@@ -86,9 +99,36 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
 
   const isi = (nama: keyof FormPemeriksaan, nilai: string) => setForm((lama) => ({ ...lama, [nama]: nilai }));
 
+  const cariSoapieTerakhir = async () => {
+    if (!form.nip) {
+      setToast({ pesan: "Pelaksana pemeriksaan belum tersedia.", tipe: "info" });
+      return;
+    }
+    setMemuatSoapie(true);
+    try {
+      const params = new URLSearchParams({ resource: "soapie-terakhir", no_rkm_medis: pasien.no_rkm_medis, nip: form.nip });
+      const response = await fetch(`/api/tindakan-rawat-jalan/pemeriksaan?${params}`, { cache: "no-store" });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat riwayat SOAPIE");
+      setSoapie(json.data || []);
+      setSoapieBuka(Boolean(json.data?.length));
+      if (!json.data?.length) setToast({ pesan: "Belum ada 5 SOAPIE terakhir untuk pelaksana ini.", tipe: "info" });
+    } catch (error) {
+      setToast({ pesan: error instanceof Error ? error.message : "Gagal memuat riwayat SOAPIE", tipe: "error" });
+    } finally { setMemuatSoapie(false); }
+  };
+
+  const pakaiSoapie = (item: SoapieTerakhir) => {
+    setForm((lama) => ({ ...lama, keluhan: item.keluhan || "", pemeriksaan: item.pemeriksaan || "", penilaian: item.penilaian || "", rtl: item.rtl || "", instruksi: item.instruksi || "", evaluasi: item.evaluasi || "" }));
+    setSoapie([]);
+    setSoapieBuka(false);
+  };
+
   const baru = () => {
     setTerpilih(null);
     setForm(formKosong(pasien.kd_dokter || (pegawai.length === 1 ? pegawai[0].kode : "")));
+    setSoapie([]);
+    setSoapieBuka(false);
   };
 
   const pilih = (item: Pemeriksaan) => {
@@ -142,7 +182,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const pegawaiDipilih = daftarPelaksana.find((item) => item.kode === form.nip);
   const kelasInput = "h-7 w-full rounded-full border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none";
   const areaKlinis = (label: string, nama: keyof FormPemeriksaan, baris = 2) => <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-1.5 text-[11px] text-slate-700"><span className="pt-1.5 text-right">{label} :</span><textarea value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={2000} rows={baris} className="w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] leading-4 text-slate-800 focus:border-primary-600 focus:outline-none" /></label>;
-  const tandaVital = (label: string, nama: keyof FormPemeriksaan, maxLength: number, placeholder = "") => <label className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">{label} :</span><input value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={maxLength} placeholder={placeholder} className={kelasInput} /></label>;
+  const tandaVital = (label: string, nama: keyof FormPemeriksaan, maxLength: number, placeholder = "") => <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1.5 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">{label} :</span><input value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={maxLength} placeholder={placeholder} className={kelasInput} /></label>;
 
   const pintasan = [
     { label: "Data PCare", ikon: faDatabase },
@@ -170,7 +210,12 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
           </div>
           <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
             <span className="whitespace-nowrap text-right font-medium">Jabatan :</span>
-            <input value={pegawaiDipilih?.jbtn || ""} readOnly aria-label="Profesi, jabatan, atau departemen pelaksana" className={kelasInput} />
+            <div className="flex min-w-0 items-center gap-1.5">
+              <input value={pegawaiDipilih?.jbtn || ""} readOnly aria-label="Profesi, jabatan, atau departemen pelaksana" className={`${kelasInput} min-w-0 flex-1`} />
+              <button type="button" onClick={() => void cariSoapieTerakhir()} disabled={memuatSoapie} aria-label="Cari 5 SOAPIE terakhir" title="5 SOAPIE Terakhir" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100 disabled:cursor-wait disabled:opacity-60">
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
+              </button>
+            </div>
           </div>
           {areaKlinis("Subjek", "keluhan")}
           {areaKlinis("Objek", "pemeriksaan")}
@@ -183,7 +228,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
             {tandaVital("Nadi (/menit)", "nadi", 3)}
             {tandaVital("SpO₂ (%)", "spo2", 3)}
             {tandaVital("GCS (E,V,M)", "gcs", 10)}
-            <label className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">Kesadaran :</span><CustomSelect value={form.kesadaran} onChange={(event) => isi("kesadaran", event.target.value)} containerClassName="relative w-full min-w-[10rem] max-w-[10rem]" className="h-7 rounded-md py-0.5 pr-5 text-[10px]">{KESADARAN.map((item) => <option key={item}>{item}</option>)}</CustomSelect></label>
+            <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1.5 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">Kesadaran :</span><CustomSelect value={form.kesadaran} onChange={(event) => isi("kesadaran", event.target.value)} containerClassName="relative w-full min-w-[10rem] max-w-[10rem]" className="h-7 rounded-md py-0.5 pr-5 text-[10px]">{KESADARAN.map((item) => <option key={item}>{item}</option>)}</CustomSelect></label>
           </div>
         </div>
 
@@ -210,6 +255,31 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
       </table>
     </section>
     <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} jumlahRecord={data.length} memuat={memuat || menyimpan} />
+    {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
+      <section className="flex max-h-[75vh] w-[min(72rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <h2 id="judul-soapie-terakhir" className="text-sm font-semibold text-slate-800">Riwayat 5 SOAPIE Terakhir</h2>
+          <button type="button" onClick={() => setSoapieBuka(false)} aria-label="Tutup riwayat SOAPIE" title="Tutup" className="p-1 text-slate-600">
+            <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="max-h-[45vh] overflow-auto p-3">
+          <table className="w-full min-w-[60rem] table-fixed border-collapse text-left text-xs text-slate-700">
+            <caption className="sr-only">Riwayat 5 SOAPIE terakhir pasien</caption>
+            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
+              <tr>{["Tanggal", "Jam", "Subjek", "Objek", "Asesmen", "Plan", "Instruksi", "Evaluasi"].map((judul) => <th key={judul} scope="col" className="border border-slate-200 px-2 py-2 font-semibold">{judul}</th>)}</tr>
+            </thead>
+            <tbody>
+              {soapie.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pakaiSoapie(item)} className="cursor-pointer align-top hover:bg-primary-50">
+                <td className="whitespace-nowrap border border-slate-200 px-2 py-2">{item.tgl_perawatan}</td>
+                <td className="whitespace-nowrap border border-slate-200 px-2 py-2">{item.jam_rawat}</td>
+                {[item.keluhan, item.pemeriksaan, item.penilaian, item.rtl, item.instruksi, item.evaluasi].map((nilai, index) => <td key={index} className="min-w-32 whitespace-pre-wrap break-words border border-slate-200 px-2 py-2">{nilai || "-"}</td>)}
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>}
     <KonfirmasiDialog terbuka={konfirmasi} judul="Hapus Pemeriksaan" pesan={`Hapus pemeriksaan ${terpilih?.tgl_perawatan || ""} ${terpilih?.jam_rawat || ""} untuk ${pasien.nm_pasien}?`} subPesan="Data klinis yang dihapus tidak dapat dipulihkan dari halaman ini." onBatal={() => setKonfirmasi(false)} onKonfirmasi={hapus} sedangMemproses={menyimpan} />
     <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
   </div>;

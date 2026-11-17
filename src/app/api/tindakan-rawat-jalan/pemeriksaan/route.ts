@@ -46,6 +46,26 @@ export async function GET(req: NextRequest) {
       const rows = await executeQuery(`SELECT p.nik AS kode, p.nama, p.jbtn FROM pegawai p WHERE ${where} ORDER BY p.nama LIMIT 150`, params);
       return NextResponse.json({ success: true, data: rows }, { headers: { "Cache-Control": "private, max-age=300" } });
     }
+    if (req.nextUrl.searchParams.get("resource") === "soapie-terakhir") {
+      const noRkmMedis = req.nextUrl.searchParams.get("no_rkm_medis")?.trim() || "";
+      const nip = req.nextUrl.searchParams.get("nip")?.trim() || "";
+      const cari = req.nextUrl.searchParams.get("cari")?.trim().slice(0, 100) || "";
+      if (!noRkmMedis || noRkmMedis.length > 15 || !nip || nip.length > 20) throw new PemeriksaanError("Identitas pasien atau pelaksana tidak valid.");
+      if (!session.isAdmin && nip !== session.username) throw new PemeriksaanError("Riwayat SOAPIE hanya dapat dilihat oleh pegawai yang bersangkutan.", 403);
+      const seperti = `%${cari}%`;
+      const rows = await executeQuery(`
+        SELECT DATE_FORMAT(pr.tgl_perawatan, '%Y-%m-%d') AS tgl_perawatan,
+               TIME_FORMAT(pr.jam_rawat, '%H:%i:%s') AS jam_rawat,
+               pr.keluhan, pr.pemeriksaan, pr.penilaian, pr.rtl, pr.instruksi, pr.evaluasi
+        FROM pemeriksaan_ralan pr
+        INNER JOIN reg_periksa r ON r.no_rawat = pr.no_rawat
+        WHERE r.no_rkm_medis = ? AND pr.nip = ?
+          AND (pr.keluhan LIKE ? OR pr.pemeriksaan LIKE ?)
+        ORDER BY pr.tgl_perawatan DESC, pr.jam_rawat DESC
+        LIMIT 5
+      `, [noRkmMedis, nip, seperti, seperti]);
+      return NextResponse.json({ success: true, data: rows });
+    }
     const noRawat = req.nextUrl.searchParams.get("no_rawat")?.trim() || "";
     if (!noRawat || noRawat.length > 17) throw new PemeriksaanError("No. Rawat tidak valid.");
     const rows = await executeQuery(`
