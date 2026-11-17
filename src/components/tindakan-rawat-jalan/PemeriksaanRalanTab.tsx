@@ -10,7 +10,14 @@ import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { registrationDate } from "@/lib/registrasi/date";
 
-interface PasienPemeriksaan { no_rawat: string; no_rkm_medis: string; nm_pasien: string; nm_poli: string }
+interface PasienPemeriksaan {
+  no_rawat: string;
+  no_rkm_medis: string;
+  nm_pasien: string;
+  nm_poli: string;
+  kd_dokter: string;
+  nm_dokter: string;
+}
 interface Pegawai { kode: string; nama: string; jbtn: string }
 interface Pemeriksaan {
   no_rawat: string; tgl_perawatan: string; jam_rawat: string; suhu_tubuh: string; tensi: string;
@@ -37,7 +44,7 @@ function formKosong(nip = ""): FormPemeriksaan {
 }
 
 export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
-  const [form, setForm] = useState<FormPemeriksaan>(() => formKosong());
+  const [form, setForm] = useState<FormPemeriksaan>(() => formKosong(pasien.kd_dokter));
   const [data, setData] = useState<Pemeriksaan[]>([]);
   const [pegawai, setPegawai] = useState<Pegawai[]>([]);
   const [terpilih, setTerpilih] = useState<Pemeriksaan | null>(null);
@@ -67,7 +74,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat pegawai");
         const daftar: Pegawai[] = json.data || [];
         setPegawai(daftar);
-        setForm((lama) => ({ ...lama, nip: lama.nip || (daftar.length === 1 ? daftar[0].kode : "") }));
+        setForm((lama) => ({ ...lama, nip: lama.nip || pasien.kd_dokter || (daftar.length === 1 ? daftar[0].kode : "") }));
       } catch (error) {
         if (!controller.signal.aborted) setToast({ pesan: error instanceof Error ? error.message : "Gagal memuat pegawai", tipe: "error" });
       }
@@ -75,13 +82,13 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
     void mulai();
     void Promise.resolve().then(() => muatData(controller.signal));
     return () => controller.abort();
-  }, [muatData]);
+  }, [muatData, pasien.kd_dokter]);
 
   const isi = (nama: keyof FormPemeriksaan, nilai: string) => setForm((lama) => ({ ...lama, [nama]: nilai }));
 
   const baru = () => {
     setTerpilih(null);
-    setForm(formKosong(pegawai.length === 1 ? pegawai[0].kode : ""));
+    setForm(formKosong(pasien.kd_dokter || (pegawai.length === 1 ? pegawai[0].kode : "")));
   };
 
   const pilih = (item: Pemeriksaan) => {
@@ -129,10 +136,13 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
     window.print();
   };
 
-  const pegawaiDipilih = pegawai.find((item) => item.kode === form.nip);
+  const daftarPelaksana = pegawai.some((item) => item.kode === pasien.kd_dokter)
+    ? pegawai
+    : [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter, jbtn: "Dokter DPJP" }, ...pegawai];
+  const pegawaiDipilih = daftarPelaksana.find((item) => item.kode === form.nip);
   const kelasInput = "h-7 w-full rounded-full border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none";
   const areaKlinis = (label: string, nama: keyof FormPemeriksaan, baris = 2) => <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-1.5 text-[11px] text-slate-700"><span className="pt-1.5 text-right">{label} :</span><textarea value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={2000} rows={baris} className="w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] leading-4 text-slate-800 focus:border-primary-600 focus:outline-none" /></label>;
-  const tandaVital = (label: string, nama: keyof FormPemeriksaan, maxLength: number, placeholder = "") => <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="text-right">{label} :</span><input value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={maxLength} placeholder={placeholder} className={kelasInput} /></label>;
+  const tandaVital = (label: string, nama: keyof FormPemeriksaan, maxLength: number, placeholder = "") => <label className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">{label} :</span><input value={form[nama]} onChange={(event) => isi(nama, event.target.value)} maxLength={maxLength} placeholder={placeholder} className={kelasInput} /></label>;
 
   const pintasan = [
     { label: "Data PCare", ikon: faDatabase },
@@ -154,13 +164,12 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
 
       <div className="grid gap-2 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)_10.75rem]">
         <div className="min-w-0 space-y-1.5">
-          <div className="grid grid-cols-[5.75rem_6.5rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
-            <span className="text-right">Dilakukan :</span>
-            <input value={form.nip} readOnly aria-label="Kode pelaksana" className={`${kelasInput} font-mono`} />
-            <PatientMasterSelect jenis="Pelaksana pemeriksaan" label="Pelaksana pemeriksaan" value={form.nip} items={pegawai.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => isi("nip", kode)} />
+          <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+            <span className="whitespace-nowrap text-right font-medium">Dilakukan :</span>
+            <PatientMasterSelect jenis="Pelaksana pemeriksaan" label="Pelaksana pemeriksaan" value={form.nip} items={daftarPelaksana.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => isi("nip", kode)} />
           </div>
-          <div className="grid grid-cols-[9.5rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
-            <span className="text-right">Profesi / Jabatan / Departemen :</span>
+          <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+            <span className="whitespace-nowrap text-right font-medium">Jabatan :</span>
             <input value={pegawaiDipilih?.jbtn || ""} readOnly aria-label="Profesi, jabatan, atau departemen pelaksana" className={kelasInput} />
           </div>
           {areaKlinis("Subjek", "keluhan")}
@@ -174,7 +183,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
             {tandaVital("Nadi (/menit)", "nadi", 3)}
             {tandaVital("SpO₂ (%)", "spo2", 3)}
             {tandaVital("GCS (E,V,M)", "gcs", 10)}
-            <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="text-right">Kesadaran :</span><CustomSelect value={form.kesadaran} onChange={(event) => isi("kesadaran", event.target.value)} className="h-7 rounded-md py-0.5 text-[11px]">{KESADARAN.map((item) => <option key={item}>{item}</option>)}</CustomSelect></label>
+            <label className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right">Kesadaran :</span><CustomSelect value={form.kesadaran} onChange={(event) => isi("kesadaran", event.target.value)} containerClassName="relative w-full min-w-[10rem] max-w-[10rem]" className="h-7 rounded-md py-0.5 pr-5 text-[10px]">{KESADARAN.map((item) => <option key={item}>{item}</option>)}</CustomSelect></label>
           </div>
         </div>
 

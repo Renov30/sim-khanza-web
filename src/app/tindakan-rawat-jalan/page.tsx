@@ -477,7 +477,17 @@ export default function HalamanTindakanRawatJalan() {
       </section>
 
       </> : tabAktif === "pemeriksaan" && pasien ? (
-        <PemeriksaanRalanTab pasien={pasien} />
+        <PemeriksaanRalanTab
+          key={pasien.no_rawat}
+          pasien={{
+            no_rawat: pasien.no_rawat,
+            no_rkm_medis: pasien.no_rkm_medis,
+            nm_pasien: pasien.nm_pasien,
+            nm_poli: pasien.nm_poli,
+            kd_dokter: pasien.kd_dokter,
+            nm_dokter: pasien.nm_dokter,
+          }}
+        />
       ) : (
         <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200/80 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-100/90 px-3 py-2 text-xs font-semibold text-slate-800">{TAB_RAWAT.find((item) => item.id === tabAktif)?.label}</div>
