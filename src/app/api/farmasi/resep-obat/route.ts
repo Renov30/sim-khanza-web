@@ -167,13 +167,16 @@ async function daftarObat(params: URLSearchParams) {
   const seperti = `%${cari}%`;
   const rows = await executeQuery(`
     SELECT db.kode_brng, db.nama_brng, db.kode_sat, COALESCE(js.nama, '-') AS jenis,
-           db.letak_barang, db.kapasitas, SUM(gb.stok) AS stok
+           db.letak_barang AS komposisi, db.ralan AS harga_ralan,
+           COALESCE(ind.nama_industri, '-') AS industri, db.kapasitas, SUM(gb.stok) AS stok
     FROM databarang db
     INNER JOIN gudangbarang gb ON gb.kode_brng = db.kode_brng AND gb.kd_bangsal = ?
     LEFT JOIN jenis js ON js.kdjns = db.kdjns
+    LEFT JOIN industrifarmasi ind ON ind.kode_industri = db.kode_industri
     WHERE db.status = '1'
       AND (db.kode_brng LIKE ? OR db.nama_brng LIKE ? OR js.nama LIKE ? OR db.letak_barang LIKE ?)
-    GROUP BY db.kode_brng, db.nama_brng, db.kode_sat, js.nama, db.letak_barang, db.kapasitas
+    GROUP BY db.kode_brng, db.nama_brng, db.kode_sat, js.nama, db.letak_barang,
+             db.ralan, ind.nama_industri, db.kapasitas
     HAVING SUM(gb.stok) > 0
     ORDER BY db.nama_brng
     LIMIT 100

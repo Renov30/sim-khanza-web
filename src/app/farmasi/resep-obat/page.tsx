@@ -33,7 +33,9 @@ interface ObatKatalog {
   nama_brng: string;
   kode_sat: string;
   jenis: string;
-  letak_barang: string;
+  komposisi: string;
+  harga_ralan: number | string;
+  industri: string;
   kapasitas: number | string;
   stok: number | string;
 }
@@ -95,7 +97,6 @@ export default function HalamanInputResep() {
   const [cariObat, setCariObat] = useState("");
   const [katalog, setKatalog] = useState<ObatKatalog[]>([]);
   const [memuatObat, setMemuatObat] = useState(false);
-  const [depo, setDepo] = useState("");
   const [obat, setObat] = useState<ObatResep[]>([]);
   const [bahan, setBahan] = useState<BahanRacikan[]>([]);
   const [racikan, setRacikan] = useState<Racikan[]>([]);
@@ -189,11 +190,9 @@ export default function HalamanInputResep() {
       try {
         const url = `/api/farmasi/resep-obat?resource=obat&no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&cari=${encodeURIComponent(cariObat.trim())}`;
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
-        const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { depot?: { kd_bangsal: string; nm_bangsal: string } } } = await response.json();
+        const json: { success?: boolean; data?: ObatKatalog[]; error?: string } = await response.json();
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat obat");
         setKatalog(json.data || []);
-        const infoDepo = json.meta?.depot;
-        setDepo(infoDepo ? `${infoDepo.kd_bangsal} · ${infoDepo.nm_bangsal}` : "");
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat obat"), "error");
       } finally {
@@ -234,7 +233,6 @@ export default function HalamanInputResep() {
     setModeInput("nonracikan");
     setCariObat("");
     setKatalog([]);
-    setDepo("");
     setObat([]);
     setBahan([]);
     setRacikan([]);
@@ -277,62 +275,64 @@ export default function HalamanInputResep() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <section className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm">
-        <div className="space-y-2 text-xs text-slate-700">
-          <div className="relative flex flex-wrap items-center gap-2">
-            <label htmlFor="no-rawat-resep" className="w-24 shrink-0 text-right">No. Rawat :</label>
-            <input
-              id="no-rawat-resep"
-              value={cariKunjungan}
-              onChange={(event) => {
-                setCariKunjungan(event.target.value);
-                setKunjungan(null);
-                setHasilKunjungan([]);
-                setObat([]);
-                setBahan([]);
-                setRacikan([]);
-              }}
-              placeholder="No. rawat, RM, atau nama pasien"
-              className="h-8 w-64 rounded-full border border-slate-300 px-3 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
-            />
-            <input
-              readOnly
-              aria-label="Identitas pasien"
-              value={kunjungan ? `${kunjungan.no_rkm_medis}  ${kunjungan.nm_pasien} (${kunjungan.jk}, ${kunjungan.umurdaftar} ${kunjungan.sttsumur})` : ""}
-              placeholder="Identitas pasien"
-              className="h-8 min-w-64 flex-1 rounded-full border border-slate-300 bg-slate-50 px-3 text-xs text-slate-700"
-            />
-            {!kunjungan && (memuatKunjungan || hasilKunjungan.length > 0) && (
-              <div className="absolute left-[6.5rem] top-9 z-20 max-h-48 w-[min(42rem,calc(100%-6.5rem))] overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                {memuatKunjungan ? (
-                  <p className="p-2.5 text-slate-500">Mencari kunjungan...</p>
-                ) : hasilKunjungan.map((item) => (
-                  <button key={item.no_rawat} type="button" onClick={() => pilihKunjungan(item)} className="block w-full border-b border-slate-100 px-3 py-2 text-left hover:bg-slate-50">
-                    <span className="font-mono text-slate-800">{item.no_rawat} · {item.no_rkm_medis}</span>
-                    <span className="block text-slate-600">{item.nm_pasien} · {item.nm_poli}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="space-y-1.5 font-sans text-xs font-normal text-slate-700">
+          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Kunjungan pasien">
+            <label htmlFor="no-rawat-resep" className="whitespace-nowrap sm:text-right">No. Rawat :</label>
+            <div className="relative flex min-w-0 flex-wrap items-center gap-2">
+              <input
+                id="no-rawat-resep"
+                value={cariKunjungan}
+                onChange={(event) => {
+                  setCariKunjungan(event.target.value);
+                  setKunjungan(null);
+                  setHasilKunjungan([]);
+                  setObat([]);
+                  setBahan([]);
+                  setRacikan([]);
+                }}
+                placeholder="No. rawat, RM, atau nama pasien"
+                className="h-7 w-56 shrink-0 rounded-md border border-slate-300 bg-white px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
+              />
+              <input
+                readOnly
+                aria-label="Identitas pasien"
+                value={kunjungan ? `${kunjungan.no_rkm_medis}  ${kunjungan.nm_pasien} (${kunjungan.jk}, ${kunjungan.umurdaftar} ${kunjungan.sttsumur})` : ""}
+                placeholder="Identitas pasien"
+                className="h-7 min-w-56 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700"
+              />
+              {!kunjungan && (memuatKunjungan || hasilKunjungan.length > 0) && (
+                <div className="absolute left-0 top-8 z-20 max-h-48 w-full max-w-2xl overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                  {memuatKunjungan ? (
+                    <p className="p-2.5 text-slate-500">Mencari kunjungan...</p>
+                  ) : hasilKunjungan.map((item) => (
+                    <button key={item.no_rawat} type="button" onClick={() => pilihKunjungan(item)} className="block w-full border-b border-slate-100 px-3 py-2 text-left hover:bg-slate-50">
+                      <span className="font-mono text-slate-800">{item.no_rawat} · {item.no_rkm_medis}</span>
+                      <span className="block text-slate-600">{item.nm_pasien} · {item.nm_poli}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="tanggal-resep" className="w-24 shrink-0 text-right">Tgl. Resep :</label>
-            <input id="tanggal-resep" type="date" value={tanggal} onChange={(event) => setTanggal(event.target.value)} className="h-8 w-36 rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
-            <input aria-label="Jam resep" type="time" step="1" value={jam} onChange={(event) => setJam(event.target.value)} className="h-8 w-32 rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
-            {Number(kunjungan?.pasien_ranap) > 0 && <span className="font-semibold text-red-700">Pasien sudah masuk kamar inap.</span>}
+          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Waktu resep">
+            <label htmlFor="tanggal-resep" className="whitespace-nowrap sm:text-right">Tgl. Resep :</label>
+            <div className="flex flex-wrap items-center gap-2">
+              <input id="tanggal-resep" type="date" value={tanggal} onChange={(event) => setTanggal(event.target.value)} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" />
+              <span className="text-slate-600">Jam :</span>
+              <input aria-label="Jam resep" type="time" step="1" value={jam} onChange={(event) => setJam(event.target.value)} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" />
+              {Number(kunjungan?.pasien_ranap) > 0 && <span className="font-semibold text-red-700">Pasien sudah masuk kamar inap.</span>}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="dokter-resep" className="w-24 shrink-0 text-right">Peresep :</label>
-            <input id="dokter-resep" readOnly value={kunjungan?.kd_dokter || ""} className="h-8 w-64 rounded-full border border-slate-300 bg-slate-50 px-3 font-mono text-xs text-slate-700" />
-            <input readOnly aria-label="Nama dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-8 min-w-64 flex-1 rounded-full border border-slate-300 bg-slate-50 px-3 text-xs text-slate-700" />
+          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Dokter peresep">
+            <label htmlFor="dokter-resep" className="whitespace-nowrap sm:text-right">Peresep :</label>
+            <input id="dokter-resep" readOnly aria-label="Nama dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
           </div>
 
-          {kunjungan && (
-            <p className="pl-[6.5rem] text-[11px] text-slate-500">
-              {kunjungan.nm_poli} · {kunjungan.png_jawab} · {kunjungan.status_bayar}
-            </p>
-          )}
+          </div>
+          <div aria-hidden="true" className="hidden lg:block" />
         </div>
       </section>
 
@@ -400,48 +400,52 @@ export default function HalamanInputResep() {
 
         <div id={`panel-resep-${modeInput}`} role="tabpanel" aria-labelledby={`tab-resep-${modeInput}`} className="min-h-0 flex-1 overflow-auto">
           {modeInput === "nonracikan" ? (
-            <table className="w-full min-w-[1050px] border-collapse text-left text-[11px] text-slate-700">
+            <table className="w-full min-w-[1320px] border-collapse text-center text-[11px] text-slate-700">
               <caption className="sr-only">Daftar obat umum yang tersedia di depo</caption>
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
                   <th scope="col" className="w-10 border-b border-r border-slate-200 px-2 py-2 text-center">Pilih</th>
-                  <th scope="col" className="w-28 border-b border-r border-slate-200 px-2 py-2">Jumlah</th>
+                  <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2">Jumlah</th>
                   <th scope="col" className="w-64 border-b border-r border-slate-200 px-2 py-2">Aturan Pakai</th>
                   <th scope="col" className="w-32 border-b border-r border-slate-200 px-2 py-2">Kode Barang</th>
-                  <th scope="col" className="min-w-64 border-b border-r border-slate-200 px-2 py-2">Nama Barang</th>
+                  <th scope="col" className="min-w-[28rem] border-b border-r border-slate-200 px-2 py-2">Nama Barang</th>
                   <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2">Satuan</th>
+                  <th scope="col" className="w-48 border-b border-r border-slate-200 px-2 py-2">Komposisi</th>
+                  <th scope="col" className="w-32 border-b border-r border-slate-200 px-2 py-2">Harga (Rp)</th>
                   <th scope="col" className="w-44 border-b border-r border-slate-200 px-2 py-2">Jenis Obat</th>
-                  <th scope="col" className="w-44 border-b border-r border-slate-200 px-2 py-2">Letak</th>
-                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2 text-right">Stok</th>
+                  <th scope="col" className="w-44 border-b border-r border-slate-200 px-2 py-2">I.F.</th>
+                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2">Stok</th>
                 </tr>
               </thead>
               <tbody>
                 {!kunjungan ? (
-                  <tr><td colSpan={9} className="p-10 text-center text-slate-400">Pilih kunjungan untuk memuat daftar obat.</td></tr>
+                  <tr><td colSpan={11} className="p-10 text-center text-slate-400">Pilih kunjungan untuk memuat daftar obat.</td></tr>
                 ) : memuatObat ? (
-                  <tr><td colSpan={9} className="p-10 text-center text-slate-500">Memuat daftar obat...</td></tr>
+                  <tr><td colSpan={11} className="p-10 text-center text-slate-500">Memuat daftar obat...</td></tr>
                 ) : katalog.length === 0 ? (
-                  <tr><td colSpan={9} className="p-10 text-center text-slate-400">Obat tidak ditemukan.</td></tr>
+                  <tr><td colSpan={11} className="p-10 text-center text-slate-400">Obat tidak ditemukan.</td></tr>
                 ) : katalog.map((item) => {
                   const terpilih = obat.find((baris) => baris.kode_brng === item.kode_brng);
                   return (
                     <tr key={item.kode_brng} className={terpilih ? "bg-primary-50/60" : "even:bg-slate-50/70"}>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center"><input type="checkbox" checked={Boolean(terpilih)} onChange={() => terpilih ? setObat((lama) => lama.filter((baris) => baris.kode_brng !== item.kode_brng)) : tambahDariKatalog(item)} aria-label={`${terpilih ? "Hapus" : "Pilih"} ${item.nama_brng}`} className="h-4 w-4 accent-primary-600" /></td>
-                      <td className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`Jumlah ${item.nama_brng}`} type="number" min="0" step="any" value={terpilih?.jumlah || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, jumlah: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-xs disabled:border-transparent disabled:bg-transparent" /></td>
-                      <td className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`Aturan pakai ${item.nama_brng}`} value={terpilih?.aturan_pakai || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, aturan_pakai: event.target.value } : baris))} placeholder={terpilih ? "Contoh: 3 x 1 sesudah makan" : ""} className="h-7 w-full rounded border border-slate-300 px-2 text-xs disabled:border-transparent disabled:bg-transparent" /></td>
+                      <td className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`Jumlah ${item.nama_brng}`} type="number" min="0" step="any" value={terpilih?.jumlah || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, jumlah: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-center text-xs disabled:border-transparent disabled:bg-transparent" /></td>
+                      <td className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`Aturan pakai ${item.nama_brng}`} value={terpilih?.aturan_pakai || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, aturan_pakai: event.target.value } : baris))} placeholder={terpilih ? "Contoh: 3 x 1 sesudah makan" : ""} className="h-7 w-full rounded border border-slate-300 px-2 text-center text-xs disabled:border-transparent disabled:bg-transparent" /></td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 font-mono">{item.kode_brng}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-slate-800">{item.nama_brng}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.kode_sat}</td>
+                      <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.komposisi || "-"}</td>
+                      <td className="border-b border-r border-slate-100 px-2 py-1.5 font-mono tabular-nums">{Number.isFinite(Number(item.harga_ralan)) ? Number(item.harga_ralan).toLocaleString("id-ID") : "-"}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.jenis || "-"}</td>
-                      <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.letak_barang || "-"}</td>
-                      <td className="border-b border-slate-100 px-2 py-1.5 text-right font-mono tabular-nums">{Number(item.stok).toLocaleString("id-ID")}</td>
+                      <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.industri || "-"}</td>
+                      <td className="border-b border-slate-100 px-2 py-1.5 font-mono tabular-nums">{Number(item.stok).toLocaleString("id-ID")}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           ) : (
-            <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] text-slate-700">
+            <table className="w-full min-w-[1120px] border-collapse text-center text-[11px] text-slate-700">
               <caption className="sr-only">Daftar bahan obat untuk racikan aktif</caption>
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
@@ -454,7 +458,7 @@ export default function HalamanInputResep() {
                   <th scope="col" className="min-w-64 border-b border-r border-slate-200 px-2 py-2">Nama Barang</th>
                   <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2">Satuan</th>
                   <th scope="col" className="w-40 border-b border-r border-slate-200 px-2 py-2">Jenis Obat</th>
-                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2 text-right">Stok</th>
+                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2">Stok</th>
                 </tr>
               </thead>
               <tbody>
@@ -470,13 +474,13 @@ export default function HalamanInputResep() {
                     <tr key={item.kode_brng} className={terpilih ? "bg-primary-50/60" : "even:bg-slate-50/70"}>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center"><input type="checkbox" checked={Boolean(terpilih)} onChange={() => terpilih ? setBahan((lama) => lama.filter((baris) => baris.kode_brng !== item.kode_brng)) : tambahDariKatalog(item)} aria-label={`${terpilih ? "Hapus" : "Pilih"} ${item.nama_brng}`} className="h-4 w-4 accent-primary-600" /></td>
                       {(['p1', 'p2', 'kandungan', 'jumlah'] as const).map((kolom) => (
-                        <td key={kolom} className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`${kolom} ${item.nama_brng}`} type={kolom === "kandungan" ? "text" : "number"} min={kolom === "kandungan" ? undefined : "0"} step="any" value={terpilih?.[kolom] || ""} onChange={(event) => setBahan((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, [kolom]: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-xs disabled:border-transparent disabled:bg-transparent" /></td>
+                        <td key={kolom} className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`${kolom} ${item.nama_brng}`} type={kolom === "kandungan" ? "text" : "number"} min={kolom === "kandungan" ? undefined : "0"} step="any" value={terpilih?.[kolom] || ""} onChange={(event) => setBahan((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, [kolom]: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-center text-xs disabled:border-transparent disabled:bg-transparent" /></td>
                       ))}
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 font-mono">{item.kode_brng}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-slate-800">{item.nama_brng}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.kode_sat}</td>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.jenis || "-"}</td>
-                      <td className="border-b border-slate-100 px-2 py-1.5 text-right font-mono tabular-nums">{Number(item.stok).toLocaleString("id-ID")}</td>
+                      <td className="border-b border-slate-100 px-2 py-1.5 font-mono tabular-nums">{Number(item.stok).toLocaleString("id-ID")}</td>
                     </tr>
                   );
                 })}
@@ -490,12 +494,11 @@ export default function HalamanInputResep() {
         tampilan="web"
         kataKunci={cariObat}
         onGantiKataKunci={setCariObat}
-        placeholderCari="Kode, nama, jenis, atau letak obat..."
+        placeholderCari="Kode, nama, jenis, atau komposisi obat..."
         filterTambahan={(
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="whitespace-nowrap">Tarif :</span>
-            <CustomSelect value="ralan" disabled aria-label="Tarif resep" className="h-7 w-32 py-0.5 text-xs"><option value="ralan">Rawat Jalan</option></CustomSelect>
-            <span className="max-w-80 truncate text-[11px] text-slate-500" title={depo || undefined}>Depo : {depo || "-"}</span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <label htmlFor="tarif-resep" className="whitespace-nowrap">Tarif :</label>
+            <CustomSelect id="tarif-resep" value="ralan" disabled aria-label="Tarif resep" className="h-7 w-32 py-0.5 text-xs"><option value="ralan">Rawat Jalan</option></CustomSelect>
           </div>
         )}
         onSimpan={mintaSimpan}
