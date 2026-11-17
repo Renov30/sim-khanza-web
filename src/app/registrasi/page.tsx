@@ -11,6 +11,7 @@ import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { useAuth } from "@/components/auth/AuthContext";
 import { registrationDate } from "@/lib/registrasi/date";
+import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
 import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -590,7 +591,11 @@ export default function HalamanRegistrasi() {
       <PanelInputData
         judul=".: Input Data"
       >
-        <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="max-h-[46vh] overflow-y-auto font-sans text-xs font-normal text-slate-700">
+        <fieldset
+          disabled={sedangMenyimpan || sedangMenghapus}
+          onKeyDown={pindahFieldDenganEnter}
+          className="max-h-[46vh] overflow-y-auto font-sans text-xs font-normal text-slate-700"
+        >
           <GridFormulirModul>
             <section className="space-y-1.5" aria-label="Informasi kunjungan">
               <RegistrationField label="No. Reg."><div className="w-full max-w-60">{input('No. Registrasi',noReg,undefined,true,'Otomatis')}</div></RegistrationField>

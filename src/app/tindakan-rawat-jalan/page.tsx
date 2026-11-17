@@ -12,6 +12,7 @@ import { CustomSelect } from "@/components/ui/CustomSelect";
 import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
 import { SidebarTindakanRalan } from "@/components/tindakan-rawat-jalan/SidebarTindakanRalan";
 import { registrationDate } from "@/lib/registrasi/date";
+import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
 
 type ModeTindakan = "dokter" | "petugas" | "gabungan";
 type TabRawatJalan = ModeTindakan | "pemeriksaan" | "obstetri" | "ginekologi" | "diagnosa" | "catatan";
@@ -328,7 +329,10 @@ export default function HalamanTindakanRawatJalan() {
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
       <SidebarTindakanRalan noRawat={pasien?.no_rawat} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
-      <main className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden">
+      <main
+        onKeyDown={pindahFieldDenganEnter}
+        className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden"
+      >
       <div role="tablist" aria-label="Jenis penanganan rawat jalan" className="flex shrink-0 overflow-x-auto border-b border-slate-200">
         {TAB_RAWAT.map((item) => (
           <button

@@ -13,6 +13,7 @@ import {
   faXmark,
   faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
+import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
 
 export function LoginModal() {
   const { isLoginModalOpen, setIsLoginModalOpen, login, isLocked } = useAuth();
@@ -110,7 +111,11 @@ export function LoginModal() {
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={pindahFieldDenganEnter}
+          className="p-5 space-y-4"
+        >
           {errorMsg && (
             <div className="p-3 text-xs bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2 shadow-2xs">
               <FontAwesomeIcon icon={faCircleExclamation} className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />

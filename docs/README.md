@@ -66,6 +66,20 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Tab `Pemeriksaan` mengadaptasi tanda vital dan SOAP `DlgRawatJalan`, menampilkan riwayat per kunjungan (maksimal 100 baris), serta mendukung tambah, ubah, dan hapus. Koreksi non-admin dibatasi untuk pencatat yang sama dalam 48 jam dan kunjungan yang belum diverifikasi billing.
 - Waktu tampil daftar dipercepat: filter non-kata-kunci langsung memuat, kata kunci ditunda 300 ms, count dan baris dijalankan paralel, serta index `reg_periksa (tgl_registrasi, jam_reg, no_rawat)` tersedia lewat `npm run db:index-kinerja`.
 
+### 16 November 2026 — input resep rawat jalan
+
+- Pintasan `Input Resep` pada halaman Tindakan Rawat Jalan membuka `/farmasi/resep-obat` sambil meneruskan `no_rawat` kunjungan terpilih.
+- Form resep mengadaptasi `DlgPeresepanDokter`: obat nonracikan, racikan, metode racik, bahan, aturan pakai, jumlah, kandungan, dan riwayat resep per kunjungan.
+- Katalog obat mengikuti depo poli dari `set_depo_ralan` dengan fallback `set_lokasi`, hanya menampilkan barang aktif yang memiliki stok pada depo tersebut.
+- API memeriksa izin `resep_obat`, status Ralan, pasien yang sudah masuk kamar inap, waktu registrasi, status billing, dan pengecualian `set_input_parsial`.
+- Nomor resep dibuat di server dengan named lock per tanggal. Header dan seluruh detail resep disimpan dalam satu transaksi agar kompatibel dengan `resep_obat`, `resep_dokter`, `resep_dokter_racikan`, dan `resep_dokter_racikan_detail` Khanza.
+- Verifikasi API tersedia melalui `npm run test:resep-obat`.
+
+### 17 November 2026 — navigasi keyboard formulir
+
+- Enter memindahkan fokus ke field aktif berikutnya pada login, registrasi, data pasien, dan tindakan rawat jalan; field baca-saja, nonaktif, serta kontrol pilihan biner dilewati.
+- Enter pada textarea tetap membuat baris baru, sedangkan Ctrl+Enter memindahkan fokus seperti Tab.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.
@@ -93,6 +107,8 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 ```sh
 npm run test:pasien
 npm run test:registrasi
+npm run test:rawat-jalan
+npm run test:resep-obat
 npm run lint
 npm run build
 ```

@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { additionalPatientFields, emptyPatientDetails, fullPatientAge } from '@/lib/pasien/fields';
 import { registrationDate } from '@/lib/registrasi/date';
+import { pindahFieldDenganEnter } from '@/lib/formulir/pindah-field';
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -437,7 +438,11 @@ export default function HalamanDataPasien() {
         tabIndex={0}
         className={tabAktif === "input" ? "flex-1 min-h-0 overflow-auto bg-white rounded-lg border border-slate-200 p-3" : "hidden"}
       >
-        <fieldset disabled={sedangMenyimpan || sedangMenghapus} className="font-sans text-xs font-normal text-slate-700">
+        <fieldset
+          disabled={sedangMenyimpan || sedangMenghapus}
+          onKeyDown={pindahFieldDenganEnter}
+          className="font-sans text-xs font-normal text-slate-700"
+        >
           <GridFormulirModul>
             <div className="space-y-1.5">
               <PatientField label="No. Rekam Medis"><div className="w-full max-w-60">{input('No. Rekam Medis',noRm,()=>{},'text',true)}</div></PatientField>

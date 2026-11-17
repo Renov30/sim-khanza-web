@@ -19,7 +19,7 @@ const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/farmasi/penjualan-obat": "Data Penjualan",
   "/farmasi/penyerahan-darah": "Penyerahan Darah",
   "/farmasi/daftar-resep-dokter": "Resep Dokter",
-  "/farmasi/resep-obat": "Nomor Resep",
+  "/farmasi/resep-obat": "Input Resep",
 };
 
 function formatSegmenPath(segmen: string) {

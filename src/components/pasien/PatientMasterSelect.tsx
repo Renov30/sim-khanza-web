@@ -39,7 +39,7 @@ export function PatientMasterSelect({ jenis, value, onChange, label, valueAsLabe
   const show = () => { setQuery(''); setOpen(true); dialog.current?.showModal(); dialog.current?.querySelector('input')?.focus(); };
   return <div className="flex flex-1 min-w-0 items-center gap-1.5">
     <input data-lookup-field tabIndex={-1} aria-label={label} value={valueAsLabel ? value : selected?.label || ''} placeholder={value ? 'Memuat...' : label} readOnly onClick={show} className="h-7 w-full min-w-0 rounded-full border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 cursor-pointer focus:outline-none focus:border-primary-600" />
-    <button type="button" onClick={show} aria-label={`Pilih ${label}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={`${titleId}-dialog`} title={`Pilih ${label}`} className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100">
+    <button type="button" data-enter-field="true" onClick={show} aria-label={`Pilih ${label}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={`${titleId}-dialog`} title={`Pilih ${label}`} className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100">
       <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
     </button>
     <dialog id={`${titleId}-dialog`} ref={dialog} aria-labelledby={titleId} onClose={() => setOpen(false)} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0 p-0 w-[min(28rem,calc(100vw-2rem))] max-h-[75vh] rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl backdrop:bg-slate-900/40">
