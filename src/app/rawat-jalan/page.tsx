@@ -44,8 +44,6 @@ interface RawatJalanRow {
   no_tlp: string;
 }
 
-const rupiah = (value: number | string) => `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
-
 export default function HalamanRawatJalan() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -225,9 +223,8 @@ export default function HalamanRawatJalan() {
                   <th scope="col" className="min-w-[11rem] px-2.5 py-2">Pasien</th>
                   <th scope="col" className="min-w-[8rem] px-2.5 py-2">Poliklinik</th>
                   <th scope="col" className="min-w-[11rem] px-2.5 py-2">Dokter Dituju</th>
-                  <th scope="col" className="min-w-[10rem] px-2.5 py-2">Penanggung Jawab</th>
+                  <th scope="col" className="min-w-[14rem] px-2.5 py-2">Penanggung Jawab / Alamat P.J.</th>
                   <th scope="col" className="min-w-[8rem] px-2.5 py-2">Jenis Bayar</th>
-                  <th scope="col" className="whitespace-nowrap px-2.5 py-2 text-right">Biaya Reg</th>
                   <th scope="col" className="px-2.5 py-2 text-center">Status</th>
                   <th scope="col" className="whitespace-nowrap px-2.5 py-2 text-center">Status Bayar</th>
                   <th scope="col" className="px-2.5 py-2 text-center">Stts Poli</th>
@@ -236,10 +233,10 @@ export default function HalamanRawatJalan() {
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
                 {memuat ? (
-                  <tr><td colSpan={14} className="py-10 text-center font-sans text-slate-500">Memuat data rawat jalan...</td></tr>
+                  <tr><td colSpan={13} className="py-10 text-center font-sans text-slate-500">Memuat data rawat jalan...</td></tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={14} className="py-10 text-center font-sans text-slate-400">
+                    <td colSpan={13} className="py-10 text-center font-sans text-slate-400">
                       <FontAwesomeIcon icon={faReceipt} className="mb-2 h-7 w-7 text-slate-300" aria-hidden="true" />
                       <p>Tidak ada registrasi rawat jalan yang sesuai</p>
                     </td>
@@ -259,7 +256,16 @@ export default function HalamanRawatJalan() {
                         {item.no_reg}
                       </button>
                     </td>
-                    <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-800">{item.no_rawat}</td>
+                    <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
+                        aria-label={`Input tindakan untuk nomor rawat ${item.no_rawat}, pasien ${item.nm_pasien}`}
+                      >
+                        {item.no_rawat}
+                      </button>
+                    </td>
                     <td className="whitespace-nowrap px-2.5 py-2 text-slate-600">
                       {item.tgl_registrasi} <span className="text-slate-400">{item.jam_reg}</span>
                     </td>
@@ -269,19 +275,18 @@ export default function HalamanRawatJalan() {
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_poli}</td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_dokter}</td>
-                    <td className="px-2.5 py-2 font-sans text-[10px] text-slate-600" title={item.almt_pj || undefined}>
-                      {item.p_jawab || "-"} <span className="text-slate-400">({item.hubunganpj || "-"})</span>
+                    <td className="max-w-[20rem] px-2.5 py-2 font-sans text-[10px] text-slate-600" title={item.almt_pj || undefined}>
+                      <span className="block truncate">{item.p_jawab || "-"} <span className="text-slate-400">({item.hubunganpj || "-"})</span></span>
                       {item.almt_pj && <span className="block truncate text-[9px] text-slate-400">{item.almt_pj}</span>}
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.png_jawab || item.kd_pj || "-"}</td>
-                    <td className="whitespace-nowrap px-2.5 py-2 text-right text-slate-700">{rupiah(item.biaya_reg)}</td>
                     <td className="px-2.5 py-2 text-center">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.stts === "Batal" ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"}`}>
                         {item.stts || "-"}
                       </span>
                     </td>
-                    <td className="px-2.5 py-2 text-center">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status_bayar === "Sudah Bayar" ? "border border-secondary-200 bg-secondary-50 text-secondary-700" : "border border-slate-200 bg-slate-100 text-slate-600"}`}>
+                    <td className="whitespace-nowrap px-2.5 py-2 text-center">
+                      <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status_bayar === "Sudah Bayar" ? "border border-secondary-200 bg-secondary-50 text-secondary-700" : "border border-slate-200 bg-slate-100 text-slate-600"}`}>
                         {item.status_bayar || "Belum Bayar"}
                       </span>
                     </td>

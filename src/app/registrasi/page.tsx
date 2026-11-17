@@ -119,12 +119,10 @@ export default function HalamanRegistrasi() {
   const [versiTabel, setVersiTabel] = useState(0);
   const permintaanTabel = useRef<AbortController | null>(null);
   const permintaanPasien = useRef<AbortController | null>(null);
-  const permintaanIdentitas = useRef<AbortController | null>(null);
   const timerPasien = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     permintaanTabel.current?.abort();
     permintaanPasien.current?.abort();
-    permintaanIdentitas.current?.abort();
     if (timerPasien.current) clearTimeout(timerPasien.current);
   }, []);
 
@@ -241,7 +239,6 @@ export default function HalamanRegistrasi() {
     const tgl = registrationDate(sekarang);
     const jam = sekarang.toTimeString().slice(0, 8);
 
-    permintaanIdentitas.current?.abort();
     setTerpilih(null);
     setVersiNomor((versi) => versi + 1);
     setTglReg(tgl);
@@ -333,7 +330,6 @@ export default function HalamanRegistrasi() {
   // Pilih baris (getData)
   const handlePilihData = (item: PasienReg) => {
     if (sedangMenyimpan || sedangMenghapus) return;
-    permintaanIdentitas.current?.abort();
     setTerpilih(item);
     setTglReg(item.tgl_registrasi);
     setJamReg(item.jam_reg);
@@ -546,26 +542,8 @@ export default function HalamanRegistrasi() {
   };
 
   const handlePilihPasienCari = (p: PasienOption) => {
-    permintaanIdentitas.current?.abort();
     isiPasien(p);
     setModalPasienBuka(false);
-  };
-
-  const cariIdentitas = async () => {
-    permintaanIdentitas.current?.abort();
-    if (!noRm.trim() || nmPasien) return;
-    const controller = new AbortController();
-    permintaanIdentitas.current = controller;
-    try {
-      const res = await fetch(`/api/registrasi/options?jenis=pasien&rm=${encodeURIComponent(noRm.trim())}`, { signal: controller.signal });
-      const json = await res.json();
-      if (controller.signal.aborted) return;
-      if (!res.ok || !json.success) throw new Error(json.error || "Gagal memuat identitas pasien");
-      if (!json.data?.[0]) throw new Error("No. Rekam Medis tidak ditemukan.");
-      isiPasien(json.data[0]);
-    } catch (error) {
-      if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal memuat pasien", "error");
-    }
   };
 
   const dataTersaring = data;
@@ -629,11 +607,7 @@ export default function HalamanRegistrasi() {
             </section>
             <section className="space-y-1.5" aria-label="Pasien dan penjamin">
               <RegistrationField label="No. Rekam Medik" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
-                <input aria-label="No. Rekam Medis pasien" type="text" value={noRm} onChange={(event)=>{
-                  permintaanIdentitas.current?.abort();
-                  setNoRm(event.target.value); setNmPasien(''); setNoKartu(''); setTanggalDaftarPasien('');
-                  setPenanggungJawab('-'); setAlmtPj('-'); setHubunganPj('DIRI SENDIRI'); setNamaPenjab('');
-                }} onBlur={()=>{void cariIdentitas();}} placeholder="No. RM" className={`${inputClass} w-28 shrink-0`} />
+                <input aria-label="No. Rekam Medis pasien" type="text" value={noRm} readOnly placeholder="No. RM" className={`${inputClass} w-28 shrink-0 bg-slate-50`} />
                 {input('Nama pasien',nmPasien,undefined,true,'Nama pasien')}
                 <button type="button" onClick={handleBukaModalPasien} aria-label="Cari data pasien" title="Cari Data Pasien" className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"><FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" /></button>
               </RegistrationField>
