@@ -420,7 +420,6 @@ export default function HalamanInputResep() {
               <input aria-label="Jam resep" type="time" step="1" value={jam} onChange={(event) => { setJamOtomatis(false); setJam(event.target.value); }} className="h-7 w-32 shrink-0 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" />
               <label className="flex items-center gap-1 whitespace-nowrap text-[11px] text-slate-600" title="Perbarui tanggal dan jam secara otomatis">
                 <input aria-label="Waktu otomatis" type="checkbox" checked={jamOtomatis} onChange={(event) => setJamOtomatis(event.target.checked)} className="accent-primary-700" />
-                Otomatis
               </label>
               {Number(kunjungan?.pasien_ranap) > 0 && <span className="font-semibold text-red-700">Pasien sudah masuk kamar inap.</span>}
             </div>

@@ -61,10 +61,19 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const [memuatSoapie, setMemuatSoapie] = useState(false);
   const [soapieBuka, setSoapieBuka] = useState(false);
   const [terpilih, setTerpilih] = useState<Pemeriksaan | null>(null);
+  const [waktuOtomatis, setWaktuOtomatis] = useState(true);
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
   const [konfirmasi, setKonfirmasi] = useState(false);
   const [toast, setToast] = useState<{ pesan: string; tipe: "sukses" | "error" | "info" } | null>(null);
+
+  useEffect(() => {
+    if (terpilih || !waktuOtomatis) return;
+    const perbaruiWaktu = () => setForm((lama) => ({ ...lama, tgl_perawatan: registrationDate(), jam_rawat: jamJayapura() }));
+    perbaruiWaktu();
+    const timer = setInterval(perbaruiWaktu, 1000);
+    return () => clearInterval(timer);
+  }, [terpilih, waktuOtomatis]);
 
   const muatData = useCallback(async (signal?: AbortSignal) => {
     setMemuat(true);
@@ -126,6 +135,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
 
   const baru = () => {
     setTerpilih(null);
+    setWaktuOtomatis(true);
     setForm(formKosong(pasien.kd_dokter || (pegawai.length === 1 ? pegawai[0].kode : "")));
     setSoapie([]);
     setSoapieBuka(false);
@@ -133,6 +143,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
 
   const pilih = (item: Pemeriksaan) => {
     setTerpilih(item);
+    setWaktuOtomatis(false);
     setForm({ tgl_perawatan: item.tgl_perawatan, jam_rawat: item.jam_rawat, suhu_tubuh: item.suhu_tubuh || "", tensi: item.tensi || "", nadi: item.nadi || "", respirasi: item.respirasi || "", tinggi: item.tinggi || "", berat: item.berat || "", spo2: item.spo2 || "", gcs: item.gcs || "", kesadaran: item.kesadaran, keluhan: item.keluhan || "", pemeriksaan: item.pemeriksaan || "", alergi: item.alergi || "", lingkar_perut: item.lingkar_perut || "", rtl: item.rtl || "", penilaian: item.penilaian || "", instruksi: item.instruksi || "", evaluasi: item.evaluasi || "", nip: item.nip });
   };
 
@@ -197,8 +208,9 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 rounded-md border border-primary-200 bg-primary-50/50 px-2.5 py-1.5 text-[11px] text-slate-700">
         <div><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
         <div className="flex items-center gap-1.5">
-          <label className="flex items-center gap-1">Tanggal<input type="date" value={form.tgl_perawatan} onChange={(event) => isi("tgl_perawatan", event.target.value)} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
-          <label className="flex items-center gap-1">Jam<input type="time" step="1" value={form.jam_rawat} onChange={(event) => isi("jam_rawat", event.target.value)} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+          <label className="flex items-center gap-1">Tanggal<input type="date" value={form.tgl_perawatan} onChange={(event) => { setWaktuOtomatis(false); isi("tgl_perawatan", event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+          <label className="flex items-center gap-1">Jam<input type="time" step="1" value={form.jam_rawat} onChange={(event) => { setWaktuOtomatis(false); isi("jam_rawat", event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+          <label className="flex items-center gap-1 whitespace-nowrap" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
         </div>
       </div>
 

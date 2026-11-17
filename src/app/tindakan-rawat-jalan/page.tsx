@@ -94,6 +94,7 @@ export default function HalamanTindakanRawatJalan() {
   const [tabAktif, setTabAktif] = useState<TabRawatJalan>("pemeriksaan");
   const [tanggal, setTanggal] = useState(hariIni);
   const [jam, setJam] = useState(jamJayapura);
+  const [waktuOtomatis, setWaktuOtomatis] = useState(true);
   const [pasien, setPasien] = useState<RegistrasiPilihan | null>(null);
   const [cariPasien, setCariPasien] = useState("");
   const [hasilPasien, setHasilPasien] = useState<RegistrasiPilihan[]>([]);
@@ -123,6 +124,18 @@ export default function HalamanTindakanRawatJalan() {
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe });
   }, []);
+
+  useEffect(() => {
+    if (!waktuOtomatis) return;
+    const perbaruiWaktu = () => {
+      const sekarang = new Date();
+      setTanggal(registrationDate(sekarang));
+      setJam(jamJayapura());
+    };
+    perbaruiWaktu();
+    const timer = setInterval(perbaruiWaktu, 1000);
+    return () => clearInterval(timer);
+  }, [waktuOtomatis]);
 
   const muatRiwayat = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -275,6 +288,7 @@ export default function HalamanTindakanRawatJalan() {
     setHasilPasien([]);
     setTanggal(hariIni);
     setJam(jamJayapura());
+    setWaktuOtomatis(true);
     setDokter("");
     setPetugas("");
     setCariTarif("");
@@ -402,10 +416,11 @@ export default function HalamanTindakanRawatJalan() {
             )}
             <div className="grid grid-cols-2 gap-2">
               <label className="text-xs text-slate-700">Tanggal
-                <input type="date" value={tanggal} onChange={(event) => setTanggal(event.target.value)} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
               </label>
               <label className="text-xs text-slate-700">Jam
-                <input type="time" step="1" value={jam} onChange={(event) => setJam(event.target.value)} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <label className="mt-1 flex items-center gap-1 text-[11px] text-slate-600" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
               </label>
             </div>
             {mode !== "petugas" && <label className="block text-xs text-slate-700">Dokter
