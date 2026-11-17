@@ -111,6 +111,7 @@ export async function GET(req: NextRequest) {
     if (resource === "kunjungan") return daftarKunjungan(params);
     if (resource === "obat") return daftarObat(params);
     if (resource === "metode") return daftarMetode();
+    if (resource === "aturan-pakai") return daftarAturanPakai(params);
     if (resource === "riwayat") return daftarRiwayat(params);
     throw new ResepError("Jenis data resep tidak valid.");
   } catch (error) {
@@ -208,6 +209,16 @@ async function daftarObat(params: URLSearchParams) {
 async function daftarMetode() {
   const rows = await executeQuery("SELECT kd_racik, nm_racik FROM metode_racik ORDER BY nm_racik");
   return NextResponse.json({ success: true, data: rows }, { headers: { "Cache-Control": "private, max-age=300" } });
+}
+
+async function daftarAturanPakai(params: URLSearchParams) {
+  const cari = params.get("cari")?.trim().slice(0, 100) || "";
+  const seperti = `%${cari}%`;
+  const rows = await executeQuery<{ aturan: string }>(
+    "SELECT aturan FROM master_aturan_pakai WHERE aturan LIKE ? ORDER BY aturan LIMIT 100",
+    [seperti],
+  );
+  return NextResponse.json({ success: true, data: rows });
 }
 
 async function daftarRiwayat(params: URLSearchParams) {
