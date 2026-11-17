@@ -72,6 +72,8 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 - [`PanelInputData`](src/components/modul/PanelInputData.tsx) tertutup secara default.
 - Kondisi terbuka disimpan di `localStorage` berdasarkan rute atau `idPenyimpanan`.
 - Bila modul memakai tab Input/Data, tab menggantikan perilaku buka/tutup panel.
+- Field tanggal dan jam pada halaman baru harus terisi otomatis berdasarkan waktu lokal aplikasi dan diperbarui realtime selama mode otomatis aktif. Perubahan manual harus menghentikan pembaruan otomatis sampai pengguna mengaktifkannya kembali.
+- Bila mode otomatis memakai checkbox/toggle, tampilkan kontrol visualnya tanpa teks label statis “Otomatis”; tetap sediakan `aria-label` dan `title` yang jelas untuk aksesibilitas.
 
 ### 3.6 Tombol Baru
 
