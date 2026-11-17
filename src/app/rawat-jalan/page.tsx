@@ -223,7 +223,7 @@ export default function HalamanRawatJalan() {
                   <th scope="col" className="min-w-[11rem] px-2.5 py-2">Pasien</th>
                   <th scope="col" className="min-w-[8rem] px-2.5 py-2">Poliklinik</th>
                   <th scope="col" className="min-w-[11rem] px-2.5 py-2">Dokter Dituju</th>
-                  <th scope="col" className="min-w-[14rem] px-2.5 py-2">Penanggung Jawab / Alamat P.J.</th>
+                  <th scope="col" className="min-w-[10rem] px-2.5 py-2">Penanggung Jawab / Alamat</th>
                   <th scope="col" className="min-w-[8rem] px-2.5 py-2">Jenis Bayar</th>
                   <th scope="col" className="px-2.5 py-2 text-center">Status</th>
                   <th scope="col" className="whitespace-nowrap px-2.5 py-2 text-center">Status Bayar</th>
@@ -275,7 +275,7 @@ export default function HalamanRawatJalan() {
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_poli}</td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_dokter}</td>
-                    <td className="max-w-[20rem] px-2.5 py-2 font-sans text-[10px] text-slate-600" title={item.almt_pj || undefined}>
+                    <td className="max-w-[14rem] px-2.5 py-2 font-sans text-[10px] text-slate-600" title={item.almt_pj || undefined}>
                       <span className="block truncate">{item.p_jawab || "-"} <span className="text-slate-400">({item.hubunganpj || "-"})</span></span>
                       {item.almt_pj && <span className="block truncate text-[9px] text-slate-400">{item.almt_pj}</span>}
                     </td>
