@@ -318,23 +318,6 @@ export default function HalamanInputResep() {
     setBahan([]);
   };
 
-  const resetForm = () => {
-    setKunjungan(null);
-    setCariKunjungan("");
-    setHasilKunjungan([]);
-    setTanggal(registrationDate());
-    setJam(jamJayapura());
-    setJamOtomatis(true);
-    setModeInput("nonracikan");
-    setCariObat("");
-    setKatalog([]);
-    setTotalObat(0);
-    setObat([]);
-    setBahan([]);
-    setRacikan([]);
-    setDraftRacikan(racikanKosong());
-  };
-
   const mintaSimpan = () => {
     if (!kunjungan) return tampilkanToast("Pilih kunjungan rawat jalan terlebih dahulu.", "error");
     if (Number(kunjungan.pasien_ranap)) return tampilkanToast("Pasien sudah masuk kamar inap; gunakan resep rawat inap.", "error");
@@ -615,7 +598,6 @@ export default function HalamanInputResep() {
           </div>
         )}
         onSimpan={mintaSimpan}
-        onBaru={resetForm}
         disabledSimpan={menyimpan || !kunjungan || obat.length + racikan.length === 0}
         memuat={menyimpan}
         jumlahRecord={totalObat}

@@ -23,10 +23,11 @@ khanza-web/
 ├── AGENTS.md                 # Aturan wajib proyek
 ├── database/
 │   ├── migrations/           # DDL rancangan database baru
+│   ├── mapping/              # Pemetaan kolom Khanza ke tabel layanan
 │   └── validasi/             # Query pemeriksaan hasil migrasi
 ├── docs/
 │   ├── README.md             # Riwayat dan arah pengembangan
-│   └── schema.md             # Dokumen ini
+│   └── SCHEMA.md             # Dokumen ini
 ├── src/
 │   ├── app/                  # Halaman App Router dan Route Handler
 │   ├── components/           # Komponen UI/layout bersama
@@ -58,6 +59,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Registrasi | `/api/registrasi`, `/api/registrasi/nomor`, `/api/registrasi/options` | Admin atau izin registrasi. |
 | Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
 | Tindakan rawat jalan | `/api/tindakan-rawat-jalan`, `/api/tindakan-rawat-jalan/pemeriksaan` | Admin atau izin tindakan ralan. |
+| Input resep dan daftar resep dokter | `/api/farmasi/resep-obat`, `/api/farmasi/daftar-resep-dokter` | Admin atau izin resep obat. |
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
@@ -71,7 +73,7 @@ Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujuk
 - `/api/rawat-inap`
 - `/api/laboratorium/*`
 - `/api/radiologi/*`
-- `/api/farmasi/*`
+- Endpoint farmasi lainnya
 
 Endpoint tersebut baru berupa query baca awal dan belum semuanya memiliki pemeriksaan izin, tipe, validasi, pagination, serta tes yang memadai.
 
@@ -170,9 +172,21 @@ Alamat dipisahkan karena pasien dapat mempunyai beberapa jenis alamat dan riwaya
 | `database/migrations/0002_referensi_awal.sql` | Data referensi awal pengganti `ENUM`. | Rancangan |
 | `database/validasi/pasien_registrasi.sql` | Validasi duplikat, relasi yatim, wilayah, dan konsistensi. | Rancangan |
 | `scripts/migrasi-khanza.mjs` | Importir awal dari Khanza. | Prototipe, ditunda |
+| `database/migrations/0003_pemeriksaan_dan_resep.sql` | Tabel rujukan internal, pemeriksaan dan pelaksana, katalog dan stok per depo, resep umum dan racikan, serta ruang inap. | Uji staging |
+| `database/mapping/layanan.sql` | Query sumber beserta nama kolom tujuan untuk data layanan. | Dipakai oleh importir |
+| `scripts/migrasi-layanan.mjs` | Impor awal data ke tabel layanan kosong, termasuk resep rawat jalan dan rawat inap. | Uji staging |
 | `scripts/db/index-kinerja.mjs` | Menambahkan index periode daftar pada database Khanza. | Opsional, perlu persetujuan DBA |
 
-## Migrasi database — ditunda
+## Uji migrasi layanan di staging
+
+1. Siapkan satu salinan Khanza yang stabil untuk kedua tahap impor dan satu database tujuan kosong. Atur `DB_SUMBER_HOST`, `DB_SUMBER_USER`, `DB_SUMBER_DATABASE` dan padanannya dengan awalan `DB_TUJUAN_` di `.env.migrasi.local`. Isi `_PORT` dan `_PASSWORD` sesuai lingkungan. Gunakan akun baca untuk sumber.
+2. Jalankan SQL `0001`, `0002`, lalu `0003` pada **database tujuan**. Jalankan `npm run migrasi:khanza`, periksa hasil `database/validasi/pasien_registrasi.sql` dan selesaikan masalah pemetaan kunjungan sebelum mengimpor data layanan.
+3. Jalankan `npm run migrasi:layanan`. Importir membaca satu snapshot sumber, mengirim 100 baris per batch, memeriksa jumlah per tabel, lalu melakukan satu commit di tujuan. Relasi yang gagal membatalkan seluruh tahap layanan. Pengulangan setelah sukses ditolak saat tabel sudah berisi data.
+4. Cocokkan jumlah pemeriksaan per kunjungan, rujukan per poli, stok per obat/depo dan jumlah obat serta bahan per nomor resep terhadap sumber. Dua baris obat umum yang identik tetap dihitung dua kali. Untuk tanggal resep, validasi, dan penyerahan, `0000-00-00` dipetakan ke `NULL` dan waktu tengah malam tetap tersimpan. Stok yang disalin adalah saldo saat snapshot.
+
+Tes integrasi memakai DDL dari referensi Khanza dan data sintetis. Pada MariaDB uji sementara di loopback, jalankan `MIGRASI_TEST_PORT=<port> node --test tests/migrasi-layanan.test.mjs`. Tes menggunakan akun root lokal tanpa sandi pada instance uji dan membuat dua database acak yang dibersihkan setelah tes.
+
+## Migrasi produksi — ditunda
 
 Selama status ditunda:
 

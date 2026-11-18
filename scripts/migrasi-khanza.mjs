@@ -1,35 +1,12 @@
 import mysql from "mysql2/promise";
+import { konfigurasiMigrasi } from "./db/konfigurasi-migrasi.mjs";
 
 const ukuranKelompok = Number(process.env.MIGRASI_UKURAN_KELOMPOK || 500);
 if (!Number.isInteger(ukuranKelompok) || ukuranKelompok < 1 || ukuranKelompok > 5000) {
   throw new Error("MIGRASI_UKURAN_KELOMPOK harus berupa bilangan 1 sampai 5000.");
 }
 
-function konfigurasi(awalan) {
-  const wajib = [`${awalan}_HOST`, `${awalan}_USER`, `${awalan}_DATABASE`];
-  const kosong = wajib.filter((nama) => !process.env[nama]);
-  if (kosong.length) throw new Error(`Konfigurasi wajib belum diisi: ${kosong.join(", ")}`);
-  return {
-    host: process.env[`${awalan}_HOST`],
-    port: Number(process.env[`${awalan}_PORT`] || 3306),
-    user: process.env[`${awalan}_USER`],
-    password: process.env[`${awalan}_PASSWORD`] || "",
-    database: process.env[`${awalan}_DATABASE`],
-    charset: "utf8mb4",
-    dateStrings: true,
-  };
-}
-
-const sumberConfig = konfigurasi("DB_SUMBER");
-const tujuanConfig = konfigurasi("DB_TUJUAN");
-
-if (
-  sumberConfig.host === tujuanConfig.host
-  && sumberConfig.port === tujuanConfig.port
-  && sumberConfig.database === tujuanConfig.database
-) {
-  throw new Error("Database sumber dan tujuan tidak boleh sama.");
-}
+const { sumberConfig, tujuanConfig } = konfigurasiMigrasi();
 
 const sumber = await mysql.createConnection(sumberConfig);
 const tujuan = await mysql.createConnection(tujuanConfig);

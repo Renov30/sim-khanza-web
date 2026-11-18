@@ -1,6 +1,6 @@
 # Riwayat dan Panduan Pengembangan
 
-Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan berikutnya. Aturan teknis yang wajib diikuti berada di [`AGENTS.md`](../AGENTS.md), sedangkan struktur aplikasi dan database dijelaskan di [`schema.md`](schema.md).
+Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan berikutnya. Aturan teknis yang wajib diikuti berada di [`AGENTS.md`](../AGENTS.md), sedangkan struktur aplikasi dan database dijelaskan di [`SCHEMA.md`](SCHEMA.md).
 
 ## Status saat ini
 
@@ -9,10 +9,13 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab. |
 | Data pasien | Aktif | Cari, tambah, ubah, penomoran RM, master pasien, TNI/POLRI. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
-| IGD, rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
-| Laboratorium, radiologi, farmasi | Eksperimental | Halaman/query awal; izin, tipe, dan tes belum seragam. |
+| Daftar Pasien Rawat Jalan | Alur daftar tersedia | Pasien terdaftar dan rujukan internal, filter, pagination, akses ke Tindakan. |
+| Tindakan, tab Pemeriksaan | Alur pemeriksaan tersedia | Pencatatan tanda vital dan SOAPIE, koreksi, hapus, dan riwayat lima SOAPIE. |
+| Input Resep | Alur resep rawat jalan tersedia | Katalog dan stok per depo, resep umum, racikan, aturan pakai, dan penyimpanan. |
+| Daftar Resep Dokter | Daftar dan detail tersedia | Rawat jalan dan inap. Petugas dapat melihat riwayat validasi dan penyerahan. Aksi validasi dan penyerahan dari web masih tertunda. |
+| IGD, rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
-| Migrasi data Khanza | Ditunda | Importir dipertahankan sebagai prototipe dan tidak dijalankan. |
+| Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
 
 ## Riwayat pengembangan
 
@@ -136,4 +139,4 @@ Perubahan dianggap selesai bila:
 - Tidak ada secret atau data pasien dalam diff.
 - Dokumentasi tetap sesuai perilaku kode.
 
-Migrasi database bukan prioritas aktif. Pekerjaan tersebut hanya dibuka kembali setelah schema, sumber kebenaran, rekonsiliasi, backup, rollback, dan jadwal cutover disepakati bersama pemilik proses, tim aplikasi, dan DBA.
+Migrasi produksi menunggu rekonsiliasi pada salinan data, uji pemulihan backup, dan kesepakatan jadwal peralihan bersama pemilik proses dan DBA.
