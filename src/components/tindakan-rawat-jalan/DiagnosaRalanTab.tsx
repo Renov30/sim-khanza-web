@@ -5,6 +5,7 @@ import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import type { AksiPanelPemeriksaan, StatusPanelPemeriksaan } from "./kontrak-panel-pemeriksaan";
+import { registrationDate } from "@/lib/registrasi/date";
 
 type Jenis = "diagnosa" | "prosedur";
 interface PasienDiagnosa { no_rawat: string; no_rkm_medis: string; nm_pasien: string; nm_poli: string; tgl_registrasi: string; jam_reg: string }
@@ -12,6 +13,12 @@ interface MasterKode { kode: string; nama: string }
 interface DiagnosaRow extends MasterKode { prioritas: number; status_penyakit: "Baru" | "Lama" }
 interface ProsedurRow extends MasterKode { prioritas: number }
 type PilihanRiwayat = { jenis: Jenis; row: DiagnosaRow | ProsedurRow };
+
+function jamJayapura() {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jayapura", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  }).format(new Date());
+}
 
 async function ambilMaster(jenis: Jenis, cari: string, offset: number, signal?: AbortSignal) {
   const params = new URLSearchParams({
@@ -50,6 +57,9 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
   const [prosedur, setProsedur] = useState<ProsedurRow[]>([]);
   const [terpilih, setTerpilih] = useState<PilihanRiwayat | null>(null);
   const [statusPenyakit, setStatusPenyakit] = useState<"Baru" | "Lama">("Baru");
+  const [tanggal, setTanggal] = useState(() => registrationDate());
+  const [jam, setJam] = useState(jamJayapura);
+  const [waktuOtomatis, setWaktuOtomatis] = useState(true);
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
   const [tanggalMulai, setTanggalMulai] = useState(pasien.tgl_registrasi);
@@ -60,6 +70,14 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
   const [versiMaster, setVersiMaster] = useState(0);
   const [konfirmasi, setKonfirmasi] = useState(false);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error" } | null>(null);
+
+  useEffect(() => {
+    if (terpilih || !waktuOtomatis) return;
+    const perbaruiWaktu = () => { setTanggal(registrationDate()); setJam(jamJayapura()); };
+    perbaruiWaktu();
+    const timer = setInterval(perbaruiWaktu, 1000);
+    return () => clearInterval(timer);
+  }, [terpilih, waktuOtomatis]);
 
   const muatRiwayat = useCallback(async (signal?: AbortSignal) => {
     setMemuat(true);
@@ -168,6 +186,7 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
   const baru = useCallback(() => {
     setCariDiagnosa(""); setCariProsedur(""); setMasterDiagnosa([]); setMasterProsedur([]);
     setDiagnosaDipilih(new Set()); setProsedurDipilih(new Set()); setTerpilih(null); setStatusPenyakit("Baru");
+    setTanggal(registrationDate()); setJam(jamJayapura()); setWaktuOtomatis(true);
     setVersiMaster((nilai) => nilai + 1);
   }, []);
 
@@ -215,6 +234,7 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
 
   const pilihRiwayat = (jenis: Jenis, row: DiagnosaRow | ProsedurRow) => {
     setTerpilih({ jenis, row });
+    setTanggal(pasien.tgl_registrasi); setJam(pasien.jam_reg); setWaktuOtomatis(false);
     if (jenis === "diagnosa") setStatusPenyakit((row as DiagnosaRow).status_penyakit || "Baru");
   };
   const ubahKode = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, kode: string) => setter((lama) => {
@@ -245,7 +265,6 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
     setPilihan: React.Dispatch<React.SetStateAction<Set<string>>>,
     memuatAwal: boolean,
     memuatBerikutnya: boolean,
-    adaBerikutnya: boolean,
   ) => (
     <fieldset className="min-w-0 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
       <legend className="px-1 text-[11px] font-semibold text-slate-700">{judul}</legend>
@@ -262,7 +281,7 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
             </label>)}
         {memuatBerikutnya && <p className="border-t border-slate-100 p-2 text-center text-[10px] text-slate-500">Memuat 20 data berikutnya...</p>}
       </div>
-      <p className="mt-1 text-[10px] text-slate-500">{pilihan.size} kode dipilih{adaBerikutnya ? " · Gulir untuk memuat lainnya" : ""}</p>
+      <p className="mt-1 text-[10px] text-slate-500">{pilihan.size} kode dipilih</p>
     </fieldset>
   );
 
@@ -272,16 +291,17 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary-200 bg-primary-50/50 px-2.5 py-1.5 text-[11px] text-slate-700">
         <div><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <label className="flex items-center gap-1">Tanggal<input aria-label="Tanggal diagnosa" type="date" value={pasien.tgl_registrasi} readOnly title="Tanggal mengikuti waktu registrasi kunjungan" className="h-7 rounded-md border border-slate-300 bg-slate-100 px-1.5 text-[11px] text-slate-700" /></label>
-          <label className="flex items-center gap-1">Jam<input aria-label="Jam diagnosa" type="time" step="1" value={pasien.jam_reg} readOnly title="Jam mengikuti waktu registrasi kunjungan" className="h-7 rounded-md border border-slate-300 bg-slate-100 px-1.5 text-[11px] text-slate-700" /></label>
+          <label className="flex items-center gap-1">Tanggal<input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+          <label className="flex items-center gap-1">Jam<input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+          <label className="flex items-center gap-1 whitespace-nowrap" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
           {terpilih?.jenis === "diagnosa" && <label className="flex items-center gap-1.5">Status penyakit
             <CustomSelect value={statusPenyakit} onChange={(event) => setStatusPenyakit(event.target.value as "Baru" | "Lama")} className="h-7 py-0.5 pr-7 text-[11px]"><option>Baru</option><option>Lama</option></CustomSelect>
           </label>}
         </div>
       </div>
       <div className="grid gap-2 lg:grid-cols-2">
-        {daftarMaster("diagnosa", "Diagnosa ICD-10", cariDiagnosa, setCariDiagnosa, masterDiagnosa, diagnosaDipilih, setDiagnosaDipilih, memuatMasterDiagnosa, memuatDiagnosaBerikutnya, adaDiagnosaBerikutnya)}
-        {daftarMaster("prosedur", "Prosedur ICD-9-CM", cariProsedur, setCariProsedur, masterProsedur, prosedurDipilih, setProsedurDipilih, memuatMasterProsedur, memuatProsedurBerikutnya, adaProsedurBerikutnya)}
+        {daftarMaster("diagnosa", "Diagnosa ICD-10", cariDiagnosa, setCariDiagnosa, masterDiagnosa, diagnosaDipilih, setDiagnosaDipilih, memuatMasterDiagnosa, memuatDiagnosaBerikutnya)}
+        {daftarMaster("prosedur", "Prosedur ICD-9-CM", cariProsedur, setCariProsedur, masterProsedur, prosedurDipilih, setProsedurDipilih, memuatMasterProsedur, memuatProsedurBerikutnya)}
       </div>
     </section>
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
