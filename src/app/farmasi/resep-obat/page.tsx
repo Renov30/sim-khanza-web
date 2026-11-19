@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faList, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faList, faPenToSquare, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
@@ -65,6 +66,43 @@ interface Racikan {
 interface MetodeRacik { kd_racik: string; nm_racik: string }
 interface AturanPakai { aturan: string }
 type TargetAturanPakai = { jenis: "obat"; kode: string } | { jenis: "racikan" };
+type SumberDraft = { jenis: "copy" | "edit"; no_resep: string };
+
+interface DraftObat extends ObatKatalog {
+  jumlah: number | string;
+  aturan_pakai: string;
+  status_barang: number | string;
+}
+
+interface DraftBahan extends ObatKatalog {
+  no_racik: string;
+  p1: number | string;
+  p2: number | string;
+  kandungan: string;
+  jumlah: number | string;
+  status_barang: number | string;
+}
+
+interface DraftRacikan {
+  no_racik: string;
+  nama_racik: string;
+  kd_racik: string;
+  jumlah: number | string;
+  aturan_pakai: string;
+  keterangan: string;
+  detail: DraftBahan[];
+}
+
+interface DraftResep {
+  sumber: {
+    no_resep: string;
+    tgl_peresepan: string;
+    jam_peresepan: string;
+    status_pelayanan: "Belum Terlayani" | "Sudah Terlayani";
+  };
+  obat: DraftObat[];
+  racikan: DraftRacikan[];
+}
 const racikanKosong = () => ({
   nama_racik: "",
   kd_racik: "",
@@ -88,6 +126,7 @@ function pesanDari(error: unknown, fallback: string) {
 }
 
 export default function HalamanInputResep() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [kunjungan, setKunjungan] = useState<Kunjungan | null>(null);
   const [cariKunjungan, setCariKunjungan] = useState("");
@@ -99,11 +138,13 @@ export default function HalamanInputResep() {
   const [modeInput, setModeInput] = useState<"nonracikan" | "racikan">("nonracikan");
   const [cariObat, setCariObat] = useState("");
   const [katalog, setKatalog] = useState<ObatKatalog[]>([]);
+  const katalogDraftRef = useRef<ObatKatalog[]>([]);
   const [memuatObat, setMemuatObat] = useState(false);
   const [memuatObatBerikutnya, setMemuatObatBerikutnya] = useState(false);
   const [offsetObat, setOffsetObat] = useState(0);
   const [adaObatBerikutnya, setAdaObatBerikutnya] = useState(false);
   const [totalObat, setTotalObat] = useState(0);
+  const [katalogDimuat, setKatalogDimuat] = useState(false);
   const [obat, setObat] = useState<ObatResep[]>([]);
   const [bahan, setBahan] = useState<BahanRacikan[]>([]);
   const [racikan, setRacikan] = useState<Racikan[]>([]);
@@ -114,6 +155,9 @@ export default function HalamanInputResep() {
   const [aturanPakai, setAturanPakai] = useState<AturanPakai[]>([]);
   const [memuatAturanPakai, setMemuatAturanPakai] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
+  const [sumberDraft, setSumberDraft] = useState<SumberDraft | null>(null);
+  const [draftDimuat, setDraftDimuat] = useState(false);
+  const [memuatDraft, setMemuatDraft] = useState(false);
   const [konfirmasi, setKonfirmasi] = useState(false);
   const [toast, setToast] = useState<{ pesan: string; tipe: ToastTipe } | null>(null);
 
@@ -139,11 +183,14 @@ export default function HalamanInputResep() {
     setHasilKunjungan([]);
     setCariObat("");
     setKatalog([]);
+    katalogDraftRef.current = [];
     setTotalObat(0);
     setObat([]);
     setBahan([]);
     setRacikan([]);
     setDraftRacikan(racikanKosong());
+    setDraftDimuat(false);
+    setKatalogDimuat(false);
   }, []);
 
   useEffect(() => {
@@ -159,6 +206,11 @@ export default function HalamanInputResep() {
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat kunjungan");
         const item = json.data?.[0];
         if (!item) throw new Error("Kunjungan rawat jalan tidak ditemukan.");
+        const params = new URLSearchParams(window.location.search);
+        const edit = params.get("edit_resep")?.trim().slice(0, 14) || "";
+        const copy = params.get("salin_dari")?.trim().slice(0, 14) || "";
+        if (edit) setSumberDraft({ jenis: "edit", no_resep: edit });
+        else if (copy) setSumberDraft({ jenis: "copy", no_resep: copy });
         pilihKunjungan(item);
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat kunjungan"), "error");
@@ -239,6 +291,7 @@ export default function HalamanInputResep() {
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setMemuatObat(true);
+      setKatalogDimuat(false);
       setOffsetObat(0);
       setAdaObatBerikutnya(false);
       setTotalObat(0);
@@ -248,18 +301,107 @@ export default function HalamanInputResep() {
         const json: { success?: boolean; data?: ObatKatalog[]; error?: string; meta?: { hasMore?: boolean; total?: number } } = await response.json();
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat obat");
         const data = json.data || [];
-        setKatalog(data);
+        setKatalog(() => {
+          const gabungan = new Map<string, ObatKatalog>();
+          for (const item of [...katalogDraftRef.current, ...data]) gabungan.set(item.kode_brng, item);
+          return [...gabungan.values()];
+        });
         setOffsetObat(data.length);
         setAdaObatBerikutnya(Boolean(json.meta?.hasMore));
         setTotalObat(Number(json.meta?.total || 0));
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat obat"), "error");
       } finally {
-        if (!controller.signal.aborted) setMemuatObat(false);
+        if (!controller.signal.aborted) {
+          setMemuatObat(false);
+          setKatalogDimuat(true);
+        }
       }
     }, cariObat ? 250 : 0);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [cariObat, kunjungan, tampilkanToast]);
+
+  useEffect(() => {
+    if (!kunjungan || !sumberDraft || !katalogDimuat || draftDimuat) return;
+    const controller = new AbortController();
+    async function muatDraft() {
+      setMemuatDraft(true);
+      try {
+        const url = new URL("/api/farmasi/copy-resep", window.location.origin);
+        url.searchParams.set("resource", "draft");
+        url.searchParams.set("no_rawat", kunjungan!.no_rawat);
+        url.searchParams.set("no_resep", sumberDraft!.no_resep);
+        const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
+        const json: { success?: boolean; data?: DraftResep; error?: string } = await response.json();
+        if (!response.ok || !json.success || !json.data) throw new Error(json.error || "Gagal memuat isi resep");
+        const draft = json.data;
+        if (sumberDraft!.jenis === "edit" && draft.sumber.status_pelayanan === "Sudah Terlayani") {
+          throw new Error("Resep sudah tervalidasi dan tidak dapat diubah.");
+        }
+
+        let itemPerluKoreksi = 0;
+        const obatDraft: ObatResep[] = draft.obat.map((item) => {
+          const jumlahAman = Number(item.status_barang) === 1 && Number(item.stok) >= Number(item.jumlah)
+            ? String(item.jumlah)
+            : "";
+          if (!jumlahAman) itemPerluKoreksi += 1;
+          return { ...item, jumlah: jumlahAman, aturan_pakai: item.aturan_pakai || "" };
+        });
+        const racikanDraft: Racikan[] = draft.racikan.map((item) => ({
+          id: crypto.randomUUID(),
+          nama_racik: item.nama_racik,
+          kd_racik: item.kd_racik,
+          jumlah: String(item.jumlah),
+          aturan_pakai: item.aturan_pakai,
+          keterangan: item.keterangan,
+          detail: item.detail.map((baris) => {
+            const jumlahAman = Number(baris.status_barang) === 1 && Number(baris.stok) >= Number(baris.jumlah)
+              ? String(baris.jumlah)
+              : "";
+            if (!jumlahAman) itemPerluKoreksi += 1;
+            return {
+              ...baris,
+              p1: baris.p1 == null ? "" : String(baris.p1),
+              p2: baris.p2 == null ? "" : String(baris.p2),
+              kandungan: baris.kandungan || "",
+              jumlah: jumlahAman,
+            };
+          }),
+        }));
+        const katalogDraft = [...draft.obat, ...draft.racikan.flatMap((item) => item.detail)];
+        katalogDraftRef.current = katalogDraft;
+        setKatalog((lama) => {
+          const gabungan = new Map<string, ObatKatalog>();
+          for (const item of [...katalogDraft, ...lama]) gabungan.set(item.kode_brng, item);
+          return [...gabungan.values()];
+        });
+        setObat(obatDraft);
+        setRacikan(racikanDraft);
+        setBahan([]);
+        setDraftRacikan(racikanKosong());
+        if (sumberDraft!.jenis === "edit") {
+          setTanggal(draft.sumber.tgl_peresepan);
+          setJam(draft.sumber.jam_peresepan);
+          setJamOtomatis(false);
+        }
+        setDraftDimuat(true);
+        if (itemPerluKoreksi > 0) {
+          tampilkanToast(`${itemPerluKoreksi} item tidak aktif atau stoknya tidak mencukupi. Periksa dan isi ulang jumlahnya.`, "info");
+        } else {
+          tampilkanToast(sumberDraft!.jenis === "copy" ? `Isi resep ${draft.sumber.no_resep} siap disalin.` : `Resep ${draft.sumber.no_resep} siap diubah.`, "sukses");
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setDraftDimuat(true);
+          tampilkanToast(pesanDari(error, "Gagal memuat isi resep"), "error");
+        }
+      } finally {
+        if (!controller.signal.aborted) setMemuatDraft(false);
+      }
+    }
+    void muatDraft();
+    return () => controller.abort();
+  }, [draftDimuat, katalogDimuat, kunjungan, sumberDraft, tampilkanToast]);
 
   const muatObatBerikutnya = async () => {
     if (!kunjungan || !adaObatBerikutnya || memuatObat || memuatObatBerikutnya) return;
@@ -318,7 +460,21 @@ export default function HalamanInputResep() {
     setBahan([]);
   };
 
+  const editRacikan = (item: Racikan) => {
+    setModeInput("racikan");
+    setDraftRacikan({
+      nama_racik: item.nama_racik,
+      kd_racik: item.kd_racik,
+      jumlah: item.jumlah,
+      aturan_pakai: item.aturan_pakai,
+      keterangan: item.keterangan,
+    });
+    setBahan(item.detail);
+    setRacikan((lama) => lama.filter((baris) => baris.id !== item.id));
+  };
+
   const mintaSimpan = () => {
+    if (memuatDraft) return tampilkanToast("Isi resep sumber masih dimuat.", "info");
     if (!kunjungan) return tampilkanToast("Pilih kunjungan rawat jalan terlebih dahulu.", "error");
     if (Number(kunjungan.pasien_ranap)) return tampilkanToast("Pasien sudah masuk kamar inap; gunakan resep rawat inap.", "error");
     if (obat.length + racikan.length === 0) return tampilkanToast("Masukkan minimal satu obat atau racikan.", "error");
@@ -329,12 +485,20 @@ export default function HalamanInputResep() {
 
   const simpan = async () => {
     if (!kunjungan) return;
+    const sedangEdit = sumberDraft?.jenis === "edit";
     setMenyimpan(true);
     try {
       const response = await fetch("/api/farmasi/resep-obat", {
-        method: "POST",
+        method: sedangEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ no_rawat: kunjungan.no_rawat, tanggal, jam, obat, racikan }),
+        body: JSON.stringify({
+          ...(sedangEdit ? { no_resep: sumberDraft.no_resep } : {}),
+          no_rawat: kunjungan.no_rawat,
+          tanggal,
+          jam,
+          obat,
+          racikan,
+        }),
       });
       const json: { success?: boolean; message?: string; error?: string } = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Resep gagal disimpan");
@@ -343,6 +507,10 @@ export default function HalamanInputResep() {
       setRacikan([]);
       setBahan([]);
       setDraftRacikan(racikanKosong());
+      katalogDraftRef.current = [];
+      setSumberDraft(null);
+      setDraftDimuat(false);
+      router.replace(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}`);
       tampilkanToast(json.message || "Resep berhasil disimpan.", "sukses");
     } catch (error) {
       tampilkanToast(pesanDari(error, "Resep gagal disimpan"), "error");
@@ -413,6 +581,17 @@ export default function HalamanInputResep() {
             <input id="dokter-resep" readOnly aria-label="Nama dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
           </div>
 
+          {sumberDraft && (
+            <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]">
+              <span className="whitespace-nowrap sm:text-right">Sumber :</span>
+              <div className="flex h-7 items-center gap-2 rounded-md border border-primary-200 bg-primary-50 px-2 text-xs text-slate-700">
+                <span className="font-mono text-slate-800">{sumberDraft.no_resep}</span>
+                <span>{sumberDraft.jenis === "copy" ? "Salinan resep sebelumnya" : "Mode ubah resep"}</span>
+                {memuatDraft && <span className="text-slate-500">Memuat...</span>}
+              </div>
+            </div>
+          )}
+
           </div>
           <div aria-hidden="true" className="hidden lg:block" />
         </div>
@@ -477,7 +656,10 @@ export default function HalamanInputResep() {
                   <p className="font-semibold text-slate-800">{index + 1}. {item.nama_racik}</p>
                   <p>{item.jumlah} · {item.aturan_pakai} · {item.detail.length} bahan</p>
                 </div>
-                <button type="button" onClick={() => setRacikan((lama) => lama.filter((baris) => baris.id !== item.id))} aria-label={`Hapus racikan ${item.nama_racik}`} className="p-1 text-red-600"><FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" /></button>
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => editRacikan(item)} aria-label={`Ubah racikan ${item.nama_racik}`} title="Ubah racikan" className="p-1 text-primary-700"><FontAwesomeIcon icon={faPenToSquare} className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => setRacikan((lama) => lama.filter((baris) => baris.id !== item.id))} aria-label={`Hapus racikan ${item.nama_racik}`} title="Hapus racikan" className="p-1 text-red-600"><FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" /></button>
+                </div>
               </div>
             ))}
           </div>
@@ -597,9 +779,11 @@ export default function HalamanInputResep() {
             <CustomSelect id="tarif-resep" value="ralan" disabled aria-label="Tarif resep" className="h-7 w-32 py-0.5 text-xs"><option value="ralan">Rawat Jalan</option></CustomSelect>
           </div>
         )}
-        onSimpan={mintaSimpan}
-        disabledSimpan={menyimpan || !kunjungan || obat.length + racikan.length === 0}
-        memuat={menyimpan}
+        onSimpan={sumberDraft?.jenis === "edit" ? undefined : mintaSimpan}
+        onGanti={sumberDraft?.jenis === "edit" ? mintaSimpan : undefined}
+        disabledSimpan={menyimpan || memuatDraft || !kunjungan || obat.length + racikan.length === 0}
+        disabledGanti={menyimpan || memuatDraft || !kunjungan || obat.length + racikan.length === 0}
+        memuat={menyimpan || memuatDraft}
         jumlahRecord={totalObat}
       />
       {targetAturanPakai && (
@@ -626,7 +810,7 @@ export default function HalamanInputResep() {
           </div>
         </div>
       )}
-      <KonfirmasiDialog terbuka={konfirmasi} judul="Simpan Resep" pesan={`Simpan resep untuk ${kunjungan?.nm_pasien || "pasien"}?`} subPesan="Resep akan mendapat nomor baru dan masuk ke antrean pelayanan farmasi." teksKonfirmasi="Simpan Resep" bahaya={false} sedangMemproses={menyimpan} onBatal={() => setKonfirmasi(false)} onKonfirmasi={() => void simpan()} />
+      <KonfirmasiDialog terbuka={konfirmasi} judul={sumberDraft?.jenis === "edit" ? "Ubah Resep" : "Simpan Resep"} pesan={`${sumberDraft?.jenis === "edit" ? "Ubah" : "Simpan"} resep untuk ${kunjungan?.nm_pasien || "pasien"}?`} subPesan={sumberDraft?.jenis === "edit" ? `Isi resep ${sumberDraft.no_resep} akan diganti dengan data pada formulir.` : "Resep akan mendapat nomor baru dan masuk ke antrean pelayanan farmasi."} teksKonfirmasi={sumberDraft?.jenis === "edit" ? "Ubah Resep" : "Simpan Resep"} bahaya={false} sedangMemproses={menyimpan} onBatal={() => setKonfirmasi(false)} onKonfirmasi={() => void simpan()} />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

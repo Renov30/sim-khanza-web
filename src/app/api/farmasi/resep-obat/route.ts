@@ -364,3 +364,115 @@ export async function POST(req: NextRequest) {
     }
   }
 }
+
+export async function PUT(req: NextRequest) {
+  const denied = await resepObatAccess();
+  if (denied) return denied;
+  let connection: PoolConnection | undefined;
+  try {
+    const body: unknown = await req.json();
+    if (!body || typeof body !== "object") throw new ResepError("Data resep tidak valid.");
+    const input = body as Record<string, unknown>;
+    const noResep = teks(input.no_resep, 14);
+    const noRawat = teks(input.no_rawat, 17);
+    const tanggal = teks(input.tanggal, 10);
+    const jam = teks(input.jam, 8);
+    const obat = bacaObat(input.obat);
+    const racikan = bacaRacikan(input.racikan);
+    if (!noResep || !noRawat || !isRegistrationDate(tanggal) || !/^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(jam)) {
+      throw new ResepError("Nomor resep, kunjungan, tanggal, atau jam tidak valid.");
+    }
+    if (obat.length + racikan.length === 0) throw new ResepError("Masukkan minimal satu obat atau racikan.");
+    if (obat.length > 100 || racikan.length > 20) throw new ResepError("Jumlah item resep melebihi batas yang diizinkan.");
+    if (obat.some((item) => !item.kode_brng || !item.jumlah)) throw new ResepError("Jumlah obat nonracikan harus lebih dari nol.");
+    if (new Set(obat.map((item) => item.kode_brng)).size !== obat.length) throw new ResepError("Obat nonracikan tidak boleh duplikat.");
+    for (const item of racikan) {
+      if (!item.nama_racik || !item.kd_racik || !item.jumlah || !item.aturan_pakai || item.detail.length === 0) {
+        throw new ResepError("Nama, metode, jumlah, aturan pakai, dan bahan racikan wajib diisi.");
+      }
+      if (item.detail.length > 30 || item.detail.some((detail) => !detail.kode_brng || !detail.jumlah)) {
+        throw new ResepError("Bahan dan jumlah racikan tidak valid.");
+      }
+      if (new Set(item.detail.map((detail) => detail.kode_brng)).size !== item.detail.length) {
+        throw new ResepError(`Bahan pada racikan ${item.nama_racik} tidak boleh duplikat.`);
+      }
+    }
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [resepRows] = await connection.execute<(KunjunganTerkunci & {
+      no_resep: string; tervalidasi: number; status_resep: string;
+    })[]>(`
+      SELECT ro.no_resep, ro.status AS status_resep,
+             CASE WHEN ro.tgl_perawatan IS NULL OR CAST(ro.tgl_perawatan AS CHAR) = '0000-00-00' THEN 0 ELSE 1 END AS tervalidasi,
+             r.no_rawat, r.kd_dokter, r.kd_poli, r.kd_pj, r.status_bayar,
+             DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') AS tgl_registrasi, r.jam_reg,
+             EXISTS(SELECT 1 FROM kamar_inap ki WHERE ki.no_rawat = r.no_rawat) AS pasien_ranap
+      FROM resep_obat ro
+      INNER JOIN reg_periksa r ON r.no_rawat = ro.no_rawat
+      WHERE ro.no_resep = ? AND ro.no_rawat = ?
+      FOR UPDATE
+    `, [noResep, noRawat]);
+    const resep = resepRows[0];
+    if (!resep) throw new ResepError("Resep tidak ditemukan.", 404);
+    if (resep.status_resep !== "ralan") throw new ResepError("Resep rawat inap harus diubah dari modul rawat inap.", 409);
+    if (Number(resep.tervalidasi)) throw new ResepError("Resep sudah tervalidasi dan tidak dapat diubah.", 409, "RESEP_SUDAH_VALIDASI");
+    if (Number(resep.pasien_ranap)) throw new ResepError("Pasien sudah masuk kamar inap; resep rawat jalan tidak dapat diubah.", 409);
+    if (`${tanggal} ${jam}` < `${resep.tgl_registrasi} ${resep.jam_reg}`) {
+      throw new ResepError("Waktu peresepan tidak boleh mendahului waktu registrasi.");
+    }
+    if (resep.status_bayar === "Sudah Bayar") {
+      const [parsial] = await connection.execute<RowDataPacket[]>("SELECT kd_pj FROM set_input_parsial WHERE kd_pj = ? LIMIT 1", [resep.kd_pj]);
+      if (!parsial[0]) throw new ResepError("Billing kunjungan sudah diverifikasi; resep tidak dapat diubah.", 409);
+    }
+
+    const semuaKode = [...new Set([...obat.map((item) => item.kode_brng), ...racikan.flatMap((item) => item.detail.map((detail) => detail.kode_brng))])];
+    const placeholderObat = semuaKode.map(() => "?").join(", ");
+    const [obatAktif] = await connection.execute<RowDataPacket[]>(
+      `SELECT kode_brng FROM databarang WHERE status = '1' AND kode_brng IN (${placeholderObat})`,
+      semuaKode,
+    );
+    if (obatAktif.length !== semuaKode.length) throw new ResepError("Sebagian obat tidak ditemukan atau sudah tidak aktif.", 409);
+    if (racikan.length > 0) {
+      const kodeMetode = [...new Set(racikan.map((item) => item.kd_racik))];
+      const placeholderMetode = kodeMetode.map(() => "?").join(", ");
+      const [metodeAktif] = await connection.execute<RowDataPacket[]>(
+        `SELECT kd_racik FROM metode_racik WHERE kd_racik IN (${placeholderMetode})`, kodeMetode,
+      );
+      if (metodeAktif.length !== kodeMetode.length) throw new ResepError("Metode racikan tidak ditemukan.", 409);
+    }
+
+    await connection.execute(
+      "UPDATE resep_obat SET tgl_peresepan = ?, jam_peresepan = ? WHERE no_resep = ?",
+      [tanggal, jam, noResep],
+    );
+    await connection.execute("DELETE FROM resep_dokter_racikan_detail WHERE no_resep = ?", [noResep]);
+    await connection.execute("DELETE FROM resep_dokter_racikan WHERE no_resep = ?", [noResep]);
+    await connection.execute("DELETE FROM resep_dokter WHERE no_resep = ?", [noResep]);
+    for (const item of obat) {
+      await connection.execute(
+        "INSERT INTO resep_dokter (no_resep, kode_brng, jml, aturan_pakai) VALUES (?, ?, ?, ?)",
+        [noResep, item.kode_brng, item.jumlah, item.aturan_pakai],
+      );
+    }
+    for (const item of racikan) {
+      await connection.execute(`INSERT INTO resep_dokter_racikan
+        (no_resep, no_racik, nama_racik, kd_racik, jml_dr, aturan_pakai, keterangan)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [noResep, item.no_racik, item.nama_racik, item.kd_racik, item.jumlah, item.aturan_pakai, item.keterangan]);
+      for (const detail of item.detail) {
+        await connection.execute(`INSERT INTO resep_dokter_racikan_detail
+          (no_resep, no_racik, kode_brng, p1, p2, kandungan, jml)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [noResep, item.no_racik, detail.kode_brng, detail.p1 || null, detail.p2 || null, detail.kandungan, detail.jumlah]);
+      }
+    }
+    await connection.commit();
+    return NextResponse.json({ success: true, data: { no_resep: noResep }, message: `Resep ${noResep} berhasil diubah.` });
+  } catch (error) {
+    if (connection) await connection.rollback().catch(() => undefined);
+    return kegagalan(error, "Resep gagal diubah.");
+  } finally {
+    connection?.release();
+  }
+}

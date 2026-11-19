@@ -12,6 +12,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Daftar Pasien Rawat Jalan | Alur daftar tersedia | Pasien terdaftar dan rujukan internal, filter, pagination, akses ke Tindakan. |
 | Tindakan, tab Pemeriksaan | Alur pemeriksaan tersedia | Tanda vital, SOAPIE, obstetri, dan ginekologi mendukung tambah, koreksi, hapus, filter, serta cetak. |
 | Input Resep | Alur resep rawat jalan tersedia | Katalog dan stok per depo, resep umum, racikan, aturan pakai, dan penyimpanan. |
+| Copy Resep | Alur salin dan koreksi tersedia | Riwayat pasien/dokter, copy ke kunjungan aktif, ubah, dan hapus resep belum tervalidasi. |
 | Daftar Resep Dokter | Daftar dan detail tersedia | Rawat jalan dan inap. Petugas dapat melihat riwayat validasi dan penyerahan. Aksi validasi dan penyerahan dari web masih tertunda. |
 | IGD, rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
@@ -91,6 +92,12 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Ringkasan menampilkan status pelayanan, unit atau ruang aktif, jenis bayar, waktu validasi, dan penyerahan rawat jalan. Detail memuat obat nonracikan, racikan, serta bahan racikan.
 - Filter periode, status, dokter, unit, dan kata kunci dijalankan di server. Data dipaginasi maksimal 100 resep per halaman dan jumlah record dihitung terpisah agar tabel tetap ringan.
 - Endpoint dilindungi izin `resep_obat`, memakai validasi filter dan query berparameter, serta menangani relasi `ranap_gabung` untuk ruang rawat inap aktif.
+
+### 20 November 2026 — copy resep
+
+- Halaman `/farmasi/copy-resep` mengadaptasi `DlgCopyResep`: hanya menampilkan riwayat pasien dan dokter peresep yang sama, mendukung filter tanggal, pencarian, rincian obat/racikan, serta aksi `Copy`, `Ubah`, dan `Hapus`.
+- Copy memuat obat dan racikan lama sebagai draft resep baru pada kunjungan aktif, mengambil kembali harga dan stok depo saat ini. Jumlah item yang tidak aktif atau stoknya kurang dikosongkan agar wajib dikoreksi sebelum disimpan.
+- Ubah dan hapus dibatasi pada resep rawat jalan yang belum tervalidasi. Mutasi memakai otorisasi server, validasi billing, penguncian baris, dan transaksi; detail resep tetap kompatibel dengan tabel Khanza.
 
 ### 20 November 2026 — tab klinis tindakan rawat jalan
 

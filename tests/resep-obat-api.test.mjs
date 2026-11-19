@@ -24,7 +24,12 @@ function handler({ denied } = {}) {
         no_rawat: '2026/11/16/000001', kd_dokter: 'D1', kd_poli: 'U0001', kd_pj: 'UMU',
         status_bayar: 'Belum Bayar', tgl_registrasi: '2026-11-16', jam_reg: '08:00:00', pasien_ranap: 0,
       }]];
-      if (/FROM databarang WHERE/.test(sql)) return [[{ kode_brng: 'OBAT1' }, { kode_brng: 'OBAT2' }]];
+      if (/FROM resep_obat ro\s+INNER JOIN reg_periksa r/.test(sql)) return [[{
+        no_resep: '202611160006', status_resep: 'ralan', tervalidasi: 0,
+        no_rawat: '2026/11/16/000001', kd_dokter: 'D1', kd_poli: 'U0001', kd_pj: 'UMU',
+        status_bayar: 'Belum Bayar', tgl_registrasi: '2026-11-16', jam_reg: '08:00:00', pasien_ranap: 0,
+      }]];
+      if (/FROM databarang WHERE/.test(sql)) return [params.map((kode_brng) => ({ kode_brng }))];
       if (/FROM metode_racik WHERE/.test(sql)) return [[{ kd_racik: 'R01' }]];
       if (/GET_LOCK/.test(sql)) return [[{ didapat: 1 }]];
       if (/MAX\(CONVERT\(RIGHT/.test(sql)) return [[{ urut: 7 }]];
@@ -104,4 +109,21 @@ test('resep kosong ditolak sebelum membuka transaksi', async () => {
   }));
   assert.equal(response.status, 400);
   assert.equal(calls.length, 0);
+});
+
+test('ubah resep belum tervalidasi mengganti detail dalam satu transaksi', async () => {
+  const { api, calls } = handler();
+  const response = await api.PUT(new NextRequest('http://localhost/api/farmasi/resep-obat', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      no_resep: '202611160006', no_rawat: '2026/11/16/000001', tanggal: '2026-11-16', jam: '09:30:00',
+      obat: [{ kode_brng: 'OBAT1', jumlah: 12, aturan_pakai: '3 x 1' }], racikan: [],
+    }),
+  }));
+  assert.equal(response.status, 200);
+  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /FOR UPDATE/.test(sql)));
+  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /UPDATE resep_obat SET tgl_peresepan/.test(sql)));
+  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /DELETE FROM resep_dokter WHERE/.test(sql)));
+  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /INSERT INTO resep_dokter \(/.test(sql)));
+  assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
 });
