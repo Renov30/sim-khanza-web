@@ -92,11 +92,13 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Filter periode, status, dokter, unit, dan kata kunci dijalankan di server. Data dipaginasi maksimal 100 resep per halaman dan jumlah record dihitung terpisah agar tabel tetap ringan.
 - Endpoint dilindungi izin `resep_obat`, memakai validasi filter dan query berparameter, serta menangani relasi `ranap_gabung` untuk ruang rawat inap aktif.
 
-### 20 November 2026 — pemeriksaan obstetri dan ginekologi
+### 20 November 2026 — tab klinis tindakan rawat jalan
 
 - Tab `Pemeriksaan Obstetri` dan `Pemeriksaan Ginekologi` memakai formulir klinis terkontrol serta tabel Khanza masing-masing.
-- Ketiga tab pemeriksaan berbagi satu `PanelBawah`; status, filter, dan aksi panel didelegasikan ke tab aktif.
+- Lima tab klinis (`Pemeriksaan`, obstetri, ginekologi, `Diagnosa`, dan `Catatan Dokter`) berbagi satu `PanelBawah`; status, filter, dan aksi panel didelegasikan ke tab aktif.
 - Tambah, koreksi, hapus, pencarian, dan cetak tersedia. Koreksi serta hapus obstetri/ginekologi oleh non-admin dibatasi 48 jam dan seluruh mutasi ditolak setelah billing diverifikasi.
+- Tab `Diagnosa` menampilkan waktu registrasi, mendukung pemilihan ICD-10 dan ICD-9-CM, prioritas Khanza, status penyakit Baru/Lama, serta sinkronisasi kode ke resume pasien. Daftar master langsung memuat 20 data dan mengambil halaman berikutnya saat digulir.
+- Tab `Catatan Dokter` memakai waktu WIT otomatis, riwayat terfilter, dan pembatasan koreksi/hapus selama 48 jam hanya untuk dokter pemilik catatan (admin dikecualikan).
 
 ## Prioritas pengembangan berikutnya
 
