@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDatabase, faFileMedical, faFlask, faHeartPulse, faMagnifyingGlass, faTooth, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
@@ -43,6 +42,36 @@ interface FormPemeriksaan {
   penilaian: string; instruksi: string; evaluasi: string; nip: string;
 }
 
+export interface StatusPanelPemeriksaan {
+  disabledSimpan: boolean;
+  disabledGanti: boolean;
+  disabledHapus: boolean;
+  disabledCetak: boolean;
+  tanggalMulai: string;
+  tanggalSelesai: string;
+  kataKunci: string;
+  jumlahRecord: number;
+  memuat: boolean;
+}
+
+export interface AksiPanelPemeriksaan {
+  simpan: () => void;
+  baru: () => void;
+  ganti: () => void;
+  hapus: () => void;
+  cetak: () => void;
+  gantiTanggalMulai: (nilai: string) => void;
+  gantiTanggalSelesai: (nilai: string) => void;
+  gantiKataKunci: (nilai: string) => void;
+  cari: () => void;
+  semua: () => void;
+}
+
+interface PemeriksaanRalanTabProps {
+  pasien: PasienPemeriksaan;
+  onStatusPanelChange: (status: StatusPanelPemeriksaan) => void;
+}
+
 const KESADARAN = ["Compos Mentis", "Somnolence", "Sopor", "Coma", "Alert", "Confusion", "Voice", "Pain", "Unresponsive", "Apatis", "Delirium"];
 
 function jamJayapura() {
@@ -53,7 +82,7 @@ function formKosong(nip = ""): FormPemeriksaan {
   return { tgl_perawatan: registrationDate(), jam_rawat: jamJayapura(), suhu_tubuh: "", tensi: "", nadi: "", respirasi: "", tinggi: "", berat: "", spo2: "", gcs: "", kesadaran: "Compos Mentis", keluhan: "", pemeriksaan: "", alergi: "", lingkar_perut: "", rtl: "", penilaian: "", instruksi: "", evaluasi: "", nip };
 }
 
-export function PemeriksaanRalanTab({ pasien, onKembali }: { pasien: PasienPemeriksaan; onKembali: () => void }) {
+export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanRalanTabProps>(function PemeriksaanRalanTab({ pasien, onStatusPanelChange }, ref) {
   const [form, setForm] = useState<FormPemeriksaan>(() => formKosong(pasien.kd_dokter));
   const [data, setData] = useState<Pemeriksaan[]>([]);
   const [pegawai, setPegawai] = useState<Pegawai[]>([]);
@@ -218,6 +247,33 @@ export function PemeriksaanRalanTab({ pasien, onKembali }: { pasien: PasienPemer
     setVersiFilter((versi) => versi + 1);
   };
 
+  useImperativeHandle(ref, () => ({
+    simpan: () => { void simpan(); },
+    baru,
+    ganti: () => { void simpan(); },
+    hapus: () => setKonfirmasi(true),
+    cetak,
+    gantiTanggalMulai: setTanggalMulai,
+    gantiTanggalSelesai: setTanggalSelesai,
+    gantiKataKunci: setKataKunci,
+    cari: cariData,
+    semua: resetFilter,
+  }));
+
+  useEffect(() => {
+    onStatusPanelChange({
+      disabledSimpan: menyimpan || Boolean(terpilih),
+      disabledGanti: menyimpan || !terpilih,
+      disabledHapus: menyimpan || !terpilih,
+      disabledCetak: data.length === 0,
+      tanggalMulai,
+      tanggalSelesai,
+      kataKunci,
+      jumlahRecord: data.length,
+      memuat: memuat || menyimpan,
+    });
+  }, [data.length, kataKunci, memuat, menyimpan, onStatusPanelChange, tanggalMulai, tanggalSelesai, terpilih]);
+
   const daftarPelaksana = pegawai.some((item) => item.kode === pasien.kd_dokter)
     ? pegawai
     : [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter, jbtn: "Dokter DPJP" }, ...pegawai];
@@ -297,7 +353,6 @@ export function PemeriksaanRalanTab({ pasien, onKembali }: { pasien: PasienPemer
         <tbody className="divide-y divide-slate-100 text-slate-700">{memuat ? <tr><td colSpan={22} className="py-10 text-center">Memuat pemeriksaan...</td></tr> : data.length === 0 ? <tr><td colSpan={22} className="py-10 text-center text-slate-400">Belum ada pemeriksaan.</td></tr> : data.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pilih(item)} className={`cursor-pointer ${terpilih?.tgl_perawatan === item.tgl_perawatan && terpilih?.jam_rawat === item.jam_rawat ? "bg-primary-50/90" : "hover:bg-slate-50"}`}><td className="whitespace-nowrap px-2.5 py-2">{item.tgl_perawatan}</td><td className="whitespace-nowrap px-2.5 py-2">{item.jam_rawat}</td>{[item.suhu_tubuh, item.tensi, item.nadi, item.respirasi, item.tinggi, item.berat, item.spo2, item.gcs, item.kesadaran, item.keluhan, item.pemeriksaan, item.alergi, item.lingkar_perut, item.rtl, item.penilaian, item.instruksi, item.evaluasi, item.nip, item.nama, item.jbtn].map((nilai, index) => <td key={index} className="max-w-72 whitespace-pre-wrap px-2.5 py-2 align-top">{nilai || "-"}</td>)}</tr>)}</tbody>
       </table>
     </section>
-    <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} onKembali={onKembali} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={setTanggalMulai} onGantiTanggalSelesai={setTanggalSelesai} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariData} placeholderCari="Cari data di sini" onSemua={resetFilter} jumlahRecord={data.length} memuat={memuat || menyimpan} />
     {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
       <section className="flex max-h-[75vh] w-[min(72rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -326,4 +381,4 @@ export function PemeriksaanRalanTab({ pasien, onKembali }: { pasien: PasienPemer
     <KonfirmasiDialog terbuka={konfirmasi} judul="Hapus Pemeriksaan" pesan={`Hapus pemeriksaan ${terpilih?.tgl_perawatan || ""} ${terpilih?.jam_rawat || ""} untuk ${pasien.nm_pasien}?`} subPesan="Data klinis yang dihapus tidak dapat dipulihkan dari halaman ini." onBatal={() => setKonfirmasi(false)} onKonfirmasi={hapus} sedangMemproses={menyimpan} />
     <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
   </div>;
-}
+});
