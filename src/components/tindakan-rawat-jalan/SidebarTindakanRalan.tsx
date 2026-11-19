@@ -12,7 +12,7 @@ interface MenuSidebar {
 const MENU_SIDEBAR: MenuSidebar[] = [
   { label: "Riwayat Pasien" },
   { label: "Input Resep", href: "/farmasi/resep-obat" },
-  { label: "Copy Resep" },
+  { label: "Copy Resep", href: "/farmasi/copy-resep" },
   { label: "Resep Luar" },
   { label: "Input Obat & BHP", href: "/farmasi/input-penjualan" },
   { label: "Data Obat & BHP", href: "/farmasi" },
