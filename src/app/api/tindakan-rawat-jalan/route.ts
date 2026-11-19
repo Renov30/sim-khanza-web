@@ -277,6 +277,40 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  const denied = await tindakanRawatJalanAccess();
+  if (denied) return denied;
+  let connection: PoolConnection | undefined;
+  try {
+    const body: unknown = await req.json();
+    const input = body && typeof body === "object" ? body as Record<string, unknown> : null;
+    const noRawat = typeof input?.no_rawat === "string" ? input.no_rawat.trim() : "";
+    if (!noRawat || noRawat.length > 17) throw new TindakanError("No. Rawat tidak valid.");
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [registrasi] = await connection.execute<RowDataPacket[]>(`
+      SELECT no_rawat FROM reg_periksa
+      WHERE no_rawat = ? AND status_lanjut = 'Ralan' FOR UPDATE
+    `, [noRawat]);
+    if (!registrasi[0]) throw new TindakanError("Kunjungan rawat jalan tidak ditemukan.", 404);
+
+    await connection.execute("UPDATE reg_periksa SET stts = 'Sudah' WHERE no_rawat = ?", [noRawat]);
+    await connection.execute(`
+      INSERT INTO mutasi_berkas (no_rawat, status, dikirim, diterima, kembali, tidakada, ranap)
+      VALUES (?, 'Sudah Kembali', NOW(), '0000-00-00 00:00:00', NOW(), '0000-00-00 00:00:00', '0000-00-00 00:00:00')
+      ON DUPLICATE KEY UPDATE status = VALUES(status), kembali = VALUES(kembali)
+    `, [noRawat]);
+    await connection.commit();
+    return NextResponse.json({ success: true, message: "Status pasien diperbarui menjadi sudah diperiksa." });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    return kegagalan(error, "Gagal memperbarui status pasien.");
+  } finally {
+    connection?.release();
+  }
+}
+
 async function pastikanPelaksana(connection: PoolConnection, jenis: "dokter" | "petugas", kode: string) {
   const tabel = jenis === "dokter" ? "dokter" : "petugas";
   const kolom = jenis === "dokter" ? "kd_dokter" : "nip";

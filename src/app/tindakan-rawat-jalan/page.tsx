@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faStethoscope } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Toast } from "@/components/common/Toast";
+import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
@@ -88,6 +90,7 @@ function CatatanPanjang({ label }: { label: string }) {
 }
 
 export default function HalamanTindakanRawatJalan() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const hariIni = registrationDate();
   const [mode, setMode] = useState<ModeTindakan>("dokter");
@@ -108,6 +111,8 @@ export default function HalamanTindakanRawatJalan() {
   const [kodeTerpilih, setKodeTerpilih] = useState<Set<string>>(new Set());
   const [memuatTarif, setMemuatTarif] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
+  const [konfirmasiKeluar, setKonfirmasiKeluar] = useState(false);
+  const [memperbaruiStatus, setMemperbaruiStatus] = useState(false);
 
   const [riwayat, setRiwayat] = useState<Riwayat[]>([]);
   const [memuatRiwayat, setMemuatRiwayat] = useState(true);
@@ -345,6 +350,47 @@ export default function HalamanTindakanRawatJalan() {
 
   const mintaPilihTindakan = () => tampilkanToast("Pilih baris tindakan yang akan diubah atau dihapus.", "info");
 
+  const kembali = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  }, [router]);
+
+  const mintaKeluar = () => {
+    if (!pasien) {
+      kembali();
+      return;
+    }
+    setKonfirmasiKeluar(true);
+  };
+
+  const keluarTanpaUbahStatus = () => {
+    setKonfirmasiKeluar(false);
+    kembali();
+  };
+
+  const tandaiSudahDiperiksa = async () => {
+    if (!pasien) return keluarTanpaUbahStatus();
+    setMemperbaruiStatus(true);
+    try {
+      const response = await fetch("/api/tindakan-rawat-jalan", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ no_rawat: pasien.no_rawat }),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Gagal memperbarui status pasien.");
+      setKonfirmasiKeluar(false);
+      kembali();
+    } catch (error) {
+      tampilkanToast(error instanceof Error ? error.message : "Gagal memperbarui status pasien.", "error");
+    } finally {
+      setMemperbaruiStatus(false);
+    }
+  };
+
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
@@ -508,6 +554,7 @@ export default function HalamanTindakanRawatJalan() {
             kd_dokter: pasien.kd_dokter,
             nm_dokter: pasien.nm_dokter,
           }}
+          onKembali={mintaKeluar}
         />
       ) : (
         <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200/80 bg-white shadow-sm">
@@ -528,9 +575,10 @@ export default function HalamanTindakanRawatJalan() {
         </section>
       )}
 
-      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariRiwayat} placeholderCari="Cari data di sini" onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
+      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} onKembali={mintaKeluar} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariRiwayat} placeholderCari="Cari data di sini" onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
       </main>
       </div>
+      <KonfirmasiDialog terbuka={konfirmasiKeluar} judul="Selesaikan Pemeriksaan" pesan={`Tandai ${pasien?.nm_pasien || "pasien"} sudah diperiksa?`} subPesan="Status kunjungan akan diperbarui menjadi Sudah dan berkas menjadi Sudah Kembali." teksBatal="Tidak, Kembali" teksKonfirmasi="Ya, Tandai Sudah" bahaya={false} sedangMemproses={memperbaruiStatus} onBatal={keluarTanpaUbahStatus} onKonfirmasi={() => void tandaiSudahDiperiksa()} />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

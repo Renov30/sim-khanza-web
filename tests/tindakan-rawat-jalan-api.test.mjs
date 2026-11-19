@@ -19,7 +19,7 @@ function handler({ denied, transaction = false } = {}) {
     release: () => calls.push(['RELEASE']),
     execute: async (sql, params) => {
       calls.push([sql, params]);
-      if (/FROM reg_periksa WHERE/.test(sql)) return [[{
+      if (/FROM reg_periksa\s+WHERE/.test(sql)) return [[{
         no_rawat: '2026/11/16/000001', tgl_registrasi: '2026-11-16', jam_reg: '08:00:00',
         kd_pj: 'UMU', kd_poli: 'U0001', kd_dokter: 'D1', status_bayar: 'Belum Bayar',
       }]];
@@ -100,6 +100,20 @@ test('simpan mengambil komponen tarif dari server dan memakai transaksi', async 
   assert.equal(insert[1].at(-1), 42000);
   assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
   assert.ok(!calls.some(([marker]) => marker === 'ROLLBACK'));
+});
+
+test('keluar dapat menandai kunjungan sudah diperiksa dalam satu transaksi', async () => {
+  const { api, calls } = handler({ transaction: true });
+  const response = await api.PATCH(new NextRequest('http://localhost/api/tindakan-rawat-jalan', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ no_rawat: '2026/11/16/000001' }),
+  }));
+  assert.equal(response.status, 200);
+  const status = calls.find(([sql]) => typeof sql === 'string' && /UPDATE reg_periksa SET stts = 'Sudah'/.test(sql));
+  const berkas = calls.find(([sql]) => typeof sql === 'string' && /INSERT INTO mutasi_berkas/.test(sql));
+  assert.deepEqual(status[1], ['2026/11/16/000001']);
+  assert.deepEqual(berkas[1], ['2026/11/16/000001']);
+  assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
 });
 
 test('periode riwayat tidak valid ditolak tanpa query', async () => {
