@@ -8,6 +8,10 @@ import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { registrationDate } from "@/lib/registrasi/date";
+import type {
+  AksiPanelPemeriksaan,
+  StatusPanelPemeriksaan,
+} from "@/components/tindakan-rawat-jalan/kontrak-panel-pemeriksaan";
 
 interface PasienPemeriksaan {
   no_rawat: string;
@@ -40,31 +44,6 @@ interface FormPemeriksaan {
   respirasi: string; tinggi: string; berat: string; spo2: string; gcs: string; kesadaran: string;
   keluhan: string; pemeriksaan: string; alergi: string; lingkar_perut: string; rtl: string;
   penilaian: string; instruksi: string; evaluasi: string; nip: string;
-}
-
-export interface StatusPanelPemeriksaan {
-  disabledSimpan: boolean;
-  disabledGanti: boolean;
-  disabledHapus: boolean;
-  disabledCetak: boolean;
-  tanggalMulai: string;
-  tanggalSelesai: string;
-  kataKunci: string;
-  jumlahRecord: number;
-  memuat: boolean;
-}
-
-export interface AksiPanelPemeriksaan {
-  simpan: () => void;
-  baru: () => void;
-  ganti: () => void;
-  hapus: () => void;
-  cetak: () => void;
-  gantiTanggalMulai: (nilai: string) => void;
-  gantiTanggalSelesai: (nilai: string) => void;
-  gantiKataKunci: (nilai: string) => void;
-  cari: () => void;
-  semua: () => void;
 }
 
 interface PemeriksaanRalanTabProps {

@@ -11,11 +11,13 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+import { PemeriksaanObgynTab } from "@/components/tindakan-rawat-jalan/PemeriksaanObgynTab";
 import {
-  PemeriksaanRalanTab,
+  STATUS_PANEL_PEMERIKSAAN_AWAL,
   type AksiPanelPemeriksaan,
   type StatusPanelPemeriksaan,
-} from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+} from "@/components/tindakan-rawat-jalan/kontrak-panel-pemeriksaan";
 import { SidebarTindakanRalan } from "@/components/tindakan-rawat-jalan/SidebarTindakanRalan";
 import { registrationDate } from "@/lib/registrasi/date";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
@@ -74,17 +76,8 @@ const TAB_RAWAT: { id: TabRawatJalan; label: string }[] = [
 const adalahModeTindakan = (tab: TabRawatJalan): tab is ModeTindakan =>
   tab === "dokter" || tab === "petugas" || tab === "gabungan";
 
-const STATUS_PANEL_PEMERIKSAAN_AWAL: StatusPanelPemeriksaan = {
-  disabledSimpan: true,
-  disabledGanti: true,
-  disabledHapus: true,
-  disabledCetak: true,
-  tanggalMulai: "",
-  tanggalSelesai: "",
-  kataKunci: "",
-  jumlahRecord: 0,
-  memuat: true,
-};
+const adalahTabPemeriksaan = (tab: TabRawatJalan) =>
+  tab === "pemeriksaan" || tab === "obstetri" || tab === "ginekologi";
 
 const rupiah = (nilai: number | string) => `Rp ${Number(nilai || 0).toLocaleString("id-ID")}`;
 
@@ -309,6 +302,9 @@ export default function HalamanTindakanRawatJalan() {
 
   const gantiTab = (berikutnya: TabRawatJalan) => {
     setTabAktif(berikutnya);
+    if (adalahTabPemeriksaan(berikutnya)) {
+      setStatusPanelPemeriksaan(STATUS_PANEL_PEMERIKSAAN_AWAL);
+    }
     if (!adalahModeTindakan(berikutnya)) return;
     setMode(berikutnya);
     setHalaman(1);
@@ -591,18 +587,25 @@ export default function HalamanTindakanRawatJalan() {
           }}
           onStatusPanelChange={setStatusPanelPemeriksaan}
         />
+      ) : (tabAktif === "obstetri" || tabAktif === "ginekologi") && pasien ? (
+        <PemeriksaanObgynTab
+          ref={aksiPanelPemeriksaan}
+          key={`${tabAktif}-${pasien.no_rawat}`}
+          jenis={tabAktif}
+          pasien={{
+            no_rawat: pasien.no_rawat,
+            no_rkm_medis: pasien.no_rkm_medis,
+            nm_pasien: pasien.nm_pasien,
+            nm_poli: pasien.nm_poli,
+          }}
+          onStatusPanelChange={setStatusPanelPemeriksaan}
+        />
       ) : (
         <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200/80 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-100/90 px-3 py-2 text-xs font-semibold text-slate-800">{TAB_RAWAT.find((item) => item.id === tabAktif)?.label}</div>
           {!pasien ? <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-slate-500">Pilih kunjungan dari halaman Rawat Jalan terlebih dahulu.</div> : (
             <div className="min-h-0 flex-1 overflow-auto p-3">
               <div className="mb-3 rounded-lg border border-primary-200 bg-primary-50/50 px-3 py-2 text-xs text-slate-700"><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
-              {tabAktif === "obstetri" && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                <Field label="Tinggi Fundus" /><Pilihan label="Janin" pilihan={["Tunggal", "Gemelli", "-"]} /><Field label="Letak" /><Pilihan label="Panggul" pilihan={["-", "5/5", "4/5", "3/5", "2/5", "1/5"]} /><Field label="Denyut" /><Pilihan label="Kontraksi" pilihan={["+", "-"]} /><Field label="Kualitas Menit" /><Field label="Kualitas Detik" /><Pilihan label="Fluksus" pilihan={["+", "-"]} /><Pilihan label="Albus" pilihan={["+", "-"]} /><Field label="Vulva" /><Field label="Portio" /><Pilihan label="Dalam" pilihan={["Kenyal", "Lunak"]} /><Field label="Tebal" /><Pilihan label="Arah" pilihan={["depan", "axial", "belakang"]} /><Field label="Pembukaan" /><Field label="Penurunan" /><Field label="Denominator" /><Pilihan label="Ketuban" pilihan={["-", "+"]} /><Pilihan label="Feto" pilihan={["Normal", "Susp.CPD-FPD", "CPD-FPD"]} />
-              </div>}
-              {tabAktif === "ginekologi" && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                <Field label="Inspeksi" /><Field label="Inspeksi Vulva/Uretra/Vagina" /><Field label="Inspekulo" /><Pilihan label="Fluxus" pilihan={["+", "-"]} /><Pilihan label="Fluor Albus" pilihan={["+", "-"]} /><Field label="Inspekulo Vulva/Vagina" /><Field label="Inspekulo Portio" /><Field label="Inspekulo Sondage" /><Field label="Dalam Portio" /><Field label="Dalam Bentuk" /><Field label="Dalam Cavum Uteri" /><Pilihan label="Mobilitas" pilihan={["+", "-"]} /><Field label="Ukuran Cavum Uteri" /><Pilihan label="Nyeri Tekan" pilihan={["+", "-"]} /><Field label="Dalam Adnexa Kanan" /><Field label="Dalam Adnexa Kiri" /><Field label="Dalam Cavum Douglas" />
-              </div>}
               {tabAktif === "diagnosa" && <div className="space-y-3"><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Field label="Kode Penyakit (ICD-10)" /><Field label="Nama Diagnosa" /><Pilihan label="Status Penyakit" pilihan={["Baru", "Lama"]} /><Field label="Prioritas" placeholder="1" /></div><div className="rounded-lg border border-slate-200"><table className="w-full text-left text-xs"><caption className="sr-only">Daftar diagnosa pasien</caption><thead className="bg-slate-100 text-slate-700"><tr><th scope="col" className="px-2 py-2">Kode</th><th scope="col" className="px-2 py-2">Diagnosa</th><th scope="col" className="px-2 py-2">Status</th><th scope="col" className="px-2 py-2">Prioritas</th></tr></thead><tbody><tr><td colSpan={4} className="px-2 py-8 text-center text-slate-400">Belum ada diagnosa yang ditampilkan.</td></tr></tbody></table></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Field label="Kode Prosedur (ICD-9-CM)" /><Field label="Nama Tindakan/Prosedur" /><Pilihan label="Status Prosedur" pilihan={["Baru", "Lama"]} /><Field label="Prioritas Prosedur" placeholder="1" /></div></div>}
               {tabAktif === "catatan" && <div className="max-w-3xl space-y-3"><div className="grid gap-2 sm:grid-cols-2"><Pilihan label="Dokter" pilihan={daftarDokter.map((item) => item.nama)} /><Field label="Tanggal & Jam" placeholder={`${tanggal} ${jam}`} /></div><CatatanPanjang label="Catatan Dokter" /><div className="rounded-lg border border-slate-200"><table className="w-full text-left text-xs"><caption className="sr-only">Daftar catatan dokter</caption><thead className="bg-slate-100 text-slate-700"><tr><th scope="col" className="px-2 py-2">Tanggal</th><th scope="col" className="px-2 py-2">Dokter</th><th scope="col" className="px-2 py-2">Catatan</th></tr></thead><tbody><tr><td colSpan={3} className="px-2 py-8 text-center text-slate-400">Belum ada catatan dokter yang ditampilkan.</td></tr></tbody></table></div></div>}
             </div>
@@ -612,7 +615,7 @@ export default function HalamanTindakanRawatJalan() {
 
       {adalahModeTindakan(tabAktif) ? (
         <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} onKembali={mintaKeluar} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariRiwayat} placeholderCari="Cari data di sini" onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />
-      ) : tabAktif === "pemeriksaan" && pasien ? (
+      ) : adalahTabPemeriksaan(tabAktif) && pasien ? (
         <PanelBawah
           tampilan="web"
           onSimpan={() => aksiPanelPemeriksaan.current?.simpan()}
