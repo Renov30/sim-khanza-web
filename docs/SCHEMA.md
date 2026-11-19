@@ -58,12 +58,20 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Registrasi | `/api/registrasi`, `/api/registrasi/nomor`, `/api/registrasi/options` | Admin atau izin registrasi. |
 | Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
 | Tindakan rawat jalan | `/api/tindakan-rawat-jalan`, `/api/tindakan-rawat-jalan/pemeriksaan` | Admin atau izin tindakan ralan. |
+| Riwayat pasien | `/api/riwayat-pasien` | Admin atau izin tindakan ralan. |
+| Tindakan rawat inap | `/api/tindakan-rawat-inap` | Admin atau izin tindakan ranap. |
+| Master obat | `/api/farmasi/master-obat`, `/api/farmasi/master-obat/options` | Admin atau izin obat. |
+| Copy resep | `/api/farmasi/copy-resep` | Admin atau izin resep obat. |
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
 Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
 Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
+
+Pintasan `Riwayat Pasien` pada sidebar tindakan ralan membuka dialog enam tab sesuai `RMRiwayatPerawatan.java`: Kunjungan, S.O.A.P.I.E, Perawatan, Pembelian Obat, Piutang Obat, dan Retensi Berkas. Filter `terakhir`, `semua`, `tanggal`, dan `nomor` mengikuti radio R1–R4. Tab Perawatan memakai sidebar kiri berisi daftar bagian dari `FormMenu` Java, checkbox `Semua`, pencarian teks, dan tombol lipat. Menu ini tidak mengadaptasi PDF, e-sign, sertisign, penulisan file HTML lokal, atau tautan berkas mentah.
+
+`tindakan-rawat-inap` dibuka dari kolom No. Rawat pada `/rawat-inap` dengan `?no_rawat=...` dan memakai tiga penanganan yang sama seperti ralan. Tarif diambil dari `jns_perawatan_inap` dan disaring menurut penjamin `reg_periksa`, bangsal, serta kelas kamar inap aktif (`kamar_inap.stts_pulang = '-'`). Penyimpanan menulis `rawat_inap_dr`, `rawat_inap_pr`, atau `rawat_inap_drpr` dalam satu transaksi dengan `FOR UPDATE` pada kunjungan; kunjungan batal, billing yang sudah dibuat, kamar aktif yang hilang, dan tarif yang tidak sesuai ditolak server. Tabel ini tidak memiliki `stts_bayar`, sehingga kolom status pada riwayat mengikuti `reg_periksa.status_bayar`.
 
 ### Eksperimental
 
@@ -98,6 +106,36 @@ Endpoint tersebut baru berupa query baca awal dan belum semuanya memiliki pemeri
 - Edit/hapus mengunci baris dengan `FOR UPDATE`.
 - Registrasi `Sudah Bayar`, memiliki biaya perujuk, atau memiliki pelayanan terkait dilindungi dari perubahan tertentu.
 - No. Rawat tetap saat edit; nomor antrean dapat dihitung ulang bila dokter, poli, atau tanggal berubah.
+
+## Aturan bisnis master obat
+
+- Tabel utama adalah `databarang`, bukan `barang`; harga dan status ada pada tabel yang sama.
+- Kode barang berformat `B` + 9 digit dan dibuat server dengan named lock `khanza-web:master-obat:kode`.
+- Satuan memakai `kodesatuan`, jenis memakai `jenis`, kategori memakai `kategori_barang`, golongan memakai `golongan_barang`, dan industri memakai `industrifarmasi`.
+- Kolom `letak_barang` menyimpan nilai yang pada antarmuka Java diberi label `Kandungan`.
+- Harga jual dihitung dari persentase `set_harga_obat` dan dibulatkan ke kelipatan 100 seperti `Valid.roundUp(..., 100)`.
+- Tanggal kadaluwarsa tanpa checkbox ditulis `NULL` agar sesuai `sql_mode` MySQL/MariaDB saat ini; penanda `0000-00-00` dari UI tetap diterima dan dinormalisasi server. Barang dihapus lunak dengan `status='0'` dan dapat dipulihkan.
+- Tab Data Barang memakai `status='1'`, tab Data Sampah memakai `status='0'`; status ditentukan tab, bukan dropdown filter.
+- Edit tidak mengganti `kode_brng` agar relasi transaksi Khanza tetap utuh.
+- Daftar difilter dan dipaginasi di server; kode barang tidak ditentukan browser.
+
+## Aturan bisnis riwayat pasien
+
+- Endpoint `GET /api/riwayat-pasien` menerima `no_rm`, `tab`, `mode`, `tanggal_awal`, `tanggal_akhir`, `nomor`, `limit`, dan `offset`; `tab` dan `mode` dibatasi allowlist.
+- Mode `terakhir` memaksa lima baris; mode lain dibatasi maksimal 100 baris per halaman dan `offset` maksimal 100000.
+- Kunjungan, S.O.A.P.I.E, dan Perawatan mengabaikan `reg_periksa.stts = 'Batal'` dan mengikat hasil pada `no_rkm_medis` dari parameter.
+- Perawatan merangkum tindakan ralan/ranap, kamar inap, diagnosa ICD-10, prosedur ICD-9, SEP, dan resume dalam data JSON terstruktur, bukan HTML. Kolom `jumlah` prosedur tidak tersedia pada skema runtime `sik2`, sehingga ditampilkan `-`.
+- Pembelian hanya mengambil `penjualan.status = 'Sudah Dibayar'`; piutang tidak memakai filter status lunas.
+- Retensi hanya mengembalikan tanggal dan status keberadaan berkas; `lokasi_pdf` tidak dikirim ke client.
+- Identitas pasien tidak memuat NIK, nomor peserta, atau telepon; akses tetap diperiksa di server meski menu tampil di sidebar.
+
+## Aturan bisnis copy resep
+
+- Endpoint `GET /api/farmasi/copy-resep` menerima `no_rm`, `status`, `tanggal_mulai`, `tanggal_selesai`, `kd_dokter`, `cari_obat`, dan `limit` untuk daftar; `no_resep` untuk detail satu resep.
+- `status` dibatasi `ralan` atau `ranap`; tanggal memakai format `YYYY-MM-DD`, `limit` 1–100, dan pencarian obat hanya filters hasil di server setelah batas resep diterapkan.
+- Header berasal dari `resep_obat`, `reg_periksa`, `pasien`, dan `dokter`; detail menggabungkan `resep_dokter`, `resep_dokter_racikan`, dan `resep_dokter_racikan_detail` dengan data `databarang`.
+- Stok racikan dan obat tidak pernah menjadi syarat tampil; baris dengan stok habis tetap dikirim agar petugas dapat mempertimbangkan substitusi.
+- Copy hanya mengisi draft form `/farmasi/resep-obat`; penyimpanan tetap memakai nomor resep baru dan seluruh validasi Input Resep.
 
 ## Rancangan database baru
 

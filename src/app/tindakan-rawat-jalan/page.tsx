@@ -9,7 +9,9 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { CopyResepDialog } from "@/components/farmasi/CopyResepDialog";
 import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+import { RiwayatPasienDialog } from "@/components/tindakan-rawat-jalan/RiwayatPasienDialog";
 import { SidebarTindakanRalan } from "@/components/tindakan-rawat-jalan/SidebarTindakanRalan";
 import { registrationDate } from "@/lib/registrasi/date";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
@@ -119,11 +121,29 @@ export default function HalamanTindakanRawatJalan() {
   const [total, setTotal] = useState(0);
   const [versiData, setVersiData] = useState(0);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error" } | null>(null);
+  const [riwayatPasienTerbuka, setRiwayatPasienTerbuka] = useState(false);
+  const [copyResepTerbuka, setCopyResepTerbuka] = useState(false);
   const permintaanRiwayat = useRef<AbortController | null>(null);
 
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe });
   }, []);
+
+  const bukaRiwayatPasien = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    setRiwayatPasienTerbuka(true);
+  }, [pasien, tampilkanToast]);
+
+  const bukaCopyResep = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    setCopyResepTerbuka(true);
+  }, [pasien, tampilkanToast]);
 
   useEffect(() => {
     if (!waktuOtomatis) return;
@@ -342,7 +362,7 @@ export default function HalamanTindakanRawatJalan() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
-      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
+      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onRiwayatPasien={bukaRiwayatPasien} onCopyResep={bukaCopyResep} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
       <main
         onKeyDown={pindahFieldDenganEnter}
         className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden"
@@ -525,6 +545,25 @@ export default function HalamanTindakanRawatJalan() {
       {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); }} placeholderCari="No. Rawat, RM, pasien, tindakan, pelaksana..." onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
       </main>
       </div>
+      <RiwayatPasienDialog
+        key={`riwayat-${riwayatPasienTerbuka ? "buka" : "tutup"}-${pasien?.no_rkm_medis || "-"}-${pasien?.no_rawat || "-"}`}
+        terbuka={riwayatPasienTerbuka}
+        noRm={pasien?.no_rkm_medis || ""}
+        namaPasien={pasien?.nm_pasien || ""}
+        noRawat={pasien?.no_rawat}
+        onTutup={() => setRiwayatPasienTerbuka(false)}
+        onToast={tampilkanToast}
+      />
+      <CopyResepDialog
+        key={`copy-resep-${copyResepTerbuka ? "buka" : "tutup"}-${pasien?.no_rkm_medis || "-"}`}
+        terbuka={copyResepTerbuka}
+        noRawat={pasien?.no_rawat || ""}
+        noRm={pasien?.no_rkm_medis || ""}
+        namaPasien={pasien?.nm_pasien || ""}
+        status="ralan"
+        onTutup={() => setCopyResepTerbuka(false)}
+        onToast={tampilkanToast}
+      />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

@@ -18,7 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="h-full">
+    <html lang="id" className="h-full" suppressHydrationWarning>
+      <head>
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `(()=>{try{const t=localStorage.getItem('khanza_theme');const g=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',g);document.documentElement.style.colorScheme=g?'dark':'light';}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="h-full flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans antialiased">
         <AuthProvider>
           <AppShell>{children}</AppShell>

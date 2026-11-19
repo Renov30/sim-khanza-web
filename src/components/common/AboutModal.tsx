@@ -19,7 +19,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-tertiary-950/50 backdrop-blur-xs p-4">
       <div className="w-full max-w-lg bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-slate-50 border-b border-slate-200">

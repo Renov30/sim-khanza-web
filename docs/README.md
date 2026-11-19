@@ -8,6 +8,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 |---|---|---|
 | Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab. |
 | Data pasien | Aktif | Cari, tambah, ubah, penomoran RM, master pasien, TNI/POLRI. |
+| Data obat, alkes & BHP | Aktif | Master `databarang`, kode otomatis, harga, expire, status aktif/nonaktif, dan pagination. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
 | IGD, rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
 | Laboratorium, radiologi, farmasi | Eksperimental | Halaman/query awal; izin, tipe, dan tes belum seragam. |
@@ -89,6 +90,48 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Filter periode, status, dokter, unit, dan kata kunci dijalankan di server. Data dipaginasi maksimal 100 resep per halaman dan jumlah record dihitung terpisah agar tabel tetap ringan.
 - Endpoint dilindungi izin `resep_obat`, memakai validasi filter dan query berparameter, serta menangani relasi `ranap_gabung` untuk ruang rawat inap aktif.
 
+### 19 November 2026 — tema terang dan gelap
+
+- Dropdown akun menyediakan pilihan `Terang` dan `Gelap`; preferensi disimpan di `localStorage` dengan kunci `khanza_theme` dan diterapkan sebelum hidrasi.
+- Skrip tema berada di `<head>` dan `<html>` memakai `suppressHydrationWarning` agar perubahan kelas/style sebelum hidrasi tidak memicu peringatan mismatch.
+- Tanpa preferensi tersimpan, tema awal mengikuti `prefers-color-scheme` sistem.
+- Skala `slate` dan `bg-white` memakai CSS variables agar seluruh panel, tabel, dan teks mengikuti tema tanpa menambah varian `dark:` di tiap modul; warna merek tetap memakai token yang sama.
+
+### 19 November 2026 — tindakan rawat inap
+
+- Kolom `No. Rawat` pada `/rawat-inap` kini membuka `/tindakan-rawat-inap?no_rawat=...`, mengikuti pola pintasan dari `/rawat-jalan`.
+- Halaman tindakan ranap mengadaptasi tiga penanganan Khanza (`rawat_inap_dr`, `rawat_inap_pr`, `rawat_inap_drpr`) dengan pencarian kunjungan/tarif, riwayat dipaginasi, dan penyimpanan beberapa tindakan dalam satu transaksi.
+- Tarif berasal dari `jns_perawatan_inap` dan disaring berdasarkan penjamin, bangsal, dan kelas kamar inap aktif; waktu tindakan tidak boleh mendahului registrasi dan kunjungan batal/billing yang sudah dibuat ditolak.
+- API memeriksa sesi dan izin `tindakan_ranap`, memakai query berparameter, `FOR UPDATE`, serta menangani duplikasi kunci utama. Verifikasi dengan `npm run test:tindakan-ranap`.
+- Sidebar pasien dipindahkan ke komponen bersama `SidebarMenuPasien` agar pencarian menu dapat dipakai ulang oleh tindakan ralan dan ranap.
+
+### 19 November 2026 — data obat, alkes & BHP
+
+- Halaman `/farmasi/master-obat` mengadaptasi `DlgBarang` dengan tab Input/Data/Data Sampah; tab Data menampilkan `status='1'`, tab Data Sampah menampilkan `status='0'`, dan filter kata kunci/master hanya tampil pada kedua tab tabel.
+- Master `databarang` mendukung tambah, ubah, nonaktifkan, dan pulihkan; kode barang `B` + 9 digit dibuat server memakai named lock.
+- Pilihan satuan, jenis, kategori, golongan, dan industri farmasi diambil dari tabel master Khanza yang sesuai.
+- Tombol Hitung Harga memakai `set_harga_obat`, `setpenjualan`, `setpenjualanumum`, atau `setpenjualanperbarang` dengan pembulatan ke kelipatan 100.
+- Kandungan disimpan ke `letak_barang`; tanggal kadaluwarsa kosong ditulis `NULL` (penanda `0000-00-00` tetap diterima dari UI); status nonaktif memakai `status='0'`.
+- API memeriksa izin `obat`, memakai query berparameter dan transaksi. Verifikasi dengan `npm run test:master-obat`.
+
+### 19 November 2026 — riwayat pasien
+
+- Pintasan `Riwayat Pasien` pada sidebar tindakan ralan kini membuka dialog enam tab: Kunjungan, S.O.A.P.I.E, Perawatan, Pembelian Obat, Piutang Obat, dan Retensi Berkas.
+- Filter R1–R4 `RMRiwayatPerawatan.java` diadaptasi menjadi `terakhir`, `semua`, `tanggal`, dan `nomor`; kunjungan terpilih langsung membuka tab Perawatan dengan mode nomor.
+- Endpoint `/api/riwayat-pasien` memakai izin tindakan ralan, allowlist parameter, query berparameter, batas pagination, dan ringkasan data JSON tanpa HTML, PDF, e-sign, atau path berkas mentah.
+- Perawatan menggabungkan tindakan ralan/ranap, kamar inap, diagnosa, prosedur, SEP, dan resume; pembelian/piutang menyertakan rincian obat; SOAPI menggabungkan pemeriksaan ralan dan ranap.
+- Tab Perawatan memiliki sidebar kiri sesuai `FormMenu` Java: checkbox bagian, `Semua`, pencarian teks, dan tombol lipat. Bagian yang tersedia di API dapat disembunyikan; bagian lain tetap tercantum sebagai daftar referensi.
+- Verifikasi dengan `npm run test:riwayat-pasien`.
+
+### 19 November 2026 — copy resep
+
+- Menu `Copy Resep` pada sidebar tindakan ralan/ranap membuka dialog sesuai `DlgCopyResep.java`: filter tanggal, pencarian per obat, tabel header resep, dan rincian obat/racikan di bawah setiap baris.
+- Endpoint `GET /api/farmasi/copy-resep` memakai izin `resep_obat`, query berparameter, allowlist status, batas tanggal/nomor, dan batas 100 resep.
+- Tombol `Copy` pada kunjungan ralan membuka `/farmasi/resep-obat` dengan `no_rawat` kunjungan aktif, bukan `no_rawat` resep sumber, serta `dari_no_resep`; halaman tujuan memuat obat, racikan, dan bahan ke form sebagai draft yang masih harus diperiksa petugas.
+- Copy resep tidak menyalin nomor resep lama atau menulis database sumber; nomor resep baru tetap dibuat server oleh alur Input Resep.
+- Tombol `Hapus` dan `Ubah` sengaja dinonaktifkan karena Khanza Web belum mengadaptasi kedua aksi `DlgCopyResep.java`. Copy resep rawat inap juga belum tersedia dan memberi pesan pada tombol Copy.
+- Verifikasi dengan `npm run test:copy-resep`.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.
@@ -117,6 +160,8 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 npm run test:pasien
 npm run test:registrasi
 npm run test:rawat-jalan
+npm run test:tindakan-ranap
+npm run test:master-obat
 npm run test:resep-obat
 npm run lint
 npm run build

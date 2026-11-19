@@ -10,7 +10,11 @@
     "migrasi:khanza": "node --env-file=.env.migrasi.local scripts/migrasi-khanza.mjs",
     "test:registrasi": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/registrasi-tests src/lib/registrasi/date.ts src/lib/registrasi/numbering.ts tests/registrasi-numbering.test.ts && node --test .next/registrasi-tests/tests/registrasi-numbering.test.js tests/registrasi-api.test.mjs",
     "test:rawat-jalan": "node --test tests/rawat-jalan-api.test.mjs tests/tindakan-rawat-jalan-api.test.mjs tests/pemeriksaan-ralan-api.test.mjs",
+    "test:tindakan-ranap": "node --test tests/tindakan-rawat-inap-api.test.mjs",
     "test:resep-obat": "node --test tests/resep-obat-api.test.mjs tests/daftar-resep-dokter-api.test.mjs",
+    "test:copy-resep": "node --test tests/copy-resep-api.test.mjs",
+    "test:master-obat": "node --test tests/master-obat-api.test.mjs",
+    "test:riwayat-pasien": "node --test tests/riwayat-pasien-api.test.mjs",
     "test:pasien": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/pasien-tests tests/pasien-fields.test.ts tests/pasien-numbering.test.ts && node --test .next/pasien-tests/tests/pasien-fields.test.js .next/pasien-tests/tests/pasien-numbering.test.js",
     "db:index-kinerja": "node --env-file=.env.local scripts/db/index-kinerja.mjs"
   },

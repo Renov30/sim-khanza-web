@@ -20,12 +20,16 @@ import {
   faPills,
   faVial,
   faCircleInfo,
+  faMoon,
+  faSun,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface UserAccountMenuProps {
   onModuleClick: (title: string) => void;
   onAboutClick: () => void;
 }
+
+type Tema = "light" | "dark";
 
 export function UserAccountMenu({
   onModuleClick,
@@ -34,6 +38,9 @@ export function UserAccountMenu({
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"presensi" | "info" | "tarif" | "dashboard" | "antrian">("presensi");
+  const [tema, setTema] = useState<Tema>(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light",
+  );
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -59,6 +66,17 @@ export function UserAccountMenu({
     onAboutClick();
   };
 
+  const pilihTema = (nilai: Tema) => {
+    setTema(nilai);
+    document.documentElement.classList.toggle("dark", nilai === "dark");
+    document.documentElement.style.colorScheme = nilai;
+    try {
+      window.localStorage.setItem("khanza_theme", nilai);
+    } catch {
+      return;
+    }
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       {/* Tombol Akun di Header (Kompak, hanya nama & avatar) */}
@@ -66,6 +84,9 @@ export function UserAccountMenu({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 bg-primary-900/80 hover:bg-primary-900 text-white pl-2.5 pr-2 py-1.5 rounded-lg border border-primary-700/70 text-xs font-semibold shadow-xs"
         title="Klik untuk membuka menu akun & modul sistem"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-controls="menu-akun"
       >
         <div className="w-5 h-5 rounded-full bg-primary-700 flex items-center justify-center text-primary-100 font-bold text-[11px]">
           {user.fullName.charAt(0).toUpperCase()}
@@ -83,7 +104,7 @@ export function UserAccountMenu({
 
       {/* Dropdown Popover Menu */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 text-slate-700 overflow-hidden">
+        <div id="menu-akun" className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 text-slate-700 overflow-hidden">
           {/* 1. Header Informasi Pegawai & Jenis Akun */}
           <div className="p-4 bg-slate-50 border-b border-slate-200">
             <div className="flex items-start gap-3">
@@ -347,6 +368,36 @@ export function UserAccountMenu({
 
           {/* 4. Pengaturan Akun & Tombol Log Out */}
           <div className="p-2.5 bg-slate-50 border-t border-slate-200 space-y-1.5">
+            <div className="flex items-center justify-between gap-2 text-xs px-2 py-1 text-slate-600">
+              <span>Tampilan</span>
+              <div className="flex overflow-hidden rounded-lg border border-slate-300">
+                <button
+                  type="button"
+                  onClick={() => pilihTema("light")}
+                  aria-pressed={tema === "light"}
+                  title="Gunakan tema terang"
+                  className={`flex items-center gap-1 px-2 py-1 ${
+                    tema === "light" ? "bg-primary-700 text-white" : "hover:bg-slate-100"
+                  }`}
+                >
+                  <FontAwesomeIcon icon={faSun} className="w-3 h-3" />
+                  <span>Terang</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => pilihTema("dark")}
+                  aria-pressed={tema === "dark"}
+                  title="Gunakan tema gelap"
+                  className={`flex items-center gap-1 px-2 py-1 border-l border-slate-300 ${
+                    tema === "dark" ? "bg-primary-700 text-white" : "hover:bg-slate-100"
+                  }`}
+                >
+                  <FontAwesomeIcon icon={faMoon} className="w-3 h-3" />
+                  <span>Gelap</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between text-xs px-2 py-1 text-slate-600">
               <button
                 onClick={() => handleAction("Ganti Password Akun")}

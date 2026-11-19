@@ -42,7 +42,7 @@ export function PatientMasterSelect({ jenis, value, onChange, label, valueAsLabe
     <button type="button" data-enter-field="true" onClick={show} aria-label={`Pilih ${label}`} aria-haspopup="dialog" aria-expanded={open} aria-controls={`${titleId}-dialog`} title={`Pilih ${label}`} className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100">
       <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" />
     </button>
-    <dialog id={`${titleId}-dialog`} ref={dialog} aria-labelledby={titleId} onClose={() => setOpen(false)} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0 p-0 w-[min(28rem,calc(100vw-2rem))] max-h-[75vh] rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl backdrop:bg-slate-900/40">
+    <dialog id={`${titleId}-dialog`} ref={dialog} aria-labelledby={titleId} onClose={() => setOpen(false)} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 m-0 p-0 w-[min(28rem,calc(100vw-2rem))] max-h-[75vh] rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl backdrop:bg-tertiary-950/40">
       <div className="flex justify-between items-center border-b border-slate-200 px-4 py-3">
         <h2 id={titleId} className="text-sm font-semibold">Pilih {label}</h2>
         <button type="button" aria-label="Tutup pilihan" onClick={() => dialog.current?.close()} className="p-1 text-slate-600"><FontAwesomeIcon icon={faXmark} className="h-3 w-3" /></button>

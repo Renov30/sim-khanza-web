@@ -267,7 +267,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
       </table>
     </section>
     <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} jumlahRecord={data.length} memuat={memuat || menyimpan} />
-    {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
+    {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-tertiary-950/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
       <section className="flex max-h-[75vh] w-[min(72rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 id="judul-soapie-terakhir" className="text-sm font-semibold text-slate-800">Riwayat 5 SOAPIE Terakhir</h2>

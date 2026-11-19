@@ -85,6 +85,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.push("/radiologi/periksa");
       return;
     }
+    if (title === "Data Obat, Alkes & BHP" || title === "Data Obat, Alkes & BHP Medis") {
+      router.push("/farmasi/master-obat");
+      return;
+    }
     if (title === "Farmasi & Obat" || title === "Farmasi & Penjualan Obat" || title === "Pemberian Obat Farmasi") {
       router.push("/farmasi");
       return;
