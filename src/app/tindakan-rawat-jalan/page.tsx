@@ -34,6 +34,7 @@ interface RegistrasiPilihan {
   nm_poli: string;
   kd_pj: string;
   png_jawab: string;
+  stts: string;
   status_bayar: string;
 }
 
@@ -360,6 +361,10 @@ export default function HalamanTindakanRawatJalan() {
 
   const mintaKeluar = () => {
     if (!pasien) {
+      kembali();
+      return;
+    }
+    if (pasien.stts === "Sudah") {
       kembali();
       return;
     }

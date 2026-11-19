@@ -10,7 +10,7 @@ const { NextRequest, NextResponse } = load('next/server');
 const isRegistrationDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
   && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 
-function handler({ denied, transaction = false } = {}) {
+function handler({ denied, transaction = false, statusPeriksa = 'Belum' } = {}) {
   const calls = [];
   const connection = {
     beginTransaction: async () => calls.push(['BEGIN']),
@@ -21,7 +21,7 @@ function handler({ denied, transaction = false } = {}) {
       calls.push([sql, params]);
       if (/FROM reg_periksa\s+WHERE/.test(sql)) return [[{
         no_rawat: '2026/11/16/000001', tgl_registrasi: '2026-11-16', jam_reg: '08:00:00',
-        kd_pj: 'UMU', kd_poli: 'U0001', kd_dokter: 'D1', status_bayar: 'Belum Bayar',
+        kd_pj: 'UMU', kd_poli: 'U0001', kd_dokter: 'D1', stts: statusPeriksa, status_bayar: 'Belum Bayar',
       }]];
       if (/SELECT kd_dokter FROM dokter/.test(sql)) return [[{ kd_dokter: 'D1' }]];
       if (/FROM jns_perawatan/.test(sql)) return [[{
@@ -113,6 +113,18 @@ test('keluar dapat menandai kunjungan sudah diperiksa dalam satu transaksi', asy
   const berkas = calls.find(([sql]) => typeof sql === 'string' && /INSERT INTO mutasi_berkas/.test(sql));
   assert.deepEqual(status[1], ['2026/11/16/000001']);
   assert.deepEqual(berkas[1], ['2026/11/16/000001']);
+  assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
+});
+
+test('keluar tidak mengubah kunjungan yang sudah diperiksa', async () => {
+  const { api, calls } = handler({ transaction: true, statusPeriksa: 'Sudah' });
+  const response = await api.PATCH(new NextRequest('http://localhost/api/tindakan-rawat-jalan', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ no_rawat: '2026/11/16/000001' }),
+  }));
+  assert.equal(response.status, 200);
+  assert.ok(!calls.some(([sql]) => typeof sql === 'string' && /UPDATE reg_periksa SET stts/.test(sql)));
+  assert.ok(!calls.some(([sql]) => typeof sql === 'string' && /INSERT INTO mutasi_berkas/.test(sql)));
   assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
 });
 
