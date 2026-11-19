@@ -41,9 +41,12 @@ export async function GET(req: NextRequest) {
     const session = await getSession();
     if (!session) throw new PemeriksaanError("Silakan login kembali.", 401);
     if (req.nextUrl.searchParams.get("resource") === "pegawai") {
-      const where = session.isAdmin ? "p.stts_aktif IN ('AKTIF', 'CUTI')" : "p.nik = ?";
-      const params = session.isAdmin ? [] : [session.username];
-      const rows = await executeQuery(`SELECT p.nik AS kode, p.nama, p.jbtn FROM pegawai p WHERE ${where} ORDER BY p.nama LIMIT 150`, params);
+      const rows = await executeQuery(`
+        SELECT p.nik AS kode, p.nama, p.jbtn
+        FROM pegawai p
+        WHERE p.stts_aktif <> 'KELUAR'
+        ORDER BY p.nama
+      `);
       return NextResponse.json({ success: true, data: rows }, { headers: { "Cache-Control": "private, max-age=300" } });
     }
     if (req.nextUrl.searchParams.get("resource") === "soapie-terakhir") {
@@ -211,7 +214,7 @@ function validasiWaktu(input: PemeriksaanInput, registrasi: RegistrasiRow) {
 }
 
 async function pastikanPegawai(connection: PoolConnection, nip: string) {
-  const [rows] = await connection.execute<RowDataPacket[]>("SELECT nik FROM pegawai WHERE nik=? AND stts_aktif IN ('AKTIF','CUTI') LIMIT 1", [nip]);
+  const [rows] = await connection.execute<RowDataPacket[]>("SELECT nik FROM pegawai WHERE nik=? AND stts_aktif<>'KELUAR' LIMIT 1", [nip]);
   if (!rows[0]) throw new PemeriksaanError("Pegawai tidak aktif atau tidak ditemukan.", 409);
 }
 

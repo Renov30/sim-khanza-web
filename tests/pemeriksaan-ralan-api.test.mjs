@@ -62,6 +62,14 @@ test('akses pemeriksaan ditolak sebelum query', async () => {
   assert.equal(calls.length, 0);
 });
 
+test('pilihan pelaksana memuat seluruh pegawai yang belum keluar', async () => {
+  const { api, calls } = handler({ admin: false, username: 'P1' });
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?resource=pegawai'));
+  assert.equal(response.status, 200);
+  assert.match(calls[0][0], /FROM pegawai p\s+WHERE p\.stts_aktif <> 'KELUAR'\s+ORDER BY p\.nama/s);
+  assert.equal(calls[0][1], undefined);
+});
+
 test('penampil pemeriksaan dibatasi untuk satu no rawat', async () => {
   const { api, calls } = handler();
   const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001'));

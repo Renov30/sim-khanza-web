@@ -476,7 +476,7 @@ export default function HalamanTindakanRawatJalan() {
             </div>
           </div>
         )}
-        <GridFormulirModul className="items-start gap-y-2 lg:gap-x-2">
+        <GridFormulirModul tampilkanKolomCadangan={false} className="items-start gap-y-2 lg:gap-x-2">
           <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
             {!pasien && <label className="block text-xs text-slate-700">
               <span className="mb-1 block">No. Rawat / RM / Pasien</span>
