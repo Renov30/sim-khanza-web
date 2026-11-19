@@ -15,6 +15,7 @@
     "test:copy-resep": "node --test tests/copy-resep-api.test.mjs",
     "test:master-obat": "node --test tests/master-obat-api.test.mjs",
     "test:riwayat-pasien": "node --test tests/riwayat-pasien-api.test.mjs",
+    "test:resume-pasien": "node --test tests/resume-pasien-api.test.mjs",
     "test:pasien": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/pasien-tests tests/pasien-fields.test.ts tests/pasien-numbering.test.ts && node --test .next/pasien-tests/tests/pasien-fields.test.js .next/pasien-tests/tests/pasien-numbering.test.js",
     "db:index-kinerja": "node --env-file=.env.local scripts/db/index-kinerja.mjs"
   },

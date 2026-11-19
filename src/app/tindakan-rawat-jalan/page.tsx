@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faStethoscope } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -90,6 +91,7 @@ function CatatanPanjang({ label }: { label: string }) {
 }
 
 export default function HalamanTindakanRawatJalan() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const hariIni = registrationDate();
   const [mode, setMode] = useState<ModeTindakan>("dokter");
@@ -144,6 +146,14 @@ export default function HalamanTindakanRawatJalan() {
     }
     setCopyResepTerbuka(true);
   }, [pasien, tampilkanToast]);
+
+  const bukaResumePasien = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    router.push(`/resume-pasien?no_rawat=${encodeURIComponent(pasien.no_rawat)}`);
+  }, [pasien, router, tampilkanToast]);
 
   useEffect(() => {
     if (!waktuOtomatis) return;
@@ -362,7 +372,7 @@ export default function HalamanTindakanRawatJalan() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
-      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onRiwayatPasien={bukaRiwayatPasien} onCopyResep={bukaCopyResep} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
+      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onRiwayatPasien={bukaRiwayatPasien} onCopyResep={bukaCopyResep} onResumePasien={bukaResumePasien} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
       <main
         onKeyDown={pindahFieldDenganEnter}
         className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden"

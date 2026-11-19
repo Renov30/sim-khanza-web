@@ -7,15 +7,17 @@ interface SidebarTindakanRalanProps {
   onBelumTersedia: (label: string) => void;
   onRiwayatPasien: () => void;
   onCopyResep: () => void;
+  onResumePasien: () => void;
 }
 
-export function SidebarTindakanRalan({ noRawat, onBelumTersedia, onRiwayatPasien, onCopyResep }: SidebarTindakanRalanProps) {
+export function SidebarTindakanRalan({ noRawat, onBelumTersedia, onRiwayatPasien, onCopyResep, onResumePasien }: SidebarTindakanRalanProps) {
   return (
     <SidebarMenuPasien
       noRawat={noRawat}
       onBelumTersedia={onBelumTersedia}
       onRiwayatPasien={onRiwayatPasien}
       onCopyResep={onCopyResep}
+      onResumePasien={onResumePasien}
       ariaLabel="Menu tindakan rawat jalan"
     />
   );

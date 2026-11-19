@@ -8,7 +8,7 @@ import { faCircle, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-sv
 interface MenuSidebar {
   label: string;
   href?: string;
-  aksi?: "riwayat" | "copy-resep";
+  aksi?: "riwayat" | "copy-resep" | "resume-pasien";
 }
 
 const MENU_SIDEBAR: MenuSidebar[] = [
@@ -27,7 +27,7 @@ const MENU_SIDEBAR: MenuSidebar[] = [
   { label: "Kamar Inap", href: "/rawat-inap" },
   { label: "Triase IGD", href: "/igd" },
   { label: "Rujuk Internal" },
-  { label: "Resume Pasien" },
+  { label: "Resume Pasien", aksi: "resume-pasien" },
   { label: "Awal Keperawatan IGD" },
   { label: "Awal Keperawatan Umum" },
   { label: "Awal Keperawatan Gigi" },
@@ -96,6 +96,7 @@ interface SidebarMenuPasienProps {
   onBelumTersedia: (label: string) => void;
   onRiwayatPasien?: () => void;
   onCopyResep?: () => void;
+  onResumePasien?: () => void;
   judul?: string;
   ariaLabel?: string;
   navLabel?: string;
@@ -106,6 +107,7 @@ export function SidebarMenuPasien({
   onBelumTersedia,
   onRiwayatPasien,
   onCopyResep,
+  onResumePasien,
   judul = "Menu Pasien",
   ariaLabel = "Menu pintasan pasien",
   navLabel = "Pintasan data pasien",
@@ -156,6 +158,11 @@ export function SidebarMenuPasien({
           </button>
         ) : item.aksi === "copy-resep" && onCopyResep ? (
           <button key={item.label} type="button" onClick={onCopyResep} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
+            <FontAwesomeIcon icon={faCircle} className="h-1.5 w-1.5 shrink-0 text-primary-600" />
+            <span>{item.label}</span>
+          </button>
+        ) : item.aksi === "resume-pasien" && onResumePasien ? (
+          <button key={item.label} type="button" onClick={onResumePasien} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
             <FontAwesomeIcon icon={faCircle} className="h-1.5 w-1.5 shrink-0 text-primary-600" />
             <span>{item.label}</span>
           </button>

@@ -43,6 +43,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 - `src/lib/auth.ts`: autentikasi admin/user Khanza, token HMAC, dan cookie sesi.
 - `src/lib/pasien/`: field, master, penyimpanan, akses, dan penomoran pasien.
 - `src/lib/registrasi/`: tanggal WIT, validasi, penomoran, transaksi, rujukan, dan perlindungan relasi.
+- `src/lib/resume-pasien/`: tipe field, akses izin dokter, dan aturan resume ralan.
 - `src/components/modul/`: header, grid formulir, panel input, dan panel bawah.
 - `src/components/common/`: Toast, dialog konfirmasi, dan modal informasi.
 - `src/components/auth/`: login, status sesi, dan sinkronisasi antar-tab.
@@ -59,6 +60,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
 | Tindakan rawat jalan | `/api/tindakan-rawat-jalan`, `/api/tindakan-rawat-jalan/pemeriksaan` | Admin atau izin tindakan ralan. |
 | Riwayat pasien | `/api/riwayat-pasien` | Admin atau izin tindakan ralan. |
+| Resume pasien | `/api/resume-pasien` | Admin atau izin `data_resume_pasien`; tulis hanya dokter/pemilik. |
 | Tindakan rawat inap | `/api/tindakan-rawat-inap` | Admin atau izin tindakan ranap. |
 | Master obat | `/api/farmasi/master-obat`, `/api/farmasi/master-obat/options` | Admin atau izin obat. |
 | Copy resep | `/api/farmasi/copy-resep` | Admin atau izin resep obat. |
@@ -70,6 +72,8 @@ Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomo
 Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
 
 Pintasan `Riwayat Pasien` pada sidebar tindakan ralan membuka dialog enam tab sesuai `RMRiwayatPerawatan.java`: Kunjungan, S.O.A.P.I.E, Perawatan, Pembelian Obat, Piutang Obat, dan Retensi Berkas. Filter `terakhir`, `semua`, `tanggal`, dan `nomor` mengikuti radio R1–R4. Tab Perawatan memakai sidebar kiri berisi daftar bagian dari `FormMenu` Java, checkbox `Semua`, pencarian teks, dan tombol lipat. Menu ini tidak mengadaptasi PDF, e-sign, sertisign, penulisan file HTML lokal, atau tautan berkas mentah.
+
+Pintasan `Resume Pasien` pada sidebar tindakan ralan membuka `/resume-pasien?no_rawat=...`. Halaman memakai `PanelInputData`, `GridFormulirModul`, `PanelBawah`, dan tabel 30 kolom sesuai versi `RMDataResumePasien.java` yang kompatibel dengan schema runtime. Tombol cetak tidak tersedia; data tidak diekspor ke HTML/PDF lokal.
 
 `tindakan-rawat-inap` dibuka dari kolom No. Rawat pada `/rawat-inap` dengan `?no_rawat=...` dan memakai tiga penanganan yang sama seperti ralan. Tarif diambil dari `jns_perawatan_inap` dan disaring menurut penjamin `reg_periksa`, bangsal, serta kelas kamar inap aktif (`kamar_inap.stts_pulang = '-'`). Penyimpanan menulis `rawat_inap_dr`, `rawat_inap_pr`, atau `rawat_inap_drpr` dalam satu transaksi dengan `FOR UPDATE` pada kunjungan; kunjungan batal, billing yang sudah dibuat, kamar aktif yang hilang, dan tarif yang tidak sesuai ditolak server. Tabel ini tidak memiliki `stts_bayar`, sehingga kolom status pada riwayat mengikuti `reg_periksa.status_bayar`.
 
@@ -136,6 +140,16 @@ Endpoint tersebut baru berupa query baca awal dan belum semuanya memiliki pemeri
 - Header berasal dari `resep_obat`, `reg_periksa`, `pasien`, dan `dokter`; detail menggabungkan `resep_dokter`, `resep_dokter_racikan`, dan `resep_dokter_racikan_detail` dengan data `databarang`.
 - Stok racikan dan obat tidak pernah menjadi syarat tampil; baris dengan stok habis tetap dikirim agar petugas dapat mempertimbangkan substitusi.
 - Copy hanya mengisi draft form `/farmasi/resep-obat`; penyimpanan tetap memakai nomor resep baru dan seluruh validasi Input Resep.
+
+## Aturan bisnis resume pasien
+
+- Endpoint `GET /api/resume-pasien` menerima `no_rawat`, `tanggal_awal`, `tanggal_akhir`, `kata_kunci`, dan `batas`; `resource=dokter` mengembalikan daftar dokter. `POST`, `PUT`, dan `DELETE` memakai body `no_rawat` atau query `no_rawat` sesuai operasi.
+- Tabel utama adalah `resume_pasien` dengan primary key `no_rawat`, satu resume per kunjungan. Data diambil dari `reg_periksa`, `pasien`, `dokter`, dan `poliklinik`; diagnosa/prosedur berasal dari `diagnosa_pasien`, `penyakit`, `prosedur_pasien`, dan `icd9` dengan status `Ralan`.
+- Schema runtime `sik2` memiliki 26 kolom dan tidak memuat `tanggal_keluar`; UI mengikuti versi Java dengan 30 kolom tabel tanpa kolom Waktu Keluar. `kondisi_pulang` dibatasi enum `Hidup|Meninggal`, bukan pilihan laporan Java yang lebih luas.
+- Akses baca memakai izin `data_resume_pasien` atau admin. Penulisan memerlukan login yang terdaftar di `dokter`; server mengisi `kd_dokter` dari sesi untuk user biasa dan menolak perubahan resume dokter lain. Admin dapat memilih `kd_dokter` dari daftar yang valid.
+- `keluhan_utama`, `jalannya_penyakit`, `diagnosa_utama`, dan `kd_dokter` wajib diisi; panjang narasi 2000 karakter, nama diagnosa/prosedur 80, kode ICD-10 10, dan kode ICD-9 8 sesuai schema.
+- Simpan, ubah, dan hapus memakai transaksi dengan `FOR UPDATE` pada `reg_periksa` dan baris resume. Benturan `INSERT` menghasilkan 409; `PUT`/`DELETE` pada data yang tidak ada menghasilkan 404.
+- Daftar resume dibatasi pada `no_rkm_medis` yang diambil server dari `no_rawat` aktif, sehingga perpindahan pasien tidak membuka data pasien lain. Filter tanggal dan kata kunci divalidasi serta dikirim sebagai parameter query.
 
 ## Rancangan database baru
 

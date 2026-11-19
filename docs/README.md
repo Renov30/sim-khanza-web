@@ -11,6 +11,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Data obat, alkes & BHP | Aktif | Master `databarang`, kode otomatis, harga, expire, status aktif/nonaktif, dan pagination. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
 | IGD, rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
+| Resume pasien | Eksperimental | Halaman CRUD ralan dari sidebar, izin dokter, dan transaksi `resume_pasien`. |
 | Laboratorium, radiologi, farmasi | Eksperimental | Halaman/query awal; izin, tipe, dan tes belum seragam. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
 | Migrasi data Khanza | Ditunda | Importir dipertahankan sebagai prototipe dan tidak dijalankan. |
@@ -132,6 +133,15 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Tombol `Hapus` dan `Ubah` sengaja dinonaktifkan karena Khanza Web belum mengadaptasi kedua aksi `DlgCopyResep.java`. Copy resep rawat inap juga belum tersedia dan memberi pesan pada tombol Copy.
 - Verifikasi dengan `npm run test:copy-resep`.
 
+### 20 November 2026 — resume pasien rawat jalan
+
+- Menu `Resume Pasien` pada sidebar tindakan ralan membuka halaman `/resume-pasien?no_rawat=...` sesuai `RMDataResumePasien.java`: identitas kunjungan, panel input narasi/diagnosa/prosedur, dan tabel resume.
+- Endpoint `/api/resume-pasien` menyediakan `GET` satu kunjungan/daftar, `resource=dokter`, serta `POST`/`PUT`/`DELETE` dengan transaksi, `FOR UPDATE`, query berparameter, dan allowlist validasi.
+- Akses memakai izin `data_resume_pasien`. Penulisan hanya untuk dokter login; `kd_dokter` diambil dari sesi pada user biasa, sedangkan admin boleh memilih dokter. Dokter non-admin hanya dapat mengubah atau menghapus resume miliknya.
+- Daftar tabel dibatasi pada pasien yang sama dengan `no_rawat` aktif. Field, panjang, dan tabel mengikuti schema runtime `sik2`: 26 kolom `resume_pasien`, `kondisi_pulang` hanya `Hidup|Meninggal`, dan tidak ada kolom `tanggal_keluar`.
+- Tombol "Ambil Diagnosa/Prosedur Kunjungan" mengisi ICD-10/ICD-9 dari `diagnosa_pasien` dan `prosedur_pasien` status `Ralan`; cetak belum tersedia di Khanza Web.
+- Verifikasi dengan `npm run test:resume-pasien`.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.
@@ -163,6 +173,9 @@ npm run test:rawat-jalan
 npm run test:tindakan-ranap
 npm run test:master-obat
 npm run test:resep-obat
+npm run test:copy-resep
+npm run test:riwayat-pasien
+npm run test:resume-pasien
 npm run lint
 npm run build
 ```
