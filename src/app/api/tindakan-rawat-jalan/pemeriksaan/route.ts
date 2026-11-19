@@ -67,7 +67,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: rows });
     }
     const noRawat = req.nextUrl.searchParams.get("no_rawat")?.trim() || "";
+    const tanggalMulai = req.nextUrl.searchParams.get("tanggal_mulai")?.trim() || "";
+    const tanggalSelesai = req.nextUrl.searchParams.get("tanggal_selesai")?.trim() || "";
+    const cari = req.nextUrl.searchParams.get("cari")?.trim().slice(0, 100) || "";
     if (!noRawat || noRawat.length > 17) throw new PemeriksaanError("No. Rawat tidak valid.");
+    const tanggalValid = (!tanggalMulai || isRegistrationDate(tanggalMulai))
+      && (!tanggalSelesai || isRegistrationDate(tanggalSelesai));
+    if (!tanggalValid || (tanggalMulai && tanggalSelesai && tanggalMulai > tanggalSelesai)) {
+      throw new PemeriksaanError("Periode pemeriksaan tidak valid.");
+    }
+    const where = ["pr.no_rawat = ?"];
+    const params: string[] = [noRawat];
+    if (tanggalMulai) { where.push("pr.tgl_perawatan >= ?"); params.push(tanggalMulai); }
+    if (tanggalSelesai) { where.push("pr.tgl_perawatan <= ?"); params.push(tanggalSelesai); }
+    if (cari) {
+      where.push("(pr.keluhan LIKE ? OR pr.pemeriksaan LIKE ? OR pr.penilaian LIKE ? OR pr.rtl LIKE ? OR pr.instruksi LIKE ? OR pr.evaluasi LIKE ? OR p.nama LIKE ? OR p.jbtn LIKE ?)");
+      params.push(...Array<string>(8).fill(`%${cari}%`));
+    }
     const rows = await executeQuery(`
       SELECT pr.no_rawat, DATE_FORMAT(pr.tgl_perawatan, '%Y-%m-%d') AS tgl_perawatan,
              TIME_FORMAT(pr.jam_rawat, '%H:%i:%s') AS jam_rawat, pr.suhu_tubuh, pr.tensi,
@@ -76,10 +92,10 @@ export async function GET(req: NextRequest) {
              pr.penilaian, pr.instruksi, pr.evaluasi, pr.nip, p.nama, p.jbtn
       FROM pemeriksaan_ralan pr
       INNER JOIN pegawai p ON p.nik = pr.nip
-      WHERE pr.no_rawat = ?
+      WHERE ${where.join(" AND ")}
       ORDER BY pr.tgl_perawatan DESC, pr.jam_rawat DESC
       LIMIT 100
-    `, [noRawat]);
+    `, params);
     return NextResponse.json({ success: true, data: rows });
   } catch (error) { return gagal(error, "Gagal memuat pemeriksaan rawat jalan."); }
 }

@@ -65,6 +65,11 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
   const [konfirmasi, setKonfirmasi] = useState(false);
+  const [tanggalMulai, setTanggalMulai] = useState(() => registrationDate());
+  const [tanggalSelesai, setTanggalSelesai] = useState(() => registrationDate());
+  const [kataKunci, setKataKunci] = useState("");
+  const [kataKunciFilter, setKataKunciFilter] = useState("");
+  const [versiFilter, setVersiFilter] = useState(0);
   const [toast, setToast] = useState<{ pesan: string; tipe: "sukses" | "error" | "info" } | null>(null);
 
   useEffect(() => {
@@ -78,14 +83,18 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const muatData = useCallback(async (signal?: AbortSignal) => {
     setMemuat(true);
     try {
-      const response = await fetch(`/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=${encodeURIComponent(pasien.no_rawat)}`, { signal, cache: "no-store" });
+      const params = new URLSearchParams({ no_rawat: pasien.no_rawat });
+      if (tanggalMulai) params.set("tanggal_mulai", tanggalMulai);
+      if (tanggalSelesai) params.set("tanggal_selesai", tanggalSelesai);
+      if (kataKunciFilter) params.set("cari", kataKunciFilter);
+      const response = await fetch(`/api/tindakan-rawat-jalan/pemeriksaan?${params}`, { signal, cache: "no-store" });
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat pemeriksaan");
       setData(json.data || []);
     } catch (error) {
       if (!signal?.aborted) setToast({ pesan: error instanceof Error ? error.message : "Gagal memuat pemeriksaan", tipe: "error" });
     } finally { if (!signal?.aborted) setMemuat(false); }
-  }, [pasien.no_rawat]);
+  }, [kataKunciFilter, pasien.no_rawat, tanggalMulai, tanggalSelesai]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,9 +111,17 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
       }
     }
     void mulai();
-    void Promise.resolve().then(() => muatData(controller.signal));
     return () => controller.abort();
-  }, [muatData, pasien.kd_dokter]);
+  }, [pasien.kd_dokter]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void muatData(controller.signal); }, 0);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [muatData, versiFilter]);
 
   const isi = (nama: keyof FormPemeriksaan, nilai: string) => setForm((lama) => ({ ...lama, [nama]: nilai }));
 
@@ -187,6 +204,20 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
     window.print();
   };
 
+  const cariData = () => {
+    setKataKunciFilter(kataKunci.trim());
+    setVersiFilter((versi) => versi + 1);
+  };
+
+  const resetFilter = () => {
+    const hariIni = registrationDate();
+    setTanggalMulai(hariIni);
+    setTanggalSelesai(hariIni);
+    setKataKunci("");
+    setKataKunciFilter("");
+    setVersiFilter((versi) => versi + 1);
+  };
+
   const daftarPelaksana = pegawai.some((item) => item.kode === pasien.kd_dokter)
     ? pegawai
     : [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter, jbtn: "Dokter DPJP" }, ...pegawai];
@@ -266,7 +297,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
         <tbody className="divide-y divide-slate-100 text-slate-700">{memuat ? <tr><td colSpan={22} className="py-10 text-center">Memuat pemeriksaan...</td></tr> : data.length === 0 ? <tr><td colSpan={22} className="py-10 text-center text-slate-400">Belum ada pemeriksaan.</td></tr> : data.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pilih(item)} className={`cursor-pointer ${terpilih?.tgl_perawatan === item.tgl_perawatan && terpilih?.jam_rawat === item.jam_rawat ? "bg-primary-50/90" : "hover:bg-slate-50"}`}><td className="whitespace-nowrap px-2.5 py-2">{item.tgl_perawatan}</td><td className="whitespace-nowrap px-2.5 py-2">{item.jam_rawat}</td>{[item.suhu_tubuh, item.tensi, item.nadi, item.respirasi, item.tinggi, item.berat, item.spo2, item.gcs, item.kesadaran, item.keluhan, item.pemeriksaan, item.alergi, item.lingkar_perut, item.rtl, item.penilaian, item.instruksi, item.evaluasi, item.nip, item.nama, item.jbtn].map((nilai, index) => <td key={index} className="max-w-72 whitespace-pre-wrap px-2.5 py-2 align-top">{nilai || "-"}</td>)}</tr>)}</tbody>
       </table>
     </section>
-    <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} jumlahRecord={data.length} memuat={memuat || menyimpan} />
+    <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={setTanggalMulai} onGantiTanggalSelesai={setTanggalSelesai} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariData} placeholderCari="Cari data di sini" onSemua={resetFilter} jumlahRecord={data.length} memuat={memuat || menyimpan} />
     {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
       <section className="flex max-h-[75vh] w-[min(72rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">

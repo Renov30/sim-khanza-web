@@ -329,6 +329,12 @@ export default function HalamanTindakanRawatJalan() {
     setVersiData((versi) => versi + 1);
   };
 
+  const cariRiwayat = () => {
+    setKataKunciFilter(kataKunci.trim());
+    setHalaman(1);
+    setVersiData((versi) => versi + 1);
+  };
+
   const cetakTindakan = () => {
     if (riwayat.length === 0) {
       tampilkanToast("Belum ada data tindakan untuk dicetak.", "info");
@@ -393,7 +399,7 @@ export default function HalamanTindakanRawatJalan() {
                   setKodeTerpilih(new Set());
                   if (nilai.trim().length < 2) setHasilPasien([]);
                 }}
-                placeholder="Ketik minimal 2 karakter..."
+                placeholder="Cari data di sini"
                 className="h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
               />
             </label>
@@ -440,7 +446,7 @@ export default function HalamanTindakanRawatJalan() {
 
           <div className="space-y-2">
             <label className="block text-xs text-slate-700">Cari Tindakan / Tagihan
-              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Kode, nama, atau kategori tindakan..." className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
+              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
             </label>
             <div className="max-h-64 overflow-auto rounded-lg border border-slate-200">
               <table className="w-full border-collapse text-left text-[11px]">
@@ -522,7 +528,7 @@ export default function HalamanTindakanRawatJalan() {
         </section>
       )}
 
-      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); }} placeholderCari="No. Rawat, RM, pasien, tindakan, pelaksana..." onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
+      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariRiwayat} placeholderCari="Cari data di sini" onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
       </main>
       </div>
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />

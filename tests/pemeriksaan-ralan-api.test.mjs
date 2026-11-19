@@ -70,6 +70,21 @@ test('penampil pemeriksaan dibatasi untuk satu no rawat', async () => {
   assert.deepEqual(calls[0][1], ['2026/11/16/000001']);
 });
 
+test('penampil pemeriksaan mendukung filter periode dan kata kunci berparameter', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001&tanggal_mulai=2026-11-01&tanggal_selesai=2026-11-16&cari=pusing'));
+  assert.equal(response.status, 200);
+  assert.match(calls[0][0], /pr\.tgl_perawatan >= \?.*pr\.tgl_perawatan <= \?.*pr\.keluhan LIKE \?/s);
+  assert.deepEqual(calls[0][1].slice(0, 4), ['2026/11/16/000001', '2026-11-01', '2026-11-16', '%pusing%']);
+});
+
+test('penampil pemeriksaan menolak periode tidak valid tanpa query', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001&tanggal_mulai=2026-11-31&tanggal_selesai=2026-11-16'));
+  assert.equal(response.status, 400);
+  assert.equal(calls.length, 0);
+});
+
 test('simpan pemeriksaan memakai transaksi dan query berparameter', async () => {
   const { api, calls } = handler();
   const response = await api.POST(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan', {
