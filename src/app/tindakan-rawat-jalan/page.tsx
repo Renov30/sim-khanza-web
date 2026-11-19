@@ -9,6 +9,7 @@ import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   PemeriksaanRalanTab,
@@ -285,6 +286,18 @@ export default function HalamanTindakanRawatJalan() {
   const totalDipilih = useMemo(() => tarif
     .filter((item) => kodeTerpilih.has(item.kd_jenis_prw))
     .reduce((jumlah, item) => jumlah + Number(item.total || 0), 0), [kodeTerpilih, tarif]);
+  const pilihanDokter = pasien && !daftarDokter.some((item) => item.kode === pasien.kd_dokter)
+    ? [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter }, ...daftarDokter]
+    : daftarDokter;
+
+  const ubahPilihanTindakan = (kode: string) => {
+    setKodeTerpilih((lama) => {
+      const baru = new Set(lama);
+      if (baru.has(kode)) baru.delete(kode);
+      else baru.add(kode);
+      return baru;
+    });
+  };
 
   const pilihPasien = (item: RegistrasiPilihan) => {
     setPasien(item);
@@ -453,9 +466,19 @@ export default function HalamanTindakanRawatJalan() {
 
       {adalahModeTindakan(tabAktif) ? <>
       <section aria-label="Input tindakan rawat jalan" className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-2 shadow-sm">
-        <GridFormulirModul className="items-start">
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-700">
+        {pasien && (
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 rounded-md border border-primary-200 bg-primary-50/50 px-2.5 py-1.5 text-[11px] text-slate-700">
+            <div><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
+            <div className="flex items-center gap-1.5">
+              <label className="flex items-center gap-1">Tanggal<input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+              <label className="flex items-center gap-1">Jam<input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+              <label className="flex items-center gap-1 whitespace-nowrap" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
+            </div>
+          </div>
+        )}
+        <GridFormulirModul className="items-start gap-y-2 lg:gap-x-2">
+          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
+            {!pasien && <label className="block text-xs text-slate-700">
               <span className="mb-1 block">No. Rawat / RM / Pasien</span>
               <input
                 value={cariPasien}
@@ -468,11 +491,11 @@ export default function HalamanTindakanRawatJalan() {
                   if (nilai.trim().length < 2) setHasilPasien([]);
                 }}
                 placeholder="Cari data di sini"
-                className="h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
+                className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
               />
-            </label>
+            </label>}
             {!pasien && (memuatPasien || hasilPasien.length > 0) && (
-              <div className="max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white">
+              <div className="max-h-40 overflow-auto rounded-md border border-slate-200 bg-white">
                 {memuatPasien ? <p className="p-2 text-xs text-slate-500">Mencari kunjungan...</p> : hasilPasien.map((item) => (
                   <button key={item.no_rawat} type="button" onClick={() => pilihPasien(item)} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-slate-50">
                     <span className="font-mono text-slate-800">{item.no_rawat} · {item.no_rkm_medis}</span>
@@ -481,58 +504,47 @@ export default function HalamanTindakanRawatJalan() {
                 ))}
               </div>
             )}
-            {pasien && (
-              <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-2 text-xs text-slate-700">
-                <p className="font-semibold text-slate-800">{pasien.nm_pasien} <span className="font-normal">({pasien.jk}, {pasien.umurdaftar} {pasien.sttsumur})</span></p>
-                <p>{pasien.no_rkm_medis} · {pasien.nm_poli} · {pasien.png_jawab}</p>
-                <p>{pasien.tgl_registrasi} {pasien.jam_reg} · {pasien.status_bayar}</p>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-2">
+            {!pasien && <div className="grid grid-cols-2 gap-2">
               <label className="text-xs text-slate-700">Tanggal
-                <input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="mt-1 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs focus:border-primary-600 focus:outline-none" />
               </label>
               <label className="text-xs text-slate-700">Jam
-                <input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="mt-1 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs focus:border-primary-600 focus:outline-none" />
                 <label className="mt-1 flex items-center gap-1 text-[11px] text-slate-600" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
               </label>
-            </div>
-            {mode !== "petugas" && <label className="block text-xs text-slate-700">Dokter
-              <CustomSelect value={dokter} onChange={(event) => setDokter(event.target.value)} className="mt-1 h-8 py-1">
-                <option value="">Pilih dokter</option>
-                {pasien && !daftarDokter.some((item) => item.kode === pasien.kd_dokter) && <option value={pasien.kd_dokter}>{pasien.nm_dokter}</option>}
-                {daftarDokter.map((item) => <option key={item.kode} value={item.kode}>{item.nama}</option>)}
-              </CustomSelect>
-            </label>}
-            {mode !== "dokter" && <label className="block text-xs text-slate-700">Petugas
-              <CustomSelect value={petugas} onChange={(event) => setPetugas(event.target.value)} className="mt-1 h-8 py-1">
-                <option value="">Pilih petugas</option>
-                {daftarPetugas.map((item) => <option key={item.kode} value={item.kode}>{item.nama}</option>)}
-              </CustomSelect>
-            </label>}
+            </div>}
+            {mode !== "petugas" && <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+              <span className="whitespace-nowrap text-right font-medium">Dokter :</span>
+              <PatientMasterSelect jenis="Dokter pelaksana tindakan" label="Dokter pelaksana" value={dokter} items={pilihanDokter.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => setDokter(kode)} />
+            </div>}
+            {mode !== "dokter" && <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+              <span className="whitespace-nowrap text-right font-medium">Petugas :</span>
+              <PatientMasterSelect jenis="Petugas pelaksana tindakan" label="Petugas pelaksana" value={petugas} items={daftarPetugas.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => setPetugas(kode)} />
+            </div>}
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-700">Cari Tindakan / Tagihan
-              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
+          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 lg:col-span-2">
+            <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right font-medium">Cari tindakan :</span>
+              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
             </label>
-            <div className="max-h-64 overflow-auto rounded-lg border border-slate-200">
+            <div className="max-h-60 overflow-auto rounded-md border border-slate-200 bg-white">
               <table className="w-full border-collapse text-left text-[11px]">
                 <caption className="sr-only">Daftar tarif tindakan yang dapat dipilih</caption>
                 <thead className="sticky top-0 bg-slate-100 text-slate-700">
-                  <tr><th scope="col" className="w-9 px-2 py-1.5">P</th><th scope="col" className="px-2 py-1.5">Tindakan</th><th scope="col" className="w-24 px-2 py-1.5 text-right">Tarif</th></tr>
+                  <tr><th scope="col" className="w-9 px-2 py-1.5">P</th><th scope="col" className="px-2 py-1.5">Tindakan</th><th scope="col" className="min-w-36 px-2 py-1.5">Kategori Perawatan</th><th scope="col" className="w-40 px-2 py-1.5 text-left">Tarif</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {!pasien ? <tr><td colSpan={3} className="p-6 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
-                    : memuatTarif ? <tr><td colSpan={3} className="p-6 text-center text-slate-500">Memuat tarif...</td></tr>
-                      : tarif.length === 0 ? <tr><td colSpan={3} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
-                        : tarif.map((item) => <tr key={item.kd_jenis_prw} className="text-slate-700 hover:bg-slate-50">
-                          <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onChange={() => setKodeTerpilih((lama) => { const baru = new Set(lama); if (baru.has(item.kd_jenis_prw)) baru.delete(item.kd_jenis_prw); else baru.add(item.kd_jenis_prw); return baru; })} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
-                          <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}<span className="block text-[10px] text-slate-500">{item.nm_kategori}</span></td>
-                          <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono">{rupiah(item.total)}</td>
+                  {!pasien ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
+                    : memuatTarif ? <tr><td colSpan={4} className="p-6 text-center text-slate-500">Memuat tarif...</td></tr>
+                      : tarif.length === 0 ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
+                        : tarif.map((item) => <tr key={item.kd_jenis_prw} onClick={() => ubahPilihanTindakan(item.kd_jenis_prw)} className={`cursor-pointer text-slate-700 hover:bg-slate-50 ${kodeTerpilih.has(item.kd_jenis_prw) ? "bg-primary-50/90" : ""}`}>
+                          <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onClick={(event) => event.stopPropagation()} onChange={() => ubahPilihanTindakan(item.kd_jenis_prw)} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
+                          <td className="px-2 py-1.5">{item.nm_perawatan}</td>
+                          <td className="px-2 py-1.5 text-slate-600">{item.nm_kategori || "-"}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 text-left font-mono">{rupiah(item.total)}</td>
                         </tr>)}
                 </tbody>
-                <tfoot><tr className="border-t border-slate-200 bg-slate-50"><th scope="row" colSpan={2} className="px-2 py-1.5 text-slate-700">{kodeTerpilih.size} dipilih</th><td className="px-2 py-1.5 text-right font-mono font-semibold">{rupiah(totalDipilih)}</td></tr></tfoot>
+                <tfoot><tr className="border-t border-slate-200 bg-slate-50"><th scope="row" colSpan={3} className="px-2 py-1.5 text-slate-700">{kodeTerpilih.size} dipilih</th><td className="px-2 py-1.5 text-left font-mono font-semibold">{rupiah(totalDipilih)}</td></tr></tfoot>
               </table>
             </div>
           </div>
