@@ -170,7 +170,16 @@ export function PanelBawah({
         <div className={`flex flex-wrap items-center ${tampilan === 'web' ? 'gap-2 px-2.5 py-2' : 'gap-3 px-3 py-3'}`}>
           <div className={tampilan === 'web' ? 'flex flex-wrap items-center gap-1.5' : 'flex flex-wrap items-center gap-2'} role="group" aria-label="Aksi registrasi">
             {actions.filter((action)=>action.click).map((action)=><button key={action.label} type="button" onClick={action.click} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 min-w-24 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed`}><FontAwesomeIcon icon={action.icon} className={`${tampilan === 'web' ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${action.color}`} />{action.label}</button>)}
-            {tombolTambahan?.map((action)=><button key={action.label} type="button" onClick={action.onClick} disabled={memuat || action.disabled} className={`${tampilan === 'web' ? 'h-7 px-3' : 'h-9 px-4'} rounded-full bg-slate-50 text-slate-800 disabled:opacity-40`}>{action.label}</button>)}
+            {tombolTambahan?.map((action) => {
+              const warnaIkon = action.varian === "bahaya"
+                ? "text-red-600"
+                : action.varian === "sekunder"
+                  ? "text-secondary-700"
+                  : action.varian === "peringatan"
+                    ? "text-tertiary-600"
+                    : "text-primary-700";
+              return <button key={action.label} type="button" onClick={action.onClick} disabled={memuat || action.disabled} title={action.tooltip} className={`${tampilan === 'web' ? 'h-7 px-3' : 'h-9 px-4'} inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40`}>{action.ikon && <FontAwesomeIcon icon={action.ikon} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} ${warnaIkon}`} />}{action.label}</button>;
+            })}
             <button type="button" onClick={handleKembali} disabled={memuat} aria-label="Kembali ke halaman sebelumnya" title="Kembali ke halaman sebelumnya" className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />Kembali</button>
           </div>
           {tampilkanRecord && <span className="ml-auto text-slate-600">Record : {jumlahRecord}</span>}

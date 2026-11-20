@@ -34,11 +34,6 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
     });
   }, [selectedCategory, searchQuery]);
 
-  const activeCategoryObj = useMemo(() => {
-    if (selectedCategory === "ALL") return null;
-    return MENU_CATEGORIES.find((cat) => cat.code === selectedCategory);
-  }, [selectedCategory]);
-
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
       {/* Search and Category Control Bar (Equivalent to panelisi2 in frmUtama) */}
@@ -119,23 +114,6 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
 
       {/* Main Grid Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-        {/* Category Description Banner */}
-        {activeCategoryObj && (
-          <div className="p-3 bg-primary-50/70 border border-primary-200/80 rounded-xl text-xs text-primary-900 flex items-start justify-between">
-            <div>
-              <p className="font-bold text-primary-800">
-                {activeCategoryObj.title}
-              </p>
-              <p className="text-primary-700 mt-0.5">
-                {activeCategoryObj.description}
-              </p>
-            </div>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-primary-100 text-primary-800">
-              {filteredItems.length} Modul
-            </span>
-          </div>
-        )}
-
         {/* Module Cards Grid: 5 item per baris pada layar desktop/tablet */}
         {filteredItems.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">

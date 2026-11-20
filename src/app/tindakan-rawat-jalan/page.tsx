@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faStethoscope } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Toast } from "@/components/common/Toast";
+import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
@@ -13,6 +14,16 @@ import { CustomSelect } from "@/components/ui/CustomSelect";
 import { CopyResepDialog } from "@/components/farmasi/CopyResepDialog";
 import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
 import { RiwayatPasienDialog } from "@/components/tindakan-rawat-jalan/RiwayatPasienDialog";
+import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
+import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+import { PemeriksaanObgynTab } from "@/components/tindakan-rawat-jalan/PemeriksaanObgynTab";
+import { DiagnosaRalanTab } from "@/components/tindakan-rawat-jalan/DiagnosaRalanTab";
+import { CatatanDokterTab } from "@/components/tindakan-rawat-jalan/CatatanDokterTab";
+import {
+  STATUS_PANEL_PEMERIKSAAN_AWAL,
+  type AksiPanelPemeriksaan,
+  type StatusPanelPemeriksaan,
+} from "@/components/tindakan-rawat-jalan/kontrak-panel-pemeriksaan";
 import { SidebarTindakanRalan } from "@/components/tindakan-rawat-jalan/SidebarTindakanRalan";
 import { registrationDate } from "@/lib/registrasi/date";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
@@ -35,6 +46,7 @@ interface RegistrasiPilihan {
   nm_poli: string;
   kd_pj: string;
   png_jawab: string;
+  stts: string;
   status_bayar: string;
 }
 
@@ -70,24 +82,15 @@ const TAB_RAWAT: { id: TabRawatJalan; label: string }[] = [
 const adalahModeTindakan = (tab: TabRawatJalan): tab is ModeTindakan =>
   tab === "dokter" || tab === "petugas" || tab === "gabungan";
 
+const adalahTabKlinis = (tab: TabRawatJalan) =>
+  tab === "pemeriksaan" || tab === "obstetri" || tab === "ginekologi" || tab === "diagnosa" || tab === "catatan";
+
 const rupiah = (nilai: number | string) => `Rp ${Number(nilai || 0).toLocaleString("id-ID")}`;
 
 function jamJayapura() {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Jayapura", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
   }).format(new Date());
-}
-
-function Field({ label, placeholder = "" }: { label: string; placeholder?: string }) {
-  return <label className="block text-xs text-slate-700"><span className="mb-1 block">{label}</span><input placeholder={placeholder} className="h-8 w-full rounded-lg border border-slate-300 px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" /></label>;
-}
-
-function Pilihan({ label, pilihan }: { label: string; pilihan: string[] }) {
-  return <label className="block text-xs text-slate-700"><span className="mb-1 block">{label}</span><CustomSelect className="h-8 py-1"><option value="">-</option>{pilihan.map((item) => <option key={item}>{item}</option>)}</CustomSelect></label>;
-}
-
-function CatatanPanjang({ label }: { label: string }) {
-  return <label className="block text-xs text-slate-700"><span className="mb-1 block">{label}</span><textarea rows={2} className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" /></label>;
 }
 
 export default function HalamanTindakanRawatJalan() {
@@ -112,6 +115,8 @@ export default function HalamanTindakanRawatJalan() {
   const [kodeTerpilih, setKodeTerpilih] = useState<Set<string>>(new Set());
   const [memuatTarif, setMemuatTarif] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
+  const [konfirmasiKeluar, setKonfirmasiKeluar] = useState(false);
+  const [memperbaruiStatus, setMemperbaruiStatus] = useState(false);
 
   const [riwayat, setRiwayat] = useState<Riwayat[]>([]);
   const [memuatRiwayat, setMemuatRiwayat] = useState(true);
@@ -126,6 +131,8 @@ export default function HalamanTindakanRawatJalan() {
   const [riwayatPasienTerbuka, setRiwayatPasienTerbuka] = useState(false);
   const [copyResepTerbuka, setCopyResepTerbuka] = useState(false);
   const permintaanRiwayat = useRef<AbortController | null>(null);
+  const aksiPanelPemeriksaan = useRef<AksiPanelPemeriksaan | null>(null);
+  const [statusPanelPemeriksaan, setStatusPanelPemeriksaan] = useState<StatusPanelPemeriksaan>(STATUS_PANEL_PEMERIKSAAN_AWAL);
 
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe });
@@ -292,6 +299,18 @@ export default function HalamanTindakanRawatJalan() {
   const totalDipilih = useMemo(() => tarif
     .filter((item) => kodeTerpilih.has(item.kd_jenis_prw))
     .reduce((jumlah, item) => jumlah + Number(item.total || 0), 0), [kodeTerpilih, tarif]);
+  const pilihanDokter = pasien && !daftarDokter.some((item) => item.kode === pasien.kd_dokter)
+    ? [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter }, ...daftarDokter]
+    : daftarDokter;
+
+  const ubahPilihanTindakan = (kode: string) => {
+    setKodeTerpilih((lama) => {
+      const baru = new Set(lama);
+      if (baru.has(kode)) baru.delete(kode);
+      else baru.add(kode);
+      return baru;
+    });
+  };
 
   const pilihPasien = (item: RegistrasiPilihan) => {
     setPasien(item);
@@ -303,6 +322,9 @@ export default function HalamanTindakanRawatJalan() {
 
   const gantiTab = (berikutnya: TabRawatJalan) => {
     setTabAktif(berikutnya);
+    if (adalahTabKlinis(berikutnya)) {
+      setStatusPanelPemeriksaan(STATUS_PANEL_PEMERIKSAAN_AWAL);
+    }
     if (!adalahModeTindakan(berikutnya)) return;
     setMode(berikutnya);
     setHalaman(1);
@@ -359,6 +381,12 @@ export default function HalamanTindakanRawatJalan() {
     setVersiData((versi) => versi + 1);
   };
 
+  const cariRiwayat = () => {
+    setKataKunciFilter(kataKunci.trim());
+    setHalaman(1);
+    setVersiData((versi) => versi + 1);
+  };
+
   const cetakTindakan = () => {
     if (riwayat.length === 0) {
       tampilkanToast("Belum ada data tindakan untuk dicetak.", "info");
@@ -368,6 +396,51 @@ export default function HalamanTindakanRawatJalan() {
   };
 
   const mintaPilihTindakan = () => tampilkanToast("Pilih baris tindakan yang akan diubah atau dihapus.", "info");
+
+  const kembali = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  }, [router]);
+
+  const mintaKeluar = () => {
+    if (!pasien) {
+      kembali();
+      return;
+    }
+    if (pasien.stts === "Sudah") {
+      kembali();
+      return;
+    }
+    setKonfirmasiKeluar(true);
+  };
+
+  const keluarTanpaUbahStatus = () => {
+    setKonfirmasiKeluar(false);
+    kembali();
+  };
+
+  const tandaiSudahDiperiksa = async () => {
+    if (!pasien) return keluarTanpaUbahStatus();
+    setMemperbaruiStatus(true);
+    try {
+      const response = await fetch("/api/tindakan-rawat-jalan", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ no_rawat: pasien.no_rawat }),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Gagal memperbarui status pasien.");
+      setKonfirmasiKeluar(false);
+      kembali();
+    } catch (error) {
+      tampilkanToast(error instanceof Error ? error.message : "Gagal memperbarui status pasien.", "error");
+    } finally {
+      setMemperbaruiStatus(false);
+    }
+  };
 
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
@@ -408,10 +481,20 @@ export default function HalamanTindakanRawatJalan() {
       </div>
 
       {adalahModeTindakan(tabAktif) ? <>
-      <PanelInputData judul="Input Tindakan Rawat Jalan" idPenyimpanan="tindakan-rawat-jalan" onSimpan={simpan} onBaru={resetForm} teksBaru="Baru" sedangMenyimpan={menyimpan}>
-        <GridFormulirModul className="items-start">
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-700">
+      <section aria-label="Input tindakan rawat jalan" className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-2 shadow-sm">
+        {pasien && (
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 rounded-md border border-primary-200 bg-primary-50/50 px-2.5 py-1.5 text-[11px] text-slate-700">
+            <div><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
+            <div className="flex items-center gap-1.5">
+              <label className="flex items-center gap-1">Tanggal<input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+              <label className="flex items-center gap-1">Jam<input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label>
+              <label className="flex items-center gap-1 whitespace-nowrap" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
+            </div>
+          </div>
+        )}
+        <GridFormulirModul tampilkanKolomCadangan={false} className="items-start gap-y-2 lg:gap-x-2">
+          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
+            {!pasien && <label className="block text-xs text-slate-700">
               <span className="mb-1 block">No. Rawat / RM / Pasien</span>
               <input
                 value={cariPasien}
@@ -423,12 +506,12 @@ export default function HalamanTindakanRawatJalan() {
                   setKodeTerpilih(new Set());
                   if (nilai.trim().length < 2) setHasilPasien([]);
                 }}
-                placeholder="Ketik minimal 2 karakter..."
-                className="h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
+                placeholder="Cari data di sini"
+                className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
               />
-            </label>
+            </label>}
             {!pasien && (memuatPasien || hasilPasien.length > 0) && (
-              <div className="max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white">
+              <div className="max-h-40 overflow-auto rounded-md border border-slate-200 bg-white">
                 {memuatPasien ? <p className="p-2 text-xs text-slate-500">Mencari kunjungan...</p> : hasilPasien.map((item) => (
                   <button key={item.no_rawat} type="button" onClick={() => pilihPasien(item)} className="block w-full border-b border-slate-100 px-2.5 py-2 text-left text-xs hover:bg-slate-50">
                     <span className="font-mono text-slate-800">{item.no_rawat} · {item.no_rkm_medis}</span>
@@ -437,63 +520,52 @@ export default function HalamanTindakanRawatJalan() {
                 ))}
               </div>
             )}
-            {pasien && (
-              <div className="rounded-lg border border-primary-200 bg-primary-50/50 p-2 text-xs text-slate-700">
-                <p className="font-semibold text-slate-800">{pasien.nm_pasien} <span className="font-normal">({pasien.jk}, {pasien.umurdaftar} {pasien.sttsumur})</span></p>
-                <p>{pasien.no_rkm_medis} · {pasien.nm_poli} · {pasien.png_jawab}</p>
-                <p>{pasien.tgl_registrasi} {pasien.jam_reg} · {pasien.status_bayar}</p>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-2">
+            {!pasien && <div className="grid grid-cols-2 gap-2">
               <label className="text-xs text-slate-700">Tanggal
-                <input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="date" value={tanggal} onChange={(event) => { setWaktuOtomatis(false); setTanggal(event.target.value); }} className="mt-1 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs focus:border-primary-600 focus:outline-none" />
               </label>
               <label className="text-xs text-slate-700">Jam
-                <input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <input type="time" step="1" value={jam} onChange={(event) => { setWaktuOtomatis(false); setJam(event.target.value); }} className="mt-1 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs focus:border-primary-600 focus:outline-none" />
                 <label className="mt-1 flex items-center gap-1 text-[11px] text-slate-600" title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Waktu otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label>
               </label>
-            </div>
-            {mode !== "petugas" && <label className="block text-xs text-slate-700">Dokter
-              <CustomSelect value={dokter} onChange={(event) => setDokter(event.target.value)} className="mt-1 h-8 py-1">
-                <option value="">Pilih dokter</option>
-                {pasien && !daftarDokter.some((item) => item.kode === pasien.kd_dokter) && <option value={pasien.kd_dokter}>{pasien.nm_dokter}</option>}
-                {daftarDokter.map((item) => <option key={item.kode} value={item.kode}>{item.nama}</option>)}
-              </CustomSelect>
-            </label>}
-            {mode !== "dokter" && <label className="block text-xs text-slate-700">Petugas
-              <CustomSelect value={petugas} onChange={(event) => setPetugas(event.target.value)} className="mt-1 h-8 py-1">
-                <option value="">Pilih petugas</option>
-                {daftarPetugas.map((item) => <option key={item.kode} value={item.kode}>{item.nama}</option>)}
-              </CustomSelect>
-            </label>}
+            </div>}
+            {mode !== "petugas" && <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+              <span className="whitespace-nowrap text-right font-medium">Dokter :</span>
+              <PatientMasterSelect jenis="Dokter pelaksana tindakan" label="Dokter pelaksana" value={dokter} items={pilihanDokter.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => setDokter(kode)} />
+            </div>}
+            {mode !== "dokter" && <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
+              <span className="whitespace-nowrap text-right font-medium">Petugas :</span>
+              <PatientMasterSelect jenis="Petugas pelaksana tindakan" label="Petugas pelaksana" value={petugas} items={daftarPetugas.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => setPetugas(kode)} />
+            </div>}
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-700">Cari Tindakan / Tagihan
-              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Kode, nama, atau kategori tindakan..." className="mt-1 h-8 w-full rounded-lg border border-slate-300 px-2.5 text-xs focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
+          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 lg:col-span-2">
+            <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right font-medium">Cari tindakan :</span>
+              <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
             </label>
-            <div className="max-h-64 overflow-auto rounded-lg border border-slate-200">
+            <div className="max-h-60 overflow-auto rounded-md border border-slate-200 bg-white">
               <table className="w-full border-collapse text-left text-[11px]">
                 <caption className="sr-only">Daftar tarif tindakan yang dapat dipilih</caption>
                 <thead className="sticky top-0 bg-slate-100 text-slate-700">
-                  <tr><th scope="col" className="w-9 px-2 py-1.5">P</th><th scope="col" className="px-2 py-1.5">Tindakan</th><th scope="col" className="w-24 px-2 py-1.5 text-right">Tarif</th></tr>
+                  <tr><th scope="col" className="w-9 px-2 py-1.5">P</th><th scope="col" className="px-2 py-1.5">Tindakan</th><th scope="col" className="min-w-36 px-2 py-1.5">Kategori Perawatan</th><th scope="col" className="w-40 px-2 py-1.5 text-left">Tarif</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {!pasien ? <tr><td colSpan={3} className="p-6 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
-                    : memuatTarif ? <tr><td colSpan={3} className="p-6 text-center text-slate-500">Memuat tarif...</td></tr>
-                      : tarif.length === 0 ? <tr><td colSpan={3} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
-                        : tarif.map((item) => <tr key={item.kd_jenis_prw} className="text-slate-700 hover:bg-slate-50">
-                          <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onChange={() => setKodeTerpilih((lama) => { const baru = new Set(lama); if (baru.has(item.kd_jenis_prw)) baru.delete(item.kd_jenis_prw); else baru.add(item.kd_jenis_prw); return baru; })} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
-                          <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}<span className="block text-[10px] text-slate-500">{item.nm_kategori}</span></td>
-                          <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono">{rupiah(item.total)}</td>
+                  {!pasien ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
+                    : memuatTarif ? <tr><td colSpan={4} className="p-6 text-center text-slate-500">Memuat tarif...</td></tr>
+                      : tarif.length === 0 ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
+                        : tarif.map((item) => <tr key={item.kd_jenis_prw} onClick={() => ubahPilihanTindakan(item.kd_jenis_prw)} className={`cursor-pointer text-slate-700 hover:bg-slate-50 ${kodeTerpilih.has(item.kd_jenis_prw) ? "bg-primary-50/90" : ""}`}>
+                          <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onClick={(event) => event.stopPropagation()} onChange={() => ubahPilihanTindakan(item.kd_jenis_prw)} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
+                          <td className="px-2 py-1.5">{item.nm_perawatan}</td>
+                          <td className="px-2 py-1.5 text-slate-600">{item.nm_kategori || "-"}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 text-left font-mono">{rupiah(item.total)}</td>
                         </tr>)}
                 </tbody>
-                <tfoot><tr className="border-t border-slate-200 bg-slate-50"><th scope="row" colSpan={2} className="px-2 py-1.5 text-slate-700">{kodeTerpilih.size} dipilih</th><td className="px-2 py-1.5 text-right font-mono font-semibold">{rupiah(totalDipilih)}</td></tr></tfoot>
+                <tfoot><tr className="border-t border-slate-200 bg-slate-50"><th scope="row" colSpan={3} className="px-2 py-1.5 text-slate-700">{kodeTerpilih.size} dipilih</th><td className="px-2 py-1.5 text-left font-mono font-semibold">{rupiah(totalDipilih)}</td></tr></tfoot>
               </table>
             </div>
           </div>
         </GridFormulirModul>
-      </PanelInputData>
+      </section>
 
       <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200/80 bg-white shadow-sm">
         <table className="w-full border-collapse text-left text-xs">
@@ -523,6 +595,7 @@ export default function HalamanTindakanRawatJalan() {
 
       </> : tabAktif === "pemeriksaan" && pasien ? (
         <PemeriksaanRalanTab
+          ref={aksiPanelPemeriksaan}
           key={pasien.no_rawat}
           pasien={{
             no_rawat: pasien.no_rawat,
@@ -532,27 +605,87 @@ export default function HalamanTindakanRawatJalan() {
             kd_dokter: pasien.kd_dokter,
             nm_dokter: pasien.nm_dokter,
           }}
+          onStatusPanelChange={setStatusPanelPemeriksaan}
+        />
+      ) : (tabAktif === "obstetri" || tabAktif === "ginekologi") && pasien ? (
+        <PemeriksaanObgynTab
+          ref={aksiPanelPemeriksaan}
+          key={`${tabAktif}-${pasien.no_rawat}`}
+          jenis={tabAktif}
+          pasien={{
+            no_rawat: pasien.no_rawat,
+            no_rkm_medis: pasien.no_rkm_medis,
+            nm_pasien: pasien.nm_pasien,
+            nm_poli: pasien.nm_poli,
+          }}
+          onStatusPanelChange={setStatusPanelPemeriksaan}
+        />
+      ) : tabAktif === "diagnosa" && pasien ? (
+        <DiagnosaRalanTab
+          ref={aksiPanelPemeriksaan}
+          key={`diagnosa-${pasien.no_rawat}`}
+          pasien={{
+            no_rawat: pasien.no_rawat,
+            no_rkm_medis: pasien.no_rkm_medis,
+            nm_pasien: pasien.nm_pasien,
+            nm_poli: pasien.nm_poli,
+            tgl_registrasi: pasien.tgl_registrasi,
+            jam_reg: pasien.jam_reg,
+          }}
+          onStatusPanelChange={setStatusPanelPemeriksaan}
+        />
+      ) : tabAktif === "catatan" && pasien ? (
+        <CatatanDokterTab
+          ref={aksiPanelPemeriksaan}
+          key={`catatan-${pasien.no_rawat}`}
+          pasien={{
+            no_rawat: pasien.no_rawat,
+            no_rkm_medis: pasien.no_rkm_medis,
+            nm_pasien: pasien.nm_pasien,
+            nm_poli: pasien.nm_poli,
+            tgl_registrasi: pasien.tgl_registrasi,
+            kd_dokter: pasien.kd_dokter,
+            nm_dokter: pasien.nm_dokter,
+          }}
+          onStatusPanelChange={setStatusPanelPemeriksaan}
         />
       ) : (
         <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col rounded-lg border border-slate-200/80 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-slate-100/90 px-3 py-2 text-xs font-semibold text-slate-800">{TAB_RAWAT.find((item) => item.id === tabAktif)?.label}</div>
-          {!pasien ? <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-slate-500">Pilih kunjungan dari halaman Rawat Jalan terlebih dahulu.</div> : (
-            <div className="min-h-0 flex-1 overflow-auto p-3">
-              <div className="mb-3 rounded-lg border border-primary-200 bg-primary-50/50 px-3 py-2 text-xs text-slate-700"><span className="font-mono">{pasien.no_rawat} · {pasien.no_rkm_medis}</span><span className="ml-2 font-semibold text-slate-800">{pasien.nm_pasien}</span><span className="ml-2">{pasien.nm_poli}</span></div>
-              {tabAktif === "obstetri" && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                <Field label="Tinggi Fundus" /><Pilihan label="Janin" pilihan={["Tunggal", "Gemelli", "-"]} /><Field label="Letak" /><Pilihan label="Panggul" pilihan={["-", "5/5", "4/5", "3/5", "2/5", "1/5"]} /><Field label="Denyut" /><Pilihan label="Kontraksi" pilihan={["+", "-"]} /><Field label="Kualitas Menit" /><Field label="Kualitas Detik" /><Pilihan label="Fluksus" pilihan={["+", "-"]} /><Pilihan label="Albus" pilihan={["+", "-"]} /><Field label="Vulva" /><Field label="Portio" /><Pilihan label="Dalam" pilihan={["Kenyal", "Lunak"]} /><Field label="Tebal" /><Pilihan label="Arah" pilihan={["depan", "axial", "belakang"]} /><Field label="Pembukaan" /><Field label="Penurunan" /><Field label="Denominator" /><Pilihan label="Ketuban" pilihan={["-", "+"]} /><Pilihan label="Feto" pilihan={["Normal", "Susp.CPD-FPD", "CPD-FPD"]} />
-              </div>}
-              {tabAktif === "ginekologi" && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                <Field label="Inspeksi" /><Field label="Inspeksi Vulva/Uretra/Vagina" /><Field label="Inspekulo" /><Pilihan label="Fluxus" pilihan={["+", "-"]} /><Pilihan label="Fluor Albus" pilihan={["+", "-"]} /><Field label="Inspekulo Vulva/Vagina" /><Field label="Inspekulo Portio" /><Field label="Inspekulo Sondage" /><Field label="Dalam Portio" /><Field label="Dalam Bentuk" /><Field label="Dalam Cavum Uteri" /><Pilihan label="Mobilitas" pilihan={["+", "-"]} /><Field label="Ukuran Cavum Uteri" /><Pilihan label="Nyeri Tekan" pilihan={["+", "-"]} /><Field label="Dalam Adnexa Kanan" /><Field label="Dalam Adnexa Kiri" /><Field label="Dalam Cavum Douglas" />
-              </div>}
-              {tabAktif === "diagnosa" && <div className="space-y-3"><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Field label="Kode Penyakit (ICD-10)" /><Field label="Nama Diagnosa" /><Pilihan label="Status Penyakit" pilihan={["Baru", "Lama"]} /><Field label="Prioritas" placeholder="1" /></div><div className="rounded-lg border border-slate-200"><table className="w-full text-left text-xs"><caption className="sr-only">Daftar diagnosa pasien</caption><thead className="bg-slate-100 text-slate-700"><tr><th scope="col" className="px-2 py-2">Kode</th><th scope="col" className="px-2 py-2">Diagnosa</th><th scope="col" className="px-2 py-2">Status</th><th scope="col" className="px-2 py-2">Prioritas</th></tr></thead><tbody><tr><td colSpan={4} className="px-2 py-8 text-center text-slate-400">Belum ada diagnosa yang ditampilkan.</td></tr></tbody></table></div><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Field label="Kode Prosedur (ICD-9-CM)" /><Field label="Nama Tindakan/Prosedur" /><Pilihan label="Status Prosedur" pilihan={["Baru", "Lama"]} /><Field label="Prioritas Prosedur" placeholder="1" /></div></div>}
-              {tabAktif === "catatan" && <div className="max-w-3xl space-y-3"><div className="grid gap-2 sm:grid-cols-2"><Pilihan label="Dokter" pilihan={daftarDokter.map((item) => item.nama)} /><Field label="Tanggal & Jam" placeholder={`${tanggal} ${jam}`} /></div><CatatanPanjang label="Catatan Dokter" /><div className="rounded-lg border border-slate-200"><table className="w-full text-left text-xs"><caption className="sr-only">Daftar catatan dokter</caption><thead className="bg-slate-100 text-slate-700"><tr><th scope="col" className="px-2 py-2">Tanggal</th><th scope="col" className="px-2 py-2">Dokter</th><th scope="col" className="px-2 py-2">Catatan</th></tr></thead><tbody><tr><td colSpan={3} className="px-2 py-8 text-center text-slate-400">Belum ada catatan dokter yang ditampilkan.</td></tr></tbody></table></div></div>}
-            </div>
-          )}
+          <div className="flex flex-1 items-center justify-center p-6 text-center text-xs text-slate-500">Pilih kunjungan dari halaman Rawat Jalan terlebih dahulu.</div>
         </section>
       )}
 
-      {adalahModeTindakan(tabAktif) && <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={() => { setKataKunciFilter(kataKunci.trim()); setHalaman(1); }} placeholderCari="No. Rawat, RM, pasien, tindakan, pelaksana..." onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />}
+      {adalahModeTindakan(tabAktif) ? (
+        <PanelBawah tampilan="web" onSimpan={simpan} onBaru={resetForm} onGanti={mintaPilihTindakan} onHapus={mintaPilihTindakan} onCetak={cetakTindakan} onKembali={mintaKeluar} disabledSimpan={menyimpan || !pasien || kodeTerpilih.size === 0} disabledGanti disabledHapus disabledCetak={riwayat.length === 0} tanggalMulai={tanggalMulai} tanggalSelesai={tanggalSelesai} onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }} onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }} kataKunci={kataKunci} onGantiKataKunci={setKataKunci} onCari={cariRiwayat} placeholderCari="Cari data di sini" onSemua={resetFilter} memuat={memuatRiwayat || menyimpan} tampilkanRecord={false} pagination={<><span>{riwayat.length} dari {total} tindakan · Halaman {halaman} / {Math.max(1, Math.ceil(total / 50))}</span><button type="button" disabled={halaman <= 1 || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai - 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button><button type="button" disabled={halaman * 50 >= total || memuatRiwayat} onClick={() => setHalaman((nilai) => nilai + 1)} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-40" aria-label="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button></>} />
+      ) : adalahTabKlinis(tabAktif) && pasien ? (
+        <PanelBawah
+          tampilan="web"
+          onSimpan={() => aksiPanelPemeriksaan.current?.simpan()}
+          onBaru={() => aksiPanelPemeriksaan.current?.baru()}
+          onGanti={() => aksiPanelPemeriksaan.current?.ganti()}
+          onHapus={() => aksiPanelPemeriksaan.current?.hapus()}
+          onCetak={() => aksiPanelPemeriksaan.current?.cetak()}
+          onKembali={mintaKeluar}
+          disabledSimpan={statusPanelPemeriksaan.disabledSimpan}
+          disabledGanti={statusPanelPemeriksaan.disabledGanti}
+          disabledHapus={statusPanelPemeriksaan.disabledHapus}
+          disabledCetak={statusPanelPemeriksaan.disabledCetak}
+          tanggalMulai={statusPanelPemeriksaan.tanggalMulai}
+          tanggalSelesai={statusPanelPemeriksaan.tanggalSelesai}
+          onGantiTanggalMulai={(nilai) => aksiPanelPemeriksaan.current?.gantiTanggalMulai(nilai)}
+          onGantiTanggalSelesai={(nilai) => aksiPanelPemeriksaan.current?.gantiTanggalSelesai(nilai)}
+          kataKunci={statusPanelPemeriksaan.kataKunci}
+          onGantiKataKunci={(nilai) => aksiPanelPemeriksaan.current?.gantiKataKunci(nilai)}
+          onCari={() => aksiPanelPemeriksaan.current?.cari()}
+          placeholderCari="Cari data di sini"
+          onSemua={() => aksiPanelPemeriksaan.current?.semua()}
+          jumlahRecord={statusPanelPemeriksaan.jumlahRecord}
+          memuat={statusPanelPemeriksaan.memuat}
+        />
+      ) : (
+        <PanelBawah tampilan="web" onKembali={mintaKeluar} tampilkanRecord={false} />
+      )}
       </main>
       </div>
       <RiwayatPasienDialog
@@ -574,6 +707,7 @@ export default function HalamanTindakanRawatJalan() {
         onTutup={() => setCopyResepTerbuka(false)}
         onToast={tampilkanToast}
       />
+      <KonfirmasiDialog terbuka={konfirmasiKeluar} judul="Selesaikan Pemeriksaan" pesan={`Tandai ${pasien?.nm_pasien || "pasien"} sudah diperiksa?`} subPesan="Status kunjungan akan diperbarui menjadi Sudah dan berkas menjadi Sudah Kembali." teksBatal="Tidak, Kembali" teksKonfirmasi="Ya, Tandai Sudah" bahaya={false} sedangMemproses={memperbaruiStatus} onBatal={keluarTanpaUbahStatus} onKonfirmasi={() => void tandaiSudahDiperiksa()} />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

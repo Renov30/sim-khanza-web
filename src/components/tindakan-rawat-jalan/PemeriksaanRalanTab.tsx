@@ -1,14 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDatabase, faFileMedical, faFlask, faHeartPulse, faMagnifyingGlass, faTooth, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { registrationDate } from "@/lib/registrasi/date";
+import type {
+  AksiPanelPemeriksaan,
+  StatusPanelPemeriksaan,
+} from "@/components/tindakan-rawat-jalan/kontrak-panel-pemeriksaan";
 
 interface PasienPemeriksaan {
   no_rawat: string;
@@ -43,6 +46,11 @@ interface FormPemeriksaan {
   penilaian: string; instruksi: string; evaluasi: string; nip: string;
 }
 
+interface PemeriksaanRalanTabProps {
+  pasien: PasienPemeriksaan;
+  onStatusPanelChange: (status: StatusPanelPemeriksaan) => void;
+}
+
 const KESADARAN = ["Compos Mentis", "Somnolence", "Sopor", "Coma", "Alert", "Confusion", "Voice", "Pain", "Unresponsive", "Apatis", "Delirium"];
 
 function jamJayapura() {
@@ -53,7 +61,7 @@ function formKosong(nip = ""): FormPemeriksaan {
   return { tgl_perawatan: registrationDate(), jam_rawat: jamJayapura(), suhu_tubuh: "", tensi: "", nadi: "", respirasi: "", tinggi: "", berat: "", spo2: "", gcs: "", kesadaran: "Compos Mentis", keluhan: "", pemeriksaan: "", alergi: "", lingkar_perut: "", rtl: "", penilaian: "", instruksi: "", evaluasi: "", nip };
 }
 
-export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
+export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanRalanTabProps>(function PemeriksaanRalanTab({ pasien, onStatusPanelChange }, ref) {
   const [form, setForm] = useState<FormPemeriksaan>(() => formKosong(pasien.kd_dokter));
   const [data, setData] = useState<Pemeriksaan[]>([]);
   const [pegawai, setPegawai] = useState<Pegawai[]>([]);
@@ -65,6 +73,11 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const [memuat, setMemuat] = useState(true);
   const [menyimpan, setMenyimpan] = useState(false);
   const [konfirmasi, setKonfirmasi] = useState(false);
+  const [tanggalMulai, setTanggalMulai] = useState(() => registrationDate());
+  const [tanggalSelesai, setTanggalSelesai] = useState(() => registrationDate());
+  const [kataKunci, setKataKunci] = useState("");
+  const [kataKunciFilter, setKataKunciFilter] = useState("");
+  const [versiFilter, setVersiFilter] = useState(0);
   const [toast, setToast] = useState<{ pesan: string; tipe: "sukses" | "error" | "info" } | null>(null);
 
   useEffect(() => {
@@ -78,14 +91,18 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
   const muatData = useCallback(async (signal?: AbortSignal) => {
     setMemuat(true);
     try {
-      const response = await fetch(`/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=${encodeURIComponent(pasien.no_rawat)}`, { signal, cache: "no-store" });
+      const params = new URLSearchParams({ no_rawat: pasien.no_rawat });
+      if (tanggalMulai) params.set("tanggal_mulai", tanggalMulai);
+      if (tanggalSelesai) params.set("tanggal_selesai", tanggalSelesai);
+      if (kataKunciFilter) params.set("cari", kataKunciFilter);
+      const response = await fetch(`/api/tindakan-rawat-jalan/pemeriksaan?${params}`, { signal, cache: "no-store" });
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat pemeriksaan");
       setData(json.data || []);
     } catch (error) {
       if (!signal?.aborted) setToast({ pesan: error instanceof Error ? error.message : "Gagal memuat pemeriksaan", tipe: "error" });
     } finally { if (!signal?.aborted) setMemuat(false); }
-  }, [pasien.no_rawat]);
+  }, [kataKunciFilter, pasien.no_rawat, tanggalMulai, tanggalSelesai]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,9 +119,17 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
       }
     }
     void mulai();
-    void Promise.resolve().then(() => muatData(controller.signal));
     return () => controller.abort();
-  }, [muatData, pasien.kd_dokter]);
+  }, [pasien.kd_dokter]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void muatData(controller.signal); }, 0);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [muatData, versiFilter]);
 
   const isi = (nama: keyof FormPemeriksaan, nilai: string) => setForm((lama) => ({ ...lama, [nama]: nilai }));
 
@@ -187,6 +212,47 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
     window.print();
   };
 
+  const cariData = () => {
+    setKataKunciFilter(kataKunci.trim());
+    setVersiFilter((versi) => versi + 1);
+  };
+
+  const resetFilter = () => {
+    const hariIni = registrationDate();
+    setTanggalMulai(hariIni);
+    setTanggalSelesai(hariIni);
+    setKataKunci("");
+    setKataKunciFilter("");
+    setVersiFilter((versi) => versi + 1);
+  };
+
+  useImperativeHandle(ref, () => ({
+    simpan: () => { void simpan(); },
+    baru,
+    ganti: () => { void simpan(); },
+    hapus: () => setKonfirmasi(true),
+    cetak,
+    gantiTanggalMulai: setTanggalMulai,
+    gantiTanggalSelesai: setTanggalSelesai,
+    gantiKataKunci: setKataKunci,
+    cari: cariData,
+    semua: resetFilter,
+  }));
+
+  useEffect(() => {
+    onStatusPanelChange({
+      disabledSimpan: menyimpan || Boolean(terpilih),
+      disabledGanti: menyimpan || !terpilih,
+      disabledHapus: menyimpan || !terpilih,
+      disabledCetak: data.length === 0,
+      tanggalMulai,
+      tanggalSelesai,
+      kataKunci,
+      jumlahRecord: data.length,
+      memuat: memuat || menyimpan,
+    });
+  }, [data.length, kataKunci, memuat, menyimpan, onStatusPanelChange, tanggalMulai, tanggalSelesai, terpilih]);
+
   const daftarPelaksana = pegawai.some((item) => item.kode === pasien.kd_dokter)
     ? pegawai
     : [{ kode: pasien.kd_dokter, nama: pasien.nm_dokter, jbtn: "Dokter DPJP" }, ...pegawai];
@@ -266,8 +332,7 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
         <tbody className="divide-y divide-slate-100 text-slate-700">{memuat ? <tr><td colSpan={22} className="py-10 text-center">Memuat pemeriksaan...</td></tr> : data.length === 0 ? <tr><td colSpan={22} className="py-10 text-center text-slate-400">Belum ada pemeriksaan.</td></tr> : data.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pilih(item)} className={`cursor-pointer ${terpilih?.tgl_perawatan === item.tgl_perawatan && terpilih?.jam_rawat === item.jam_rawat ? "bg-primary-50/90" : "hover:bg-slate-50"}`}><td className="whitespace-nowrap px-2.5 py-2">{item.tgl_perawatan}</td><td className="whitespace-nowrap px-2.5 py-2">{item.jam_rawat}</td>{[item.suhu_tubuh, item.tensi, item.nadi, item.respirasi, item.tinggi, item.berat, item.spo2, item.gcs, item.kesadaran, item.keluhan, item.pemeriksaan, item.alergi, item.lingkar_perut, item.rtl, item.penilaian, item.instruksi, item.evaluasi, item.nip, item.nama, item.jbtn].map((nilai, index) => <td key={index} className="max-w-72 whitespace-pre-wrap px-2.5 py-2 align-top">{nilai || "-"}</td>)}</tr>)}</tbody>
       </table>
     </section>
-    <PanelBawah tampilan="web" onSimpan={simpan} onBaru={baru} onGanti={simpan} onHapus={() => setKonfirmasi(true)} onCetak={cetak} disabledSimpan={menyimpan || Boolean(terpilih)} disabledGanti={menyimpan || !terpilih} disabledHapus={menyimpan || !terpilih} disabledCetak={data.length === 0} jumlahRecord={data.length} memuat={memuat || menyimpan} />
-    {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-tertiary-950/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
+    {soapieBuka && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-3" role="dialog" aria-modal="true" aria-labelledby="judul-soapie-terakhir" onClick={(event) => { if (event.target === event.currentTarget) setSoapieBuka(false); }}>
       <section className="flex max-h-[75vh] w-[min(72rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-800 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 id="judul-soapie-terakhir" className="text-sm font-semibold text-slate-800">Riwayat 5 SOAPIE Terakhir</h2>
@@ -295,4 +360,4 @@ export function PemeriksaanRalanTab({ pasien }: { pasien: PasienPemeriksaan }) {
     <KonfirmasiDialog terbuka={konfirmasi} judul="Hapus Pemeriksaan" pesan={`Hapus pemeriksaan ${terpilih?.tgl_perawatan || ""} ${terpilih?.jam_rawat || ""} untuk ${pasien.nm_pasien}?`} subPesan="Data klinis yang dihapus tidak dapat dipulihkan dari halaman ini." onBatal={() => setKonfirmasi(false)} onKonfirmasi={hapus} sedangMemproses={menyimpan} />
     <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
   </div>;
-}
+});

@@ -1,6 +1,6 @@
 # Riwayat dan Panduan Pengembangan
 
-Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan berikutnya. Aturan teknis yang wajib diikuti berada di [`AGENTS.md`](../AGENTS.md), sedangkan struktur aplikasi dan database dijelaskan di [`schema.md`](schema.md).
+Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan berikutnya. Aturan teknis yang wajib diikuti berada di [`AGENTS.md`](../AGENTS.md), sedangkan struktur aplikasi dan database dijelaskan di [`SCHEMA.md`](SCHEMA.md).
 
 ## Status saat ini
 
@@ -13,8 +13,14 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | IGD, rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
 | Resume pasien | Eksperimental | Halaman CRUD ralan dari sidebar, izin dokter, dan transaksi `resume_pasien`. |
 | Laboratorium, radiologi, farmasi | Eksperimental | Halaman/query awal; izin, tipe, dan tes belum seragam. |
+| Daftar Pasien Rawat Jalan | Alur daftar tersedia | Pasien terdaftar dan rujukan internal, filter, pagination, akses ke Tindakan. |
+| Tindakan, tab Pemeriksaan | Alur pemeriksaan tersedia | Tanda vital, SOAPIE, obstetri, dan ginekologi mendukung tambah, koreksi, hapus, filter, serta cetak. |
+| Input Resep | Alur resep rawat jalan tersedia | Katalog dan stok per depo, resep umum, racikan, aturan pakai, dan penyimpanan. |
+| Copy Resep | Alur salin dan koreksi tersedia | Riwayat pasien/dokter, copy ke kunjungan aktif, ubah, dan hapus resep belum tervalidasi. |
+| Daftar Resep Dokter | Daftar dan detail tersedia | Rawat jalan dan inap. Petugas dapat melihat riwayat validasi dan penyerahan. Aksi validasi dan penyerahan dari web masih tertunda. |
+| IGD, rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
-| Migrasi data Khanza | Ditunda | Importir dipertahankan sebagai prototipe dan tidak dijalankan. |
+| Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
 
 ## Riwayat pengembangan
 
@@ -81,7 +87,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 - Enter memindahkan fokus ke field aktif berikutnya pada login, registrasi, data pasien, dan tindakan rawat jalan; field baca-saja, nonaktif, serta kontrol pilihan biner dilewati.
 - Enter pada textarea tetap membuat baris baru, sedangkan Ctrl+Enter memindahkan fokus seperti Tab.
-- Pelaksana tindakan dan pemeriksaan otomatis menggunakan dokter tujuan/DPJP dari kunjungan terpilih; pilihan manual tetap tersedia dan otorisasi penyimpanan server tetap berlaku.
+- Pelaksana tindakan dan pemeriksaan otomatis menggunakan dokter tujuan/DPJP dari kunjungan terpilih. Pilihan manual pemeriksaan mengikuti `DlgCariPegawai` Khanza dan memuat seluruh pegawai selain status `KELUAR`, sehingga dokter maupun petugas dapat dipilih; otorisasi penyimpanan server tetap berlaku.
 - Tab Pemeriksaan menyediakan pencarian 5 SOAPIE terakhir seperti `RMCari5SOAPTerakhir`; riwayat difilter berdasarkan No. RM dan NIP pelaksana, lalu dapat dipakai untuk mengisi Subjek, Objek, Asesmen, Plan, Instruksi, dan Evaluasi.
 
 ### 18 November 2026 — daftar resep dokter
@@ -141,6 +147,19 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Daftar tabel dibatasi pada pasien yang sama dengan `no_rawat` aktif. Field, panjang, dan tabel mengikuti schema runtime `sik2`: 26 kolom `resume_pasien`, `kondisi_pulang` hanya `Hidup|Meninggal`, dan tidak ada kolom `tanggal_keluar`.
 - Tombol "Ambil Diagnosa/Prosedur Kunjungan" mengisi ICD-10/ICD-9 dari `diagnosa_pasien` dan `prosedur_pasien` status `Ralan`; cetak belum tersedia di Khanza Web.
 - Verifikasi dengan `npm run test:resume-pasien`.
+### 20 November 2026 — copy resep
+
+- Halaman `/farmasi/copy-resep` mengadaptasi `DlgCopyResep`: hanya menampilkan riwayat pasien dan dokter peresep yang sama, mendukung filter tanggal, pencarian, rincian obat/racikan, serta aksi `Copy`, `Ubah`, dan `Hapus`.
+- Copy memuat obat dan racikan lama sebagai draft resep baru pada kunjungan aktif, mengambil kembali harga dan stok depo saat ini. Jumlah item yang tidak aktif atau stoknya kurang dikosongkan agar wajib dikoreksi sebelum disimpan.
+- Ubah dan hapus dibatasi pada resep rawat jalan yang belum tervalidasi. Mutasi memakai otorisasi server, validasi billing, penguncian baris, dan transaksi; detail resep tetap kompatibel dengan tabel Khanza.
+
+### 20 November 2026 — tab klinis tindakan rawat jalan
+
+- Tab `Pemeriksaan Obstetri` dan `Pemeriksaan Ginekologi` memakai formulir klinis terkontrol serta tabel Khanza masing-masing.
+- Lima tab klinis (`Pemeriksaan`, obstetri, ginekologi, `Diagnosa`, dan `Catatan Dokter`) berbagi satu `PanelBawah`; status, filter, dan aksi panel didelegasikan ke tab aktif.
+- Tambah, koreksi, hapus, pencarian, dan cetak tersedia. Koreksi serta hapus obstetri/ginekologi oleh non-admin dibatasi 48 jam dan seluruh mutasi ditolak setelah billing diverifikasi.
+- Tab `Diagnosa` menampilkan waktu registrasi, mendukung pemilihan ICD-10 dan ICD-9-CM, prioritas Khanza, status penyakit Baru/Lama, serta sinkronisasi kode ke resume pasien. Daftar master langsung memuat 20 data dan mengambil halaman berikutnya saat digulir.
+- Tab `Catatan Dokter` memakai waktu WIT otomatis, riwayat terfilter, dan pembatasan koreksi/hapus selama 48 jam hanya untuk dokter pemilik catatan (admin dikecualikan).
 
 ## Prioritas pengembangan berikutnya
 
@@ -194,4 +213,4 @@ Perubahan dianggap selesai bila:
 - Tidak ada secret atau data pasien dalam diff.
 - Dokumentasi tetap sesuai perilaku kode.
 
-Migrasi database bukan prioritas aktif. Pekerjaan tersebut hanya dibuka kembali setelah schema, sumber kebenaran, rekonsiliasi, backup, rollback, dan jadwal cutover disepakati bersama pemilik proses, tim aplikasi, dan DBA.
+Migrasi produksi menunggu rekonsiliasi pada salinan data, uji pemulihan backup, dan kesepakatan jadwal peralihan bersama pemilik proses dan DBA.

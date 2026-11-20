@@ -62,12 +62,35 @@ test('akses pemeriksaan ditolak sebelum query', async () => {
   assert.equal(calls.length, 0);
 });
 
+test('pilihan pelaksana memuat seluruh pegawai yang belum keluar', async () => {
+  const { api, calls } = handler({ admin: false, username: 'P1' });
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?resource=pegawai'));
+  assert.equal(response.status, 200);
+  assert.match(calls[0][0], /FROM pegawai p\s+WHERE p\.stts_aktif <> 'KELUAR'\s+ORDER BY p\.nama/s);
+  assert.equal(calls[0][1], undefined);
+});
+
 test('penampil pemeriksaan dibatasi untuk satu no rawat', async () => {
   const { api, calls } = handler();
   const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001'));
   assert.equal(response.status, 200);
   assert.match(calls[0][0], /WHERE pr\.no_rawat = \?.*LIMIT 100/s);
   assert.deepEqual(calls[0][1], ['2026/11/16/000001']);
+});
+
+test('penampil pemeriksaan mendukung filter periode dan kata kunci berparameter', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001&tanggal_mulai=2026-11-01&tanggal_selesai=2026-11-16&cari=pusing'));
+  assert.equal(response.status, 200);
+  assert.match(calls[0][0], /pr\.tgl_perawatan >= \?.*pr\.tgl_perawatan <= \?.*pr\.keluhan LIKE \?/s);
+  assert.deepEqual(calls[0][1].slice(0, 4), ['2026/11/16/000001', '2026-11-01', '2026-11-16', '%pusing%']);
+});
+
+test('penampil pemeriksaan menolak periode tidak valid tanpa query', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/tindakan-rawat-jalan/pemeriksaan?no_rawat=2026/11/16/000001&tanggal_mulai=2026-11-31&tanggal_selesai=2026-11-16'));
+  assert.equal(response.status, 400);
+  assert.equal(calls.length, 0);
 });
 
 test('simpan pemeriksaan memakai transaksi dan query berparameter', async () => {

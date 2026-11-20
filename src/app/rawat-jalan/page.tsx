@@ -44,6 +44,13 @@ interface RawatJalanRow {
   no_tlp: string;
 }
 
+function warnaStatusPeriksa(status: string) {
+  if (status === "Sudah") return "border border-secondary-300 bg-secondary-100 text-secondary-800";
+  if (["Batal", "Meninggal", "Pulang Paksa"].includes(status)) return "border border-red-200 bg-red-50 text-red-700";
+  if (["Berkas Diterima", "Dirujuk", "Dirawat"].includes(status)) return "border border-primary-200 bg-primary-50 text-primary-700";
+  return "border border-slate-200 bg-slate-100 text-slate-700";
+}
+
 export default function HalamanRawatJalan() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -281,7 +288,7 @@ export default function HalamanRawatJalan() {
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.png_jawab || item.kd_pj || "-"}</td>
                     <td className="px-2.5 py-2 text-center">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.stts === "Batal" ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-700"}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${warnaStatusPeriksa(item.stts)}`}>
                         {item.stts || "-"}
                       </span>
                     </td>

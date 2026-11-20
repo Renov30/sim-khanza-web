@@ -11,6 +11,23 @@ Fitur utama yang tersedia saat ini:
 - Halaman awal IGD, rawat jalan, rawat inap, laboratorium, radiologi, dan farmasi.
 - Penguncian sesi serta sinkronisasi login/logout antar-tab.
 
+## Tampilan aplikasi
+
+### Halaman utama
+
+
+<img src="docs/images/ss-home.png" alt="Halaman utama SIMRS Khanza Web" width="900">
+
+### Registrasi pasien
+
+
+<img src="docs/images/ss-reg.png" alt="Halaman registrasi pasien SIMRS Khanza Web" width="900">
+
+### Rawat jalan
+
+
+<img src="docs/images/ss-rajal.png" alt="Halaman rawat jalan SIMRS Khanza Web" width="900">
+
 ## Instalasi
 
 Kebutuhan:

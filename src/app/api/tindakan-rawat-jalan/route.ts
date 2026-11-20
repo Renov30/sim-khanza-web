@@ -88,7 +88,7 @@ async function daftarRegistrasi(cari: string) {
     SELECT r.no_rawat, r.no_rkm_medis, p.nm_pasien, p.jk, r.umurdaftar, r.sttsumur,
            DATE_FORMAT(r.tgl_registrasi, '%Y-%m-%d') AS tgl_registrasi, r.jam_reg,
            r.kd_dokter, d.nm_dokter, r.kd_poli, pol.nm_poli, r.kd_pj,
-           COALESCE(pj.png_jawab, r.kd_pj) AS png_jawab, r.status_bayar
+           COALESCE(pj.png_jawab, r.kd_pj) AS png_jawab, r.stts, r.status_bayar
     FROM reg_periksa r
     INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
     INNER JOIN dokter d ON d.kd_dokter = r.kd_dokter
@@ -272,6 +272,44 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (connection) await connection.rollback();
     return kegagalan(error, "Tindakan rawat jalan gagal disimpan.");
+  } finally {
+    connection?.release();
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const denied = await tindakanRawatJalanAccess();
+  if (denied) return denied;
+  let connection: PoolConnection | undefined;
+  try {
+    const body: unknown = await req.json();
+    const input = body && typeof body === "object" ? body as Record<string, unknown> : null;
+    const noRawat = typeof input?.no_rawat === "string" ? input.no_rawat.trim() : "";
+    if (!noRawat || noRawat.length > 17) throw new TindakanError("No. Rawat tidak valid.");
+
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [registrasi] = await connection.execute<RowDataPacket[]>(`
+      SELECT no_rawat, stts FROM reg_periksa
+      WHERE no_rawat = ? AND status_lanjut = 'Ralan' FOR UPDATE
+    `, [noRawat]);
+    if (!registrasi[0]) throw new TindakanError("Kunjungan rawat jalan tidak ditemukan.", 404);
+    if (registrasi[0].stts === "Sudah") {
+      await connection.commit();
+      return NextResponse.json({ success: true, message: "Status pasien sudah diperiksa." });
+    }
+
+    await connection.execute("UPDATE reg_periksa SET stts = 'Sudah' WHERE no_rawat = ?", [noRawat]);
+    await connection.execute(`
+      INSERT INTO mutasi_berkas (no_rawat, status, dikirim, diterima, kembali, tidakada, ranap)
+      VALUES (?, 'Sudah Kembali', NOW(), '0000-00-00 00:00:00', NOW(), '0000-00-00 00:00:00', '0000-00-00 00:00:00')
+      ON DUPLICATE KEY UPDATE status = VALUES(status), kembali = VALUES(kembali)
+    `, [noRawat]);
+    await connection.commit();
+    return NextResponse.json({ success: true, message: "Status pasien diperbarui menjadi sudah diperiksa." });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    return kegagalan(error, "Gagal memperbarui status pasien.");
   } finally {
     connection?.release();
   }
