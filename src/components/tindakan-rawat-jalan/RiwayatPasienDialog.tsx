@@ -18,9 +18,9 @@ import type { ToastTipe } from "@/components/common/Toast";
 
 interface RiwayatPasienDialogProps {
   terbuka: boolean;
+  tampilan?: "dialog" | "halaman";
   noRm: string;
   namaPasien: string;
-  noRawat?: string;
   onTutup: () => void;
   onToast: (pesan: string, tipe?: ToastTipe) => void;
 }
@@ -50,7 +50,7 @@ const LABEL_MODE: Record<ModeRiwayat, string> = {
 
 const BAGIAN_PERAWATAN = Array.from(new Set([
   "Diagnosa/Penyakit (ICD 10)",
-  "Prosedur/Tidakan (ICD 9)",
+  "Prosedur/Tindakan (ICD 9)",
   "SEP BPJS",
   "Triase IGD/UGD",
   "Awal Keperawatan IGD",
@@ -252,20 +252,20 @@ function TabelRiwayat({ caption, kolom, baris, kunciBaris }: {
   kunciBaris: (baris: BarisRiwayat, indeks: number) => string;
 }) {
   return (
-    <div className="overflow-auto rounded border border-slate-200 bg-white">
+    <div className="overflow-auto border border-slate-200 bg-white">
       <table className="w-full border-collapse text-left text-[11px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 bg-slate-100 text-slate-700">
           <tr>
-            {kolom.map((item) => <th key={item.kunci} scope="col" className={`whitespace-nowrap px-2 py-1.5 ${item.lebar || ""}`}>{item.judul}</th>)}
+            {kolom.map((item) => <th key={item.kunci} scope="col" className={`whitespace-nowrap border-b border-r border-slate-200 px-2 py-2 text-center ${item.lebar || ""}`}>{item.judul}</th>)}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 text-slate-700">
+        <tbody className="text-slate-700">
           {baris.length === 0 ? (
             <tr><td colSpan={kolom.length} className="px-2 py-6 text-center text-slate-400">Tidak ada data.</td></tr>
           ) : baris.map((item, indeks) => (
-            <tr key={kunciBaris(item, indeks)} className="align-top hover:bg-slate-50">
-              {kolom.map((kol) => <td key={kol.kunci} className={`px-2 py-1.5 ${kol.lebar || ""}`}>{kol.render ? kol.render(item, indeks) : teks(item[kol.kunci])}</td>)}
+            <tr key={kunciBaris(item, indeks)} className="align-top even:bg-slate-50/70 hover:bg-slate-50">
+              {kolom.map((kol) => <td key={kol.kunci} className={`border-b border-r border-slate-100 px-2 py-1.5 ${kol.lebar || ""}`}>{kol.render ? kol.render(item, indeks) : teks(item[kol.kunci])}</td>)}
             </tr>
           ))}
         </tbody>
@@ -354,18 +354,18 @@ function RingkasanKunjungan({ item }: { item: BarisRiwayat }) {
 
 export function RiwayatPasienDialog({
   terbuka,
+  tampilan = "dialog",
   noRm,
   namaPasien,
-  noRawat,
   onTutup,
   onToast,
 }: RiwayatPasienDialogProps) {
   const terpasang = useKlien();
   const tombolTutup = useRef<HTMLButtonElement>(null);
   const hariIni = registrationDate();
-  const [tabAktif, setTabAktif] = useState<TabRiwayat>(noRawat ? "perawatan" : "kunjungan");
-  const [mode, setMode] = useState<ModeRiwayat>(noRawat ? "nomor" : "terakhir");
-  const [nomor, setNomor] = useState(noRawat || "");
+  const [tabAktif, setTabAktif] = useState<TabRiwayat>("kunjungan");
+  const [mode, setMode] = useState<ModeRiwayat>("terakhir");
+  const [nomor, setNomor] = useState("");
   const [tanggalAwal, setTanggalAwal] = useState(hariIni);
   const [tanggalAkhir, setTanggalAkhir] = useState(hariIni);
   const [offset, setOffset] = useState(0);
@@ -377,19 +377,19 @@ export function RiwayatPasienDialog({
   const nomorTidakAda = mode === "nomor" && !nomor.trim();
 
   useEffect(() => {
-    if (!terbuka) return;
+    if (!terbuka || tampilan !== "dialog") return;
     const pengatur = window.setTimeout(() => tombolTutup.current?.focus(), 0);
     return () => window.clearTimeout(pengatur);
-  }, [terbuka]);
+  }, [terbuka, tampilan]);
 
   useEffect(() => {
-    if (!terbuka) return;
+    if (!terbuka || tampilan !== "dialog") return;
     const keluarkan = (event: KeyboardEvent) => {
       if (event.key === "Escape") onTutup();
     };
     window.addEventListener("keydown", keluarkan);
     return () => window.removeEventListener("keydown", keluarkan);
-  }, [terbuka, onTutup]);
+  }, [terbuka, onTutup, tampilan]);
 
   useEffect(() => {
     if (!terbuka || !noRm || nomorTidakAda) return;
@@ -468,31 +468,35 @@ export function RiwayatPasienDialog({
   const halamanSaatIni = Math.floor(offset / Math.max(limit, 1)) + 1;
   const jumlahHalaman = Math.max(1, Math.ceil(total / Math.max(limit, 1)));
 
-  return createPortal(
-    <div className="fixed inset-0 z-[99997] flex items-stretch justify-center bg-black/50 p-2 sm:p-4" role="presentation">
-      <div role="dialog" aria-modal="true" aria-labelledby="judul-riwayat-pasien" className="flex w-full max-w-7xl flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-xl">
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-100 px-3 py-2">
+  const konten = (
+    <div className={tampilan === "dialog" ? "fixed inset-0 z-[99997] flex items-stretch justify-center bg-black/50 p-2 sm:p-4" : "module-page flex h-full w-full flex-col overflow-hidden bg-slate-50 p-2 sm:p-3"} role={tampilan === "dialog" ? "presentation" : undefined}>
+      <div role={tampilan === "dialog" ? "dialog" : undefined} aria-modal={tampilan === "dialog" ? true : undefined} aria-label="Riwayat pasien" className={tampilan === "dialog" ? "flex w-full max-w-7xl flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-xl" : "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm"}>
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
           <div>
-            <h2 id="judul-riwayat-pasien" className="text-xs font-semibold text-slate-900">Riwayat Pasien</h2>
             <p className="text-[11px] text-slate-600"><span className="font-mono">{noRm}</span> · {namaPasien}</p>
           </div>
-          <button ref={tombolTutup} type="button" onClick={onTutup} aria-label="Tutup riwayat pasien" title="Tutup" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-600">
+          {tampilan === "dialog" && <button ref={tombolTutup} type="button" onClick={onTutup} aria-label="Tutup riwayat pasien" title="Tutup" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-600">
             <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5" />
-          </button>
+          </button>}
         </div>
 
         {pasien && (
-          <div className="grid shrink-0 grid-cols-2 gap-x-3 gap-y-1 border-b border-slate-200 bg-slate-50 px-3 py-2 text-[11px] sm:grid-cols-4 lg:grid-cols-7">
-            <div><span className="text-slate-500">JK: </span><span className="text-slate-800">{teks(pasien.jenis_kelamin)}</span></div>
-            <div><span className="text-slate-500">Lahir: </span><span className="text-slate-800">{teks(pasien.tempat_lahir)}, {teks(pasien.tanggal_lahir)}</span></div>
-            <div className="col-span-2 lg:col-span-2"><span className="text-slate-500">Alamat: </span><span className="text-slate-800">{teks(pasien.alamat)}</span></div>
-            <div><span className="text-slate-500">Gol. Darah: </span><span className="text-slate-800">{teks(pasien.golongan_darah)}</span></div>
-            <div><span className="text-slate-500">Status: </span><span className="text-slate-800">{teks(pasien.status_nikah)}</span></div>
-            <div><span className="text-slate-500">Ibu: </span><span className="text-slate-800">{teks(pasien.nama_ibu)}</span></div>
+          <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-2 text-[11px] sm:grid-cols-4 lg:grid-cols-6">
+            <div className="col-span-2"><span className="text-slate-500">Pasien: </span><span className="font-mono text-slate-800">{pasien.no_rm}</span><span className="text-slate-800"> · {pasien.nama}</span></div>
+            <div><span className="text-slate-500">J.K.: </span><span className="text-slate-800">{teks(pasien.jenis_kelamin)}</span></div>
+            <div className="col-span-2"><span className="text-slate-500">Tempat &amp; Tgl. Lahir: </span><span className="text-slate-800">{teks(pasien.tempat_lahir)}, {teks(pasien.tanggal_lahir)}</span></div>
+            <div className="col-span-2 lg:col-span-3"><span className="text-slate-500">Alamat: </span><span className="text-slate-800">{teks(pasien.alamat)}</span></div>
+            <div><span className="text-slate-500">G.D.: </span><span className="text-slate-800">{teks(pasien.golongan_darah)}</span></div>
+            <div className="col-span-2"><span className="text-slate-500">Nama Ibu Kandung: </span><span className="text-slate-800">{teks(pasien.nama_ibu)}</span></div>
+            <div><span className="text-slate-500">Agama: </span><span className="text-slate-800">{teks(pasien.agama)}</span></div>
+            <div><span className="text-slate-500">Stts. Nikah: </span><span className="text-slate-800">{teks(pasien.status_nikah)}</span></div>
+            <div><span className="text-slate-500">Pendidikan: </span><span className="text-slate-800">{teks(pasien.pendidikan)}</span></div>
+            <div><span className="text-slate-500">Bahasa: </span><span className="text-slate-800">{teks(pasien.bahasa)}</span></div>
+            <div><span className="text-slate-500">Cacat Fisik: </span><span className="text-slate-800">{teks(pasien.cacat_fisik)}</span></div>
           </div>
         )}
 
-        <div role="tablist" aria-label="Jenis riwayat pasien" className="flex shrink-0 overflow-x-auto border-b border-slate-200">
+        <div role="tablist" aria-label="Jenis riwayat pasien" className="flex shrink-0 overflow-x-auto border-b border-slate-200 px-2">
           {TAB_RIWAYAT.map((tab, indeks) => (
             <button
               key={tab}
@@ -514,14 +518,14 @@ export function RiwayatPasienDialog({
                 pindahTab(TAB_RIWAYAT[tujuan]);
                 document.getElementById(`tab-riwayat-${TAB_RIWAYAT[tujuan]}`)?.focus();
               }}
-              className={`whitespace-nowrap border-b-2 px-3 py-1.5 text-[11px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === tab ? "border-primary-700 bg-white text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+              className={`whitespace-nowrap border-b-2 px-4 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === tab ? "border-primary-600 text-primary-700" : "border-transparent text-slate-600 hover:bg-slate-50"}`}
             >
               {LABEL_TAB[tab]}
             </button>
           ))}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-end gap-2 border-b border-slate-200 bg-slate-50 p-2">
+        <div className="order-2 flex shrink-0 flex-wrap items-end gap-2 border-t border-slate-200 bg-white px-2.5 py-2">
           <fieldset className="flex items-center gap-2">
             <legend className="sr-only">Mode pencarian riwayat</legend>
             {(Object.keys(LABEL_MODE) as ModeRiwayat[]).filter(modeTersedia).map((nilai) => (
@@ -541,7 +545,7 @@ export function RiwayatPasienDialog({
           <CustomSelect aria-label="Batas data" value={String(limit)} onChange={() => undefined} className="ml-auto h-7 py-0.5 text-[11px]"><option value={String(limit)}>{limit} baris</option></CustomSelect>
         </div>
 
-        <section id="panel-riwayat-pasien" role="tabpanel" aria-labelledby={`tab-riwayat-${tabAktif}`} tabIndex={0} className={`min-h-0 flex-1 bg-slate-50 ${tabAktif === "perawatan" ? "flex overflow-hidden p-0" : "space-y-3 overflow-auto p-2"}`}>
+        <section id="panel-riwayat-pasien" role="tabpanel" aria-labelledby={`tab-riwayat-${tabAktif}`} tabIndex={0} className={`order-1 min-h-0 flex-1 bg-white ${tabAktif === "perawatan" ? "flex overflow-hidden p-0" : "space-y-3 overflow-auto p-2"}`}>
           {tabAktif === "perawatan" && !memuatTampil && items.length > 0 && (
             <SidebarBagianPerawatan
               terbuka={sidebarPerawatanTerbuka}
@@ -610,7 +614,7 @@ export function RiwayatPasienDialog({
             const tampilTindakan = tindakanDipilih.length > 0 && tindakanTerfilter.length > 0;
             const tampilKamar = bagianTerpilih.has("Penggunaan Kamar") && (sections.kamar || []).length > 0;
             const tampilDiagnosa = bagianTerpilih.has("Diagnosa/Penyakit (ICD 10)") && (sections.diagnosa || []).length > 0;
-            const tampilProsedur = bagianTerpilih.has("Prosedur/Tidakan (ICD 9)") && (sections.prosedur || []).length > 0;
+            const tampilProsedur = bagianTerpilih.has("Prosedur/Tindakan (ICD 9)") && (sections.prosedur || []).length > 0;
             const tampilResume = bagianTerpilih.has("Resume") && (sections.resume || []).length > 0;
             const adaBagian = tampilSep || tampilTindakan || tampilKamar || tampilDiagnosa || tampilProsedur || tampilResume;
             return (
@@ -731,7 +735,7 @@ export function RiwayatPasienDialog({
           </div>
         </section>
 
-        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 bg-slate-100 px-3 py-2 text-[11px] text-slate-600">
+        <div className="order-3 flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 bg-white px-2.5 py-2 text-[11px] text-slate-600">
           <span>{items.length} dari {total} riwayat · Halaman {halamanSaatIni} / {jumlahHalaman}</span>
           <div className="flex items-center gap-2">
             <button type="button" disabled={offset <= 0 || memuatTampil} onClick={() => setOffset((nilai) => Math.max(0, nilai - limit))} aria-label="Halaman sebelumnya" className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary-500"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button>
@@ -740,7 +744,7 @@ export function RiwayatPasienDialog({
           </div>
         </div>
       </div>
-    </div>,
-    document.body,
+    </div>
   );
+  return tampilan === "dialog" ? createPortal(konten, document.body) : konten;
 }
