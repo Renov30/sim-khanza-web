@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN dokter d ON pl.dokter_perujuk = d.kd_dokter
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (status !== "Semua") {
       sql += ` AND pl.status = ?`;
@@ -38,17 +38,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY pl.tgl_permintaan DESC, pl.jam_permintaan DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/laboratorium/permintaan-pa:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data permintaan lab PA" },
+      { success: false, error: "Gagal memuat data permintaan lab PA" },
       { status: 500 }
     );
   }

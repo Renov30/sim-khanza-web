@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import type { BarisApi } from "@/lib/types/api";
 import { useRouter } from "next/navigation";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBed,
   faMagnifyingGlass,
   faXmark,
   faCircleExclamation,
@@ -15,7 +15,7 @@ import {
 
 export default function HalamanRawatInap() {
   const router = useRouter();
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<BarisApi[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
   const [statusPulang, setStatusPulang] = useState("Semua");
@@ -37,15 +37,16 @@ export default function HalamanRawatInap() {
       } else {
         setPesanError(json.error || "Gagal memuat data rawat inap");
       }
-    } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+    } catch (err: unknown) {
+      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
     } finally {
       setMemuat(false);
     }
   }, [kataKunci, statusPulang]);
 
   useEffect(() => {
-    muatData();
+    const timer = window.setTimeout(() => void muatData(), 0);
+    return () => window.clearTimeout(timer);
   }, [muatData]);
 
   return (
@@ -143,7 +144,7 @@ export default function HalamanRawatInap() {
                     <td className="whitespace-nowrap py-2 px-2.5 font-medium text-slate-800">
                       <button
                         type="button"
-                        onClick={() => router.push(`/tindakan-rawat-inap?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        onClick={() => router.push(`/tindakan-rawat-inap?no_rawat=${encodeURIComponent(String(item.no_rawat ?? ""))}`)}
                         className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
                         aria-label={`Input tindakan untuk nomor rawat ${item.no_rawat}, pasien ${item.nm_pasien}`}
                       >

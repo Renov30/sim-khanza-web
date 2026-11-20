@@ -49,14 +49,20 @@ export function PanelInputData({
   const [terbuka, setTerbuka] = useState(terbukaAwal);
 
   useEffect(() => {
+    let aktif = true;
     try {
       const nilaiTersimpan = localStorage.getItem(kunciStorage);
       if (nilaiTersimpan !== null) {
-        setTerbuka(nilaiTersimpan === "true");
+        queueMicrotask(() => {
+          if (aktif) setTerbuka(nilaiTersimpan === "true");
+        });
       }
-    } catch (e) {
+    } catch {
       // Abaikan jika storage dinonaktifkan di browser
     }
+    return () => {
+      aktif = false;
+    };
   }, [kunciStorage]);
 
   const handleToggle = () => {
@@ -64,7 +70,7 @@ export function PanelInputData({
       const stateBaru = !prev;
       try {
         localStorage.setItem(kunciStorage, String(stateBaru));
-      } catch (e) {
+      } catch {
         // Abaikan
       }
       return stateBaru;

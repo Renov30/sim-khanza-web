@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       FROM utd_penyerahan_darah upd
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (cari.trim()) {
       sql += ` AND (upd.no_penyerahan LIKE ? OR upd.pengambil_darah LIKE ? OR upd.keterangan LIKE ?)`;
@@ -25,17 +25,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY upd.tanggal DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/farmasi/penyerahan-darah:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data penyerahan darah" },
+      { success: false, error: "Gagal memuat data penyerahan darah" },
       { status: 500 }
     );
   }

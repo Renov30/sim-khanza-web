@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       INNER JOIN poliklinik pol ON r.kd_poli = pol.kd_poli
       WHERE (r.kd_poli = 'IGD' OR pol.nm_poli LIKE '%IGD%' OR pol.nm_poli LIKE '%DARURAT%')
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (tanggalMulai && tanggalSelesai) {
       sql += ` AND r.tgl_registrasi BETWEEN ? AND ?`;
@@ -37,17 +37,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY r.tgl_registrasi DESC, r.jam_reg DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/igd:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data IGD" },
+      { success: false, error: "Gagal memuat data IGD" },
       { status: 500 }
     );
   }

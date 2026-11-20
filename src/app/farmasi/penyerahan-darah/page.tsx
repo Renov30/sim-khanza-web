@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import type { BarisApi } from "@/lib/types/api";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,7 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function HalamanPenyerahanDarah() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<BarisApi[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
   const [pesanError, setPesanError] = useState<string | null>(null);
@@ -31,15 +32,16 @@ export default function HalamanPenyerahanDarah() {
       } else {
         setPesanError(json.error || "Gagal memuat data penyerahan darah");
       }
-    } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+    } catch (err: unknown) {
+      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
     } finally {
       setMemuat(false);
     }
   }, [kataKunci]);
 
   useEffect(() => {
-    muatData();
+    const timer = window.setTimeout(() => void muatData(), 0);
+    return () => window.clearTimeout(timer);
   }, [muatData]);
 
   return (

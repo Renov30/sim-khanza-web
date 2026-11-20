@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN databarang b ON dpo.kode_brng = b.kode_brng
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (tanggalMulai && tanggalSelesai) {
       sql += ` AND dpo.tgl_perawatan BETWEEN ? AND ?`;
@@ -36,17 +36,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY dpo.tgl_perawatan DESC, dpo.jam DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/farmasi:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data farmasi" },
+      { success: false, error: "Gagal memuat data farmasi" },
       { status: 500 }
     );
   }

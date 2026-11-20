@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN kodesatuan s ON b.kode_sat = s.kode_sat
       WHERE b.status = '1'
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (cari.trim()) {
       sql += ` AND (b.kode_brng LIKE ? OR b.nama_brng LIKE ?)`;
@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
     sql += ` ORDER BY b.nama_brng ASC LIMIT 50`;
 
-    const barang = await executeQuery<any[]>(sql, params);
-    const gudang = await executeQuery<any[]>("SELECT kd_bangsal, nm_bangsal FROM bangsal ORDER BY nm_bangsal ASC", []);
+    const barang = await executeQuery<Record<string, unknown>>(sql, params);
+    const gudang = await executeQuery<Record<string, unknown>>("SELECT kd_bangsal, nm_bangsal FROM bangsal ORDER BY nm_bangsal ASC", []);
 
     return NextResponse.json({
       success: true,
@@ -32,10 +32,10 @@ export async function GET(req: NextRequest) {
         gudang,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/farmasi/input-penjualan:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data form input penjualan" },
+      { success: false, error: "Gagal memuat data form input penjualan" },
       { status: 500 }
     );
   }

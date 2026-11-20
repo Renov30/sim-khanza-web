@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN dokter d ON pl.kd_dokter = d.kd_dokter
       WHERE (pl.kategori = 'PK' OR pl.kategori IS NULL OR pl.kategori = '')
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (status !== "Semua") {
       sql += ` AND pl.status = ?`;
@@ -36,17 +36,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY pl.tgl_periksa DESC, pl.jam DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/laboratorium/periksa-pk:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data periksa lab PK" },
+      { success: false, error: "Gagal memuat data periksa lab PK" },
       { status: 500 }
     );
   }

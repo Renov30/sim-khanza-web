@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN dokter d ON pl.kd_dokter = d.kd_dokter
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (tanggalMulai && tanggalSelesai) {
       sql += ` AND pl.tgl_periksa BETWEEN ? AND ?`;
@@ -37,17 +37,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY pl.tgl_periksa DESC, pl.jam DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/laboratorium:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data laboratorium" },
+      { success: false, error: "Gagal memuat data laboratorium" },
       { status: 500 }
     );
   }

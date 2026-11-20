@@ -1,7 +1,7 @@
 import mysql from "mysql2/promise";
+import type { ExecuteValues } from "mysql2/promise";
 
 declare global {
-  // eslint-disable-next-line no-var
   var _mysqlPool: mysql.Pool | undefined;
 }
 
@@ -24,11 +24,9 @@ if (process.env.NODE_ENV !== "production") {
   global._mysqlPool = pool;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function executeQuery<T = unknown>(
   sql: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: any[]
+  params?: ExecuteValues[]
 ): Promise<T[]> {
   const [rows] = await pool.execute(sql, params);
   return rows as T[];

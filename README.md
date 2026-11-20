@@ -83,7 +83,7 @@ npm run start
 ## Dokumentasi
 
 - [Riwayat dan panduan pengembangan](docs/README.md)
-- [Struktur aplikasi dan schema database](docs/schema.md)
+- [Struktur aplikasi dan schema database](docs/SCHEMA.md)
 - [Aturan wajib proyek](AGENTS.md)
 
 Jangan commit `.env*`, dump database, atau data pasien ke repository.

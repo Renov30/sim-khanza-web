@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN jns_perawatan_lab j ON dp.kd_jenis_prw = j.kd_jenis_prw
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (cari.trim()) {
       sql += ` AND (dp.no_rawat LIKE ? OR r.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR j.nm_perawatan LIKE ?)`;
@@ -29,17 +29,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY dp.tgl_periksa DESC, dp.jam DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/laboratorium/periksa-pa:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data periksa lab PA" },
+      { success: false, error: "Gagal memuat data periksa lab PA" },
       { status: 500 }
     );
   }

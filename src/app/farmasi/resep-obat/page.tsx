@@ -567,11 +567,26 @@ export default function HalamanInputResep() {
     setCariObat("");
     setKatalog([]);
     setKatalogSumber([]);
+    katalogDraftRef.current = [];
+    setMemuatObat(false);
+    setMemuatObatBerikutnya(false);
+    setOffsetObat(0);
+    setAdaObatBerikutnya(false);
     setTotalObat(0);
+    setKatalogDimuat(false);
     setObat([]);
     setBahan([]);
     setRacikan([]);
     setDraftRacikan(racikanKosong());
+    setTargetAturanPakai(null);
+    setCariAturanPakai("");
+    setAturanPakai([]);
+    setSumberDraft(null);
+    setDraftDimuat(false);
+    setKonfirmasi(false);
+    router.replace("/farmasi/resep-obat");
+  };
+
   const editRacikan = (item: Racikan) => {
     setModeInput("racikan");
     setDraftRacikan({
@@ -884,6 +899,7 @@ export default function HalamanInputResep() {
 
       <PanelBawah
         tampilan="web"
+        onBaru={resetForm}
         kataKunci={cariObat}
         onGantiKataKunci={setCariObat}
         placeholderCari="Kode, nama, jenis, atau komposisi obat..."

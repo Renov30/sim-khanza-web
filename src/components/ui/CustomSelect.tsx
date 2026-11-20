@@ -3,6 +3,7 @@
 import React, { SelectHTMLAttributes, forwardRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export interface SelectOption {
   value: string;
@@ -13,7 +14,7 @@ export interface SelectOption {
 export interface CustomSelectProps
   extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   options?: SelectOption[];
-  icon?: any;
+  icon?: IconProp;
   containerClassName?: string;
 }
 

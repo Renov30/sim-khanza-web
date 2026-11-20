@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useKlien } from "@/lib/klien";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTriangleExclamation,
@@ -39,11 +40,7 @@ export function KonfirmasiDialog({
   bahaya = true,
   sedangMemproses = false,
 }: KonfirmasiDialogProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useKlien();
 
   // Tutup dengan tombol Escape
   useEffect(() => {

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN dokter d ON pr.kd_dokter = d.kd_dokter
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (tanggalMulai && tanggalSelesai) {
       sql += ` AND pr.tgl_periksa BETWEEN ? AND ?`;
@@ -37,17 +37,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY pr.tgl_periksa DESC, pr.jam DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/radiologi:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data radiologi" },
+      { success: false, error: "Gagal memuat data radiologi" },
       { status: 500 }
     );
   }

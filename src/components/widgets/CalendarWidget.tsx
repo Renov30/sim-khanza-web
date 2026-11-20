@@ -1,17 +1,26 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useKlien } from "@/lib/klien";
 
 export default function CalendarWidget() {
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const mounted = useKlien();
 
   useEffect(() => {
-    setCurrentDate(new Date());
+    const awal = window.setTimeout(() => setCurrentDate(new Date()), 0);
     const timer = setInterval(() => setCurrentDate(new Date()), 60000);
-    return () => clearInterval(timer);
+    return () => {
+      window.clearTimeout(awal);
+      clearInterval(timer);
+    };
   }, []);
 
-  const now = currentDate || new Date();
+  if (!mounted || !currentDate) {
+    return <div aria-hidden="true" className="h-[184px] w-[184px]" />;
+  }
+
+  const now = currentDate;
 
   const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const monthNames = [

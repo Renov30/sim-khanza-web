@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN detailjual dj ON p.nota_jual = dj.nota_jual
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (status !== "Semua") {
       sql += ` AND p.status = ?`;
@@ -34,17 +34,17 @@ export async function GET(req: NextRequest) {
     sql += ` GROUP BY p.nota_jual ORDER BY p.tgl_jual DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/farmasi/penjualan-obat:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data penjualan obat" },
+      { success: false, error: "Gagal memuat data penjualan obat" },
       { status: 500 }
     );
   }

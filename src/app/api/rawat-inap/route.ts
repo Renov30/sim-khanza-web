@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       LEFT JOIN bangsal b ON k.kd_bangsal = b.kd_bangsal
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (statusPulang !== "Semua") {
       sql += ` AND ki.stts_pulang = ?`;
@@ -39,17 +39,17 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY ki.tgl_masuk DESC, ki.jam_masuk DESC LIMIT ?`;
     params.push(limit);
 
-    const rows = await executeQuery<any[]>(sql, params);
+    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
       total: rows.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in api/rawat-inap:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal memuat data rawat inap" },
+      { success: false, error: "Gagal memuat data rawat inap" },
       { status: 500 }
     );
   }

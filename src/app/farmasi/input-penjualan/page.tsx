@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import type { BarisApi } from "@/lib/types/api";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,8 +13,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function HalamanInputPenjualan() {
-  const [barangList, setBarangList] = useState<any[]>([]);
-  const [gudangList, setGudangList] = useState<any[]>([]);
+  const [barangList, setBarangList] = useState<BarisApi[]>([]);
+  const [gudangList, setGudangList] = useState<BarisApi[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
   const [gudangDipilih, setGudangDipilih] = useState("AP");
@@ -34,15 +35,16 @@ export default function HalamanInputPenjualan() {
       } else {
         setPesanError(json.error || "Gagal memuat katalog barang farmasi");
       }
-    } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+    } catch (err: unknown) {
+      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
     } finally {
       setMemuat(false);
     }
   }, [kataKunci]);
 
   useEffect(() => {
-    muatData();
+    const timer = window.setTimeout(() => void muatData(), 0);
+    return () => window.clearTimeout(timer);
   }, [muatData]);
 
   return (
@@ -77,7 +79,7 @@ export default function HalamanInputPenjualan() {
               onChange={(e) => setGudangDipilih(e.target.value)}
             >
               {gudangList.map((g) => (
-                <option key={g.kd_bangsal} value={g.kd_bangsal}>
+                <option key={String(g.kd_bangsal)} value={String(g.kd_bangsal ?? "")}>
                   Gudang: {g.nm_bangsal}
                 </option>
               ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import type { BarisApi } from "@/lib/types/api";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,7 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function HalamanPenjualanObat() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<BarisApi[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
   const [status, setStatus] = useState("Semua");
@@ -34,15 +35,16 @@ export default function HalamanPenjualanObat() {
       } else {
         setPesanError(json.error || "Gagal memuat data penjualan obat & BHP");
       }
-    } catch (err: any) {
-      setPesanError(err.message || "Terjadi kesalahan jaringan");
+    } catch (err: unknown) {
+      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
     } finally {
       setMemuat(false);
     }
   }, [kataKunci, status]);
 
   useEffect(() => {
-    muatData();
+    const timer = window.setTimeout(() => void muatData(), 0);
+    return () => window.clearTimeout(timer);
   }, [muatData]);
 
   return (
