@@ -163,7 +163,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex-1 overflow-hidden relative flex flex-col">
             {isMenuOpen && pathname === "/" ? (
               <main className="flex-1 overflow-hidden relative flex flex-col bg-white">
-                <MainMenuGrid key={searchParams.toString()} onModuleClick={handleModuleClick} />
+                <MainMenuGrid onModuleClick={handleModuleClick} />
               </main>
             ) : (
               <main className="flex-1 overflow-hidden relative flex flex-col">
