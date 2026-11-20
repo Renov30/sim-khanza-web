@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
+import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
@@ -20,6 +21,9 @@ interface PasanganKode {
   nama: keyof ResumePasienForm;
   kode: keyof ResumePasienForm;
 }
+
+const TAB_RESUME = ["input", "data"] as const;
+type TabResume = (typeof TAB_RESUME)[number];
 
 const DIAGNOSA: PasanganKode[] = [
   { judul: "Diagnosa Utama", nama: "diagnosa_utama", kode: "kd_diagnosa_utama" },
@@ -69,6 +73,22 @@ const KOLOM_TABEL: { label: string; kunci: keyof BarisResume }[] = [
   { label: "Obat-obatan waktu pulang/nasihat", kunci: "obat_pulang" },
 ];
 
+const KOLOM_MONO = new Set<keyof BarisResume>([
+  "tgl_registrasi",
+  "no_rawat",
+  "no_rkm_medis",
+  "kd_dokter",
+  "kd_diagnosa_utama",
+  "kd_diagnosa_sekunder",
+  "kd_diagnosa_sekunder2",
+  "kd_diagnosa_sekunder3",
+  "kd_diagnosa_sekunder4",
+  "kd_prosedur_utama",
+  "kd_prosedur_sekunder",
+  "kd_prosedur_sekunder2",
+  "kd_prosedur_sekunder3",
+]);
+
 function pesanDari(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
 }
@@ -83,12 +103,14 @@ function KolomBaca({ label, nilai, mono = false }: { label: string; nilai: strin
 }
 
 function AreaInput({
+  id,
   label,
   nilai,
   onUbah,
   batas,
   dinonaktifkan,
 }: {
+  id: string;
   label: string;
   nilai: string;
   onUbah: (nilai: string) => void;
@@ -96,17 +118,18 @@ function AreaInput({
   dinonaktifkan: boolean;
 }) {
   return (
-    <div className="grid max-w-[98rem] grid-cols-1 items-start gap-1.5 sm:grid-cols-[28rem_minmax(0,1fr)]">
-      <label className="pt-1.5 text-[11px] font-medium text-slate-700 sm:text-right">
+    <div className="space-y-1">
+      <label htmlFor={id} className="block text-[11px] font-medium text-slate-700">
         {label} :
       </label>
       <textarea
+        id={id}
         value={nilai}
         maxLength={batas}
         disabled={dinonaktifkan}
         onChange={(event) => onUbah(event.target.value)}
-        rows={3}
-        className="min-h-20 w-full resize-y rounded-sm border border-slate-300 bg-white px-2 py-1.5 text-xs leading-relaxed text-slate-800 disabled:bg-slate-50 disabled:text-slate-600"
+        rows={4}
+        className="min-h-24 w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs leading-relaxed text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600"
       />
     </div>
   );
@@ -123,7 +146,7 @@ function KontenResumePasien() {
   const [tanggalAkhir, setTanggalAkhir] = useState("");
   const [kataKunci, setKataKunci] = useState("");
   const [barisTerpilih, setBarisTerpilih] = useState("");
-  const [tabAktif, setTabAktif] = useState<"input" | "data">("input");
+  const [tabAktif, setTabAktif] = useState<TabResume>("input");
   const [memuat, setMemuat] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
   const [konfirmasiHapus, setKonfirmasiHapus] = useState(false);
@@ -270,30 +293,44 @@ function KontenResumePasien() {
     router.replace(`/resume-pasien?no_rawat=${encodeURIComponent(baris.no_rawat)}`);
   };
 
+  const navigasiTab = (event: KeyboardEvent<HTMLButtonElement>, tab: TabResume) => {
+    const indeks = TAB_RESUME.indexOf(tab);
+    let tujuan = indeks;
+    if (event.key === "ArrowRight") tujuan = (indeks + 1) % TAB_RESUME.length;
+    else if (event.key === "ArrowLeft") tujuan = (indeks - 1 + TAB_RESUME.length) % TAB_RESUME.length;
+    else if (event.key === "Home") tujuan = 0;
+    else if (event.key === "End") tujuan = TAB_RESUME.length - 1;
+    else return;
+    event.preventDefault();
+    const tabTujuan = TAB_RESUME[tujuan];
+    setTabAktif(tabTujuan);
+    document.getElementById(`tab-resume-${tabTujuan}`)?.focus();
+  };
+
   const bisaUbah = Boolean(data?.bisa_ubah);
   const kunjungan = data?.kunjungan;
 
   return (
-    <div className="module-page flex h-full w-full flex-col overflow-hidden bg-white p-0">
-      <section className="shrink-0 border-b border-slate-200 bg-white px-3 py-2">
+    <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
+      <section aria-label="Identitas kunjungan resume pasien" className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm">
         <form
           onSubmit={(event) => {
             event.preventDefault();
             const nilai = String(new FormData(event.currentTarget).get("no_rawat") || "").trim();
             if (nilai) router.replace(`/resume-pasien?no_rawat=${encodeURIComponent(nilai)}`);
           }}
-          className="mb-2 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2 text-xs"
+          className="mb-2 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-2 text-xs"
         >
-          <label htmlFor="cari-no-rawat-resume" className="whitespace-nowrap font-medium text-slate-700">No. Rawat</label>
+          <label htmlFor="cari-no-rawat-resume" className="whitespace-nowrap font-medium text-slate-700">No. Rawat :</label>
           <input
             key={noRawat}
             id="cari-no-rawat-resume"
             name="no_rawat"
             defaultValue={noRawat}
             placeholder="Masukkan no. rawat kunjungan rawat jalan"
-            className="h-8 w-64 rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800"
+            className="h-7 w-64 rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
           />
-          <button type="submit" className="h-8 rounded-md border border-primary-700 bg-primary-700 px-3 text-xs font-semibold text-white">Buka</button>
+          <button type="submit" className="h-7 rounded-md bg-primary-700 px-3 text-xs font-semibold text-white">Buka</button>
         </form>
         {kunjungan ? (
           <div className="grid grid-cols-1 gap-x-3 gap-y-1.5 text-xs sm:grid-cols-2 xl:grid-cols-3">
@@ -332,10 +369,11 @@ function KontenResumePasien() {
             </div>
           </div>
         ) : (
-          <p className="py-3 text-xs text-slate-500">Pilih pasien rawat jalan dari menu Resume Pasien atau masukkan no. rawat di atas.</p>
+          <p className="py-1 text-xs text-slate-500">Pilih pasien rawat jalan dari menu Resume Pasien atau masukkan no. rawat di atas.</p>
         )}
       </section>
 
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
       <div role="tablist" aria-label="Resume medis" className="flex shrink-0 border-b border-slate-200 bg-white px-3">
         <button
           id="tab-resume-input"
@@ -343,8 +381,10 @@ function KontenResumePasien() {
           role="tab"
           aria-selected={tabAktif === "input"}
           aria-controls="panel-resume-input"
+          tabIndex={tabAktif === "input" ? 0 : -1}
           onClick={() => setTabAktif("input")}
-          className={`border-b-2 px-3 py-2 text-xs font-semibold ${tabAktif === "input" ? "border-primary-700 text-primary-700" : "border-transparent text-slate-500 hover:bg-slate-50"}`}
+          onKeyDown={(event) => navigasiTab(event, "input")}
+          className={`border-b-2 px-3 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === "input" ? "border-primary-600 text-primary-700" : "border-transparent text-slate-600"}`}
         >
           Input Data
         </button>
@@ -354,97 +394,90 @@ function KontenResumePasien() {
           role="tab"
           aria-selected={tabAktif === "data"}
           aria-controls="panel-resume-data"
+          tabIndex={tabAktif === "data" ? 0 : -1}
           onClick={() => setTabAktif("data")}
-          className={`border-b-2 px-3 py-2 text-xs font-semibold ${tabAktif === "data" ? "border-primary-700 text-primary-700" : "border-transparent text-slate-500 hover:bg-slate-50"}`}
+          onKeyDown={(event) => navigasiTab(event, "data")}
+          className={`border-b-2 px-3 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === "data" ? "border-primary-600 text-primary-700" : "border-transparent text-slate-600"}`}
         >
           Data Resume
         </button>
       </div>
 
-      <section id="panel-resume-input" role="tabpanel" aria-labelledby="tab-resume-input" hidden={tabAktif !== "input"} className="min-h-0 flex-1 overflow-auto border-b border-slate-200 bg-white px-3 py-2">
-        <div className="space-y-2.5">
+      {tabAktif === "input" && <section id="panel-resume-input" role="tabpanel" aria-labelledby="tab-resume-input" tabIndex={0} className="min-h-0 flex-1 overflow-auto bg-white p-3">
+        <GridFormulirModul className="items-start gap-y-3 lg:gap-x-5">
           <div className="space-y-2.5">
-            <AreaInput label="Keluhan utama riwayat penyakit yang positif" nilai={form.keluhan_utama} batas={PANJANG_RESUME.keluhan_utama} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("keluhan_utama", nilai)} />
-            <AreaInput label="Jalannya penyakit selama perawatan" nilai={form.jalannya_penyakit} batas={PANJANG_RESUME.jalannya_penyakit} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("jalannya_penyakit", nilai)} />
-            <AreaInput label="Pemeriksaan penunjang yang positif" nilai={form.pemeriksaan_penunjang} batas={PANJANG_RESUME.pemeriksaan_penunjang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("pemeriksaan_penunjang", nilai)} />
-            <AreaInput label="Hasil laboratorium yang positif" nilai={form.hasil_laborat} batas={PANJANG_RESUME.hasil_laborat} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("hasil_laborat", nilai)} />
-            <AreaInput label="Obat-obatan waktu pulang/nasihat" nilai={form.obat_pulang} batas={PANJANG_RESUME.obat_pulang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("obat_pulang", nilai)} />
+            <AreaInput id="keluhan-utama-resume" label="Keluhan utama riwayat penyakit yang positif" nilai={form.keluhan_utama} batas={PANJANG_RESUME.keluhan_utama} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("keluhan_utama", nilai)} />
+            <AreaInput id="jalannya-penyakit-resume" label="Jalannya penyakit selama perawatan" nilai={form.jalannya_penyakit} batas={PANJANG_RESUME.jalannya_penyakit} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("jalannya_penyakit", nilai)} />
+            <AreaInput id="pemeriksaan-penunjang-resume" label="Pemeriksaan penunjang yang positif" nilai={form.pemeriksaan_penunjang} batas={PANJANG_RESUME.pemeriksaan_penunjang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("pemeriksaan_penunjang", nilai)} />
+            <AreaInput id="hasil-laboratorium-resume" label="Hasil laboratorium yang positif" nilai={form.hasil_laborat} batas={PANJANG_RESUME.hasil_laborat} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("hasil_laborat", nilai)} />
+            <AreaInput id="obat-pulang-resume" label="Obat-obatan waktu pulang/nasihat" nilai={form.obat_pulang} batas={PANJANG_RESUME.obat_pulang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("obat_pulang", nilai)} />
           </div>
 
-          <div className="flex max-w-[98rem] items-center justify-between gap-2 border-t border-slate-200 pt-2.5">
-            <h3 className="text-xs font-semibold text-slate-800">Diagnosa Akhir dan Prosedur</h3>
-            <button
-              type="button"
-              disabled={!bisaUbah || ((data?.unggulan.diagnosa.length || 0) === 0 && (data?.unggulan.prosedur.length || 0) === 0)}
-              onClick={ambilUnggulan}
-              className="h-7 rounded-md border border-primary-200 bg-primary-50 px-3 text-xs font-semibold text-primary-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-            >
-              Ambil Diagnosa/Prosedur Kunjungan
-            </button>
-          </div>
+          <div className="space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+              <h3 className="text-xs font-semibold text-slate-800">Diagnosa Akhir dan Prosedur</h3>
+              <button
+                type="button"
+                disabled={!bisaUbah || ((data?.unggulan.diagnosa.length || 0) === 0 && (data?.unggulan.prosedur.length || 0) === 0)}
+                onClick={ambilUnggulan}
+                className="h-7 rounded-md border border-primary-200 bg-primary-50 px-3 text-xs font-semibold text-primary-700 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                Ambil dari Kunjungan
+              </button>
+            </div>
 
-          <div className="max-w-[98rem] space-y-1.5">
-            {DIAGNOSA.map((pasangan) => (
-              <div key={pasangan.nama} className="grid grid-cols-1 items-end gap-1.5 sm:grid-cols-[16rem_minmax(0,1fr)_8rem]">
-                <label className="text-[11px] font-medium text-slate-700 sm:text-right">
-                  {pasangan.judul} :
-                </label>
-                <div>
+            <div className="space-y-1.5">
+              {DIAGNOSA.map((pasangan) => (
+                <div key={pasangan.nama} className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[8rem_minmax(0,1fr)_6.5rem]">
+                  <label className="text-[11px] font-medium text-slate-700 sm:text-right">{pasangan.judul} :</label>
                   <input
                     value={String(form[pasangan.nama])}
                     maxLength={PANJANG_RESUME[pasangan.nama as keyof typeof PANJANG_RESUME]}
                     disabled={!bisaUbah}
                     onChange={(event) => ubah(pasangan.nama, event.target.value)}
                     aria-label={pasangan.judul}
-                    className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 disabled:bg-slate-50"
+                    className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50"
                   />
-                </div>
-                <label className="text-[11px] font-medium text-slate-700">
-                  <span className="sr-only">Kode ICD-10 {pasangan.judul}</span>
                   <input
                     value={String(form[pasangan.kode])}
                     maxLength={PANJANG_RESUME[pasangan.kode as keyof typeof PANJANG_RESUME]}
                     disabled={!bisaUbah}
                     onChange={(event) => ubah(pasangan.kode, event.target.value)}
                     aria-label={`Kode ICD-10 ${pasangan.judul}`}
-                    className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 disabled:bg-slate-50"
+                    placeholder="ICD-10"
+                    className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50"
                   />
-                </label>
-              </div>
-            ))}
-            {PROSEDUR.map((pasangan) => (
-              <div key={pasangan.nama} className="grid grid-cols-1 items-end gap-1.5 sm:grid-cols-[16rem_minmax(0,1fr)_8rem]">
-                <label className="text-[11px] font-medium text-slate-700 sm:text-right">
-                  {pasangan.judul} :
-                </label>
-                <div>
+                </div>
+              ))}
+              <div className="border-t border-slate-100 pt-1.5" />
+              {PROSEDUR.map((pasangan) => (
+                <div key={pasangan.nama} className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[8rem_minmax(0,1fr)_6.5rem]">
+                  <label className="text-[11px] font-medium text-slate-700 sm:text-right">{pasangan.judul} :</label>
                   <input
                     value={String(form[pasangan.nama])}
                     maxLength={PANJANG_RESUME[pasangan.nama as keyof typeof PANJANG_RESUME]}
                     disabled={!bisaUbah}
                     onChange={(event) => ubah(pasangan.nama, event.target.value)}
                     aria-label={pasangan.judul}
-                    className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 disabled:bg-slate-50"
+                    className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50"
                   />
-                </div>
-                <label className="text-[11px] font-medium text-slate-700">
-                  <span className="sr-only">Kode ICD-9 {pasangan.judul}</span>
                   <input
                     value={String(form[pasangan.kode])}
                     maxLength={PANJANG_RESUME[pasangan.kode as keyof typeof PANJANG_RESUME]}
                     disabled={!bisaUbah}
                     onChange={(event) => ubah(pasangan.kode, event.target.value)}
                     aria-label={`Kode ICD-9 ${pasangan.judul}`}
-                    className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 disabled:bg-slate-50"
+                    placeholder="ICD-9"
+                    className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50"
                   />
-                </label>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </GridFormulirModul>
+      </section>}
 
-      <section id="panel-resume-data" role="tabpanel" aria-labelledby="tab-resume-data" hidden={tabAktif !== "data"} className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-slate-200 bg-white">
+      {tabAktif === "data" && <section id="panel-resume-data" role="tabpanel" aria-labelledby="tab-resume-data" tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
         <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full min-w-[4600px] border-collapse text-left text-[11px] text-slate-700">
             <caption className="sr-only">Daftar resume pasien rawat jalan</caption>
@@ -458,8 +491,10 @@ function KontenResumePasien() {
               </tr>
             </thead>
             <tbody>
-              {!data || memuat ? (
+              {memuat ? (
                 <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-500">Memuat resume pasien...</td></tr>
+              ) : !data ? (
+                <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-400">Pilih kunjungan untuk menampilkan data resume.</td></tr>
               ) : data.daftar.length === 0 ? (
                 <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-400">Belum ada resume pasien.</td></tr>
               ) : data.daftar.map((baris) => (
@@ -467,10 +502,10 @@ function KontenResumePasien() {
                   key={baris.no_rawat}
                   aria-current={barisTerpilih === baris.no_rawat ? "true" : undefined}
                   onClick={() => pilihBaris(baris)}
-                  className={`cursor-pointer border-b border-slate-100 ${barisTerpilih === baris.no_rawat ? "bg-primary-50" : "even:bg-slate-50/60"}`}
+                  className={`cursor-pointer ${barisTerpilih === baris.no_rawat ? "bg-primary-50/60" : "even:bg-slate-50/70"}`}
                 >
                   {KOLOM_TABEL.map((kolom) => (
-                    <td key={kolom.kunci} className="max-w-[22rem] truncate whitespace-nowrap border-r border-slate-100 px-2 py-1.5">
+                    <td key={kolom.kunci} className={`max-w-[22rem] truncate whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5 ${KOLOM_MONO.has(kolom.kunci) ? "font-mono tabular-nums" : ""}`}>
                       {String(baris[kolom.kunci] ?? "") || "-"}
                     </td>
                   ))}
@@ -479,6 +514,7 @@ function KontenResumePasien() {
             </tbody>
           </table>
         </div>
+      </section>}
       </section>
 
       {tabAktif === "input" ? (
