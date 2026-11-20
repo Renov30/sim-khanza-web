@@ -73,6 +73,14 @@ interface HitunganRow extends RowDataPacket {
   jumlah: number;
 }
 
+type JenisRiwayatResume = "keluhan" | "pemeriksaan" | "radiologi" | "laborat" | "obat";
+
+interface RiwayatResumeRow extends RowDataPacket {
+  tanggal: string;
+  jam: string;
+  nilai: string;
+}
+
 class ResumeError extends Error {
   constructor(message: string, readonly status = 400) {
     super(message);
@@ -98,6 +106,8 @@ export async function GET(req: NextRequest) {
         { headers: { "Cache-Control": "private, max-age=300" } },
       );
     }
+
+    if (query.get("resource") === "riwayat") return riwayatResume(query);
 
     const noRawat = query.get("no_rawat")?.trim() || "";
     if (!noRawat || noRawat.length > 17) throw new ResumeError("No. Rawat tidak valid.");
@@ -227,6 +237,63 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return gagal(error, "Gagal memuat resume pasien.");
   }
+}
+
+async function riwayatResume(query: URLSearchParams) {
+  const noRawat = query.get("no_rawat")?.trim() || "";
+  if (!noRawat || noRawat.length > 17) throw new ResumeError("No. Rawat tidak valid.");
+  const jenis = query.get("jenis");
+  if (!jenis || !["keluhan", "pemeriksaan", "radiologi", "laborat", "obat"].includes(jenis)) {
+    throw new ResumeError("Jenis riwayat tidak valid.");
+  }
+  const kataKunci = query.get("cari")?.trim().slice(0, 100) || "";
+  const pola = `%${kataKunci}%`;
+  const konfigurasi: Record<JenisRiwayatResume, { sql: string; parameter: string[] }> = {
+    keluhan: {
+      sql: `SELECT DATE_FORMAT(tgl_perawatan, '%Y-%m-%d') AS tanggal, TIME_FORMAT(jam_rawat, '%H:%i:%s') AS jam, keluhan AS nilai
+        FROM pemeriksaan_ralan WHERE no_rawat = ? AND (tgl_perawatan LIKE ? OR keluhan LIKE ?)
+        UNION ALL
+        SELECT DATE_FORMAT(tgl_perawatan, '%Y-%m-%d') AS tanggal, TIME_FORMAT(jam_rawat, '%H:%i:%s') AS jam, keluhan AS nilai
+        FROM pemeriksaan_ranap WHERE no_rawat = ? AND (tgl_perawatan LIKE ? OR keluhan LIKE ?)
+        ORDER BY tanggal DESC, jam DESC LIMIT 100`,
+      parameter: [noRawat, pola, pola, noRawat, pola, pola],
+    },
+    pemeriksaan: {
+      sql: `SELECT DATE_FORMAT(tgl_perawatan, '%Y-%m-%d') AS tanggal, TIME_FORMAT(jam_rawat, '%H:%i:%s') AS jam, pemeriksaan AS nilai
+        FROM pemeriksaan_ralan WHERE no_rawat = ? AND (tgl_perawatan LIKE ? OR pemeriksaan LIKE ?)
+        UNION ALL
+        SELECT DATE_FORMAT(tgl_perawatan, '%Y-%m-%d') AS tanggal, TIME_FORMAT(jam_rawat, '%H:%i:%s') AS jam, pemeriksaan AS nilai
+        FROM pemeriksaan_ranap WHERE no_rawat = ? AND (tgl_perawatan LIKE ? OR pemeriksaan LIKE ?)
+        ORDER BY tanggal DESC, jam DESC LIMIT 100`,
+      parameter: [noRawat, pola, pola, noRawat, pola, pola],
+    },
+    radiologi: {
+      sql: `SELECT DATE_FORMAT(tgl_periksa, '%Y-%m-%d') AS tanggal, TIME_FORMAT(jam, '%H:%i:%s') AS jam, hasil AS nilai
+        FROM hasil_radiologi WHERE no_rawat = ? AND (tgl_periksa LIKE ? OR hasil LIKE ?)
+        ORDER BY tgl_periksa DESC, jam DESC LIMIT 100`,
+      parameter: [noRawat, pola, pola],
+    },
+    laborat: {
+      sql: `SELECT DATE_FORMAT(d.tgl_periksa, '%Y-%m-%d') AS tanggal, TIME_FORMAT(d.jam, '%H:%i:%s') AS jam,
+        CONCAT(t.Pemeriksaan, ' : ', d.nilai) AS nilai
+        FROM detail_periksa_lab d INNER JOIN template_laboratorium t ON t.id_template = d.id_template
+        WHERE d.no_rawat = ? AND (d.tgl_periksa LIKE ? OR t.Pemeriksaan LIKE ?)
+        ORDER BY d.tgl_periksa DESC, d.jam DESC LIMIT 100`,
+      parameter: [noRawat, pola, pola],
+    },
+    obat: {
+      sql: `SELECT DATE_FORMAT(d.tgl_perawatan, '%Y-%m-%d') AS tanggal, TIME_FORMAT(d.jam, '%H:%i:%s') AS jam,
+        CONCAT(b.nama_brng, ' : ', d.jml, ' ', b.kode_sat, ' ', COALESCE(a.aturan, '')) AS nilai
+        FROM detail_pemberian_obat d INNER JOIN databarang b ON b.kode_brng = d.kode_brng
+        LEFT JOIN aturan_pakai a ON a.tgl_perawatan = d.tgl_perawatan AND a.jam = d.jam AND a.no_rawat = d.no_rawat AND a.kode_brng = d.kode_brng
+        WHERE d.no_rawat = ? AND (d.tgl_perawatan LIKE ? OR b.nama_brng LIKE ?)
+        ORDER BY d.tgl_perawatan DESC, d.jam DESC LIMIT 100`,
+      parameter: [noRawat, pola, pola],
+    },
+  };
+  const pilihan = konfigurasi[jenis as JenisRiwayatResume];
+  const rows = await executeQuery<RiwayatResumeRow>(pilihan.sql, pilihan.parameter);
+  return NextResponse.json({ success: true, data: { items: rows.map((row) => ({ tanggal: String(row.tanggal), jam: String(row.jam), nilai: String(row.nilai) })) } });
 }
 
 export async function POST(req: NextRequest) {

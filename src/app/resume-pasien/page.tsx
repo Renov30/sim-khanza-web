@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
+import { RiwayatResumeButton, type JenisRiwayatResume } from "@/components/resume-pasien/RiwayatResumeButton";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import {
   KONDISI_PULANG,
@@ -98,6 +99,7 @@ function AreaInput({
   onUbah,
   batas,
   dinonaktifkan,
+  riwayat,
 }: {
   id: string;
   label: string;
@@ -105,12 +107,14 @@ function AreaInput({
   onUbah: (nilai: string) => void;
   batas: number;
   dinonaktifkan: boolean;
+  riwayat?: ReactNode;
 }) {
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-[11px] font-medium text-slate-700">
-        {label} :
-      </label>
+      <div className="flex min-h-7 items-center justify-between gap-2">
+        <label htmlFor={id} className="block text-[11px] font-medium text-slate-700">{label} :</label>
+        {riwayat && <div className="flex shrink-0 items-center gap-1.5">{riwayat}</div>}
+      </div>
       <textarea
         id={id}
         value={nilai}
@@ -134,6 +138,7 @@ function KontenResumePasien() {
   const [tanggalAwal, setTanggalAwal] = useState("");
   const [tanggalAkhir, setTanggalAkhir] = useState("");
   const [kataKunci, setKataKunci] = useState("");
+  const [tabAktif, setTabAktif] = useState<"input" | "data">("input");
   const [barisTerpilih, setBarisTerpilih] = useState("");
   const [memuat, setMemuat] = useState(false);
   const [menyimpan, setMenyimpan] = useState(false);
@@ -195,6 +200,14 @@ function KontenResumePasien() {
   const ubah = <K extends keyof ResumePasienForm>(kunci: K, nilai: ResumePasienForm[K]) => {
     setForm((lama) => ({ ...lama, [kunci]: nilai }));
   };
+
+  const tambahRiwayat = (kunci: "keluhan_utama" | "pemeriksaan_penunjang" | "hasil_laborat" | "obat_pulang", nilai: string) => {
+    ubah(kunci, `${form[kunci]}${form[kunci].trim() ? ", " : ""}${nilai}`.slice(0, PANJANG_RESUME[kunci]));
+  };
+
+  const tombolRiwayat = (jenis: JenisRiwayatResume, kunci: "keluhan_utama" | "pemeriksaan_penunjang" | "hasil_laborat" | "obat_pulang") => (
+    <RiwayatResumeButton jenis={jenis} noRawat={noRawat} disabled={!bisaUbah} onPilih={(nilai) => tambahRiwayat(kunci, nilai)} />
+  );
 
   const resetForm = () => {
     setForm(resumeKosong(noRawat, data?.resume.kd_dokter || ""));
@@ -260,9 +273,39 @@ function KontenResumePasien() {
 
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
-      <div className="min-h-0 flex-1 space-y-2.5 overflow-auto">
-        <section aria-label="Input resume pasien" className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm">
-          <div className="space-y-2.5 border-b border-slate-100 pb-3">
+      <div role="tablist" aria-label="Pengelolaan resume pasien" className="flex shrink-0 border-b border-slate-200">
+        {(["input", "data"] as const).map((tab) => (
+          <button
+            key={tab}
+            id={`tab-resume-pasien-${tab}`}
+            type="button"
+            role="tab"
+            aria-selected={tabAktif === tab}
+            aria-controls={`panel-resume-pasien-${tab}`}
+            tabIndex={tabAktif === tab ? 0 : -1}
+            onClick={() => setTabAktif(tab)}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+              event.preventDefault();
+              const berikutnya = event.key === 'Home' ? 'input' : event.key === 'End' ? 'data' : tab === 'input' ? 'data' : 'input';
+              setTabAktif(berikutnya);
+              document.getElementById(`tab-resume-pasien-${berikutnya}`)?.focus();
+            }}
+            className={`border-b-2 px-4 py-2 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700 ${tabAktif === tab ? "bg-white border-primary-700 text-slate-900" : "border-transparent text-slate-500 hover:bg-slate-100"}`}
+          >
+            {tab === "input" ? "Input Resume" : "Data Resume"}
+          </button>
+        ))}
+      </div>
+
+      <section
+        id="panel-resume-pasien-input"
+        role="tabpanel"
+        aria-labelledby="tab-resume-pasien-input"
+        tabIndex={0}
+        className={tabAktif === "input" ? "min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm" : "hidden"}
+      >
+          <div className="space-y-2 border-b border-slate-100 pb-2">
             <GridFormulirModul className="items-center text-xs lg:gap-x-5">
               <div className="grid min-w-0 grid-cols-1 items-center gap-1.5 sm:grid-cols-[auto_minmax(0,1fr)]">
                 <label htmlFor="no-rawat-resume" className="whitespace-nowrap font-medium text-slate-700">No. Rawat :</label>
@@ -284,30 +327,37 @@ function KontenResumePasien() {
             {!kunjungan && <p className="text-center text-xs text-slate-500">Pilih kunjungan pasien terlebih dahulu untuk mengisi resume.</p>}
           </div>
 
-          <GridFormulirModul kolomAktifSama className="mt-3 items-start gap-y-4 lg:gap-x-5">
+          <GridFormulirModul kolomAktifSama className="mt-2 items-start gap-y-4 lg:gap-x-5">
             <div className="min-w-0 space-y-4">
-              <AreaInput id="keluhan-utama-resume" label="Keluhan utama riwayat penyakit yang positif" nilai={form.keluhan_utama} batas={PANJANG_RESUME.keluhan_utama} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("keluhan_utama", nilai)} />
-              <AreaInput id="pemeriksaan-penunjang-resume" label="Pemeriksaan penunjang yang positif" nilai={form.pemeriksaan_penunjang} batas={PANJANG_RESUME.pemeriksaan_penunjang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("pemeriksaan_penunjang", nilai)} />
-              <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
-                <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_4.5rem]">
-                  <span className="whitespace-nowrap text-[11px] font-semibold text-slate-700 sm:text-right">Diagnosa :</span>
-                  <span />
-                  <span className="whitespace-nowrap text-center text-[11px] font-semibold text-slate-700">Kode ICD-10</span>
+              <div className="space-y-2">
+                <div className="space-y-2">
+                  <AreaInput id="keluhan-utama-resume" label="Keluhan utama riwayat penyakit yang positif" nilai={form.keluhan_utama} batas={PANJANG_RESUME.keluhan_utama} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("keluhan_utama", nilai)} riwayat={<>{tombolRiwayat("keluhan", "keluhan_utama")}{tombolRiwayat("pemeriksaan", "keluhan_utama")}</>} />
+                  <AreaInput id="pemeriksaan-penunjang-resume" label="Pemeriksaan penunjang yang positif" nilai={form.pemeriksaan_penunjang} batas={PANJANG_RESUME.pemeriksaan_penunjang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("pemeriksaan_penunjang", nilai)} riwayat={tombolRiwayat("radiologi", "pemeriksaan_penunjang")} />
                 </div>
-                {DIAGNOSA.map((pasangan) => (
-                  <div key={pasangan.nama} className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_4.5rem]">
-                    <label className="whitespace-nowrap text-[11px] font-medium text-slate-700 sm:text-right">{pasangan.judul} :</label>
-                    <input value={String(form[pasangan.nama])} maxLength={PANJANG_RESUME[pasangan.nama as keyof typeof PANJANG_RESUME]} disabled={!bisaUbah} onChange={(event) => ubah(pasangan.nama, event.target.value)} aria-label={pasangan.judul} className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50" />
-                    <input value={String(form[pasangan.kode])} maxLength={PANJANG_RESUME[pasangan.kode as keyof typeof PANJANG_RESUME]} disabled={!bisaUbah} onChange={(event) => ubah(pasangan.kode, event.target.value)} aria-label={`Kode ICD-10 ${pasangan.judul}`} className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50" />
+                <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
+                  <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_4.5rem]">
+                    <span className="whitespace-nowrap text-[11px] font-semibold text-slate-700 sm:text-right">Diagnosa :</span>
+                    <span />
+                    <span className="whitespace-nowrap text-center text-[11px] font-semibold text-slate-700">Kode ICD-10</span>
                   </div>
-                ))}
+                  {DIAGNOSA.map((pasangan) => (
+                    <div key={pasangan.nama} className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_4.5rem]">
+                      <label className="whitespace-nowrap text-[11px] font-medium text-slate-700 sm:text-right">{pasangan.judul} :</label>
+                      <input value={String(form[pasangan.nama])} maxLength={PANJANG_RESUME[pasangan.nama as keyof typeof PANJANG_RESUME]} disabled={!bisaUbah} onChange={(event) => ubah(pasangan.nama, event.target.value)} aria-label={pasangan.judul} className="h-7 w-full rounded-md border border-slate-300 px-2 text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50" />
+                      <input value={String(form[pasangan.kode])} maxLength={PANJANG_RESUME[pasangan.kode as keyof typeof PANJANG_RESUME]} disabled={!bisaUbah} onChange={(event) => ubah(pasangan.kode, event.target.value)} aria-label={`Kode ICD-10 ${pasangan.judul}`} className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50" />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <AreaInput id="obat-pulang-resume" label="Obat-obatan waktu pulang/nasihat" nilai={form.obat_pulang} batas={PANJANG_RESUME.obat_pulang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("obat_pulang", nilai)} />
+              <AreaInput id="obat-pulang-resume" label="Obat-obatan waktu pulang/nasihat" nilai={form.obat_pulang} batas={PANJANG_RESUME.obat_pulang} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("obat_pulang", nilai)} riwayat={tombolRiwayat("obat", "obat_pulang")} />
             </div>
             <div className="min-w-0 space-y-4">
-              <AreaInput id="jalannya-penyakit-resume" label="Jalannya penyakit selama perawatan" nilai={form.jalannya_penyakit} batas={PANJANG_RESUME.jalannya_penyakit} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("jalannya_penyakit", nilai)} />
-              <AreaInput id="hasil-laboratorium-resume" label="Hasil laboratorium yang positif" nilai={form.hasil_laborat} batas={PANJANG_RESUME.hasil_laborat} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("hasil_laborat", nilai)} />
-              <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
+              <div className="space-y-2">
+                <div className="space-y-2">
+                  <AreaInput id="jalannya-penyakit-resume" label="Jalannya penyakit selama perawatan" nilai={form.jalannya_penyakit} batas={PANJANG_RESUME.jalannya_penyakit} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("jalannya_penyakit", nilai)} />
+                  <AreaInput id="hasil-laboratorium-resume" label="Hasil laboratorium yang positif" nilai={form.hasil_laborat} batas={PANJANG_RESUME.hasil_laborat} dinonaktifkan={!bisaUbah} onUbah={(nilai) => ubah("hasil_laborat", nilai)} riwayat={tombolRiwayat("laborat", "hasil_laborat")} />
+                </div>
+                <div className="space-y-1.5 border-t border-slate-100 pt-2.5">
                 <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)_4.5rem]">
                   <span className="whitespace-nowrap text-[11px] font-semibold text-slate-700 sm:text-right">Prosedur :</span>
                   <span />
@@ -320,18 +370,26 @@ function KontenResumePasien() {
                     <input value={String(form[pasangan.kode])} maxLength={PANJANG_RESUME[pasangan.kode as keyof typeof PANJANG_RESUME]} disabled={!bisaUbah} onChange={(event) => ubah(pasangan.kode, event.target.value)} aria-label={`Kode ICD-9 ${pasangan.judul}`} className="h-7 w-full rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-50" />
                   </div>
                 ))}
+                </div>
               </div>
             </div>
           </GridFormulirModul>
-        </section>
+      </section>
 
-        <section aria-label="Data resume pasien" className="h-96 overflow-auto rounded-lg border border-slate-200/80 bg-white shadow-sm">
+      <section
+        id="panel-resume-pasien-data"
+        role="tabpanel"
+        aria-labelledby="tab-resume-pasien-data"
+        tabIndex={0}
+        className={tabAktif === "data" ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm" : "hidden"}
+      >
+        <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
           <table className="w-full min-w-[4600px] border-collapse text-left text-[11px] text-slate-700">
             <caption className="sr-only">Daftar resume pasien rawat jalan</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
               <tr>
                 {KOLOM_TABEL.map((kolom) => (
-                  <th key={kolom.kunci} scope="col" className="whitespace-nowrap border-b border-r border-slate-200 px-2 py-2 font-semibold">
+                  <th key={kolom.kunci} scope="col" className="whitespace-nowrap border-b border-r border-slate-200 px-2 py-2 text-center font-semibold">
                     {kolom.label}
                   </th>
                 ))}
@@ -339,20 +397,20 @@ function KontenResumePasien() {
             </thead>
             <tbody>
               {memuat ? (
-                <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-500">Memuat resume pasien...</td></tr>
+                <tr><td colSpan={KOLOM_TABEL.length} className="h-36 text-center text-slate-500">Memuat resume pasien...</td></tr>
               ) : !data ? (
-                <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-400">Pilih kunjungan untuk menampilkan data resume.</td></tr>
+                <tr><td colSpan={KOLOM_TABEL.length} className="h-44 text-center text-slate-400">Pilih kunjungan untuk menampilkan data resume.</td></tr>
               ) : data.daftar.length === 0 ? (
-                <tr><td colSpan={KOLOM_TABEL.length} className="p-8 text-center text-slate-400">Belum ada resume pasien.</td></tr>
+                <tr><td colSpan={KOLOM_TABEL.length} className="h-44 text-center text-slate-400">Belum ada resume pasien.</td></tr>
               ) : data.daftar.map((baris) => (
                 <tr
                   key={baris.no_rawat}
                   aria-current={barisTerpilih === baris.no_rawat ? "true" : undefined}
                   onClick={() => pilihBaris(baris)}
-                  className={`cursor-pointer ${barisTerpilih === baris.no_rawat ? "bg-primary-50/60" : "even:bg-slate-50/70"}`}
+                  className={`cursor-pointer ${barisTerpilih === baris.no_rawat ? "bg-primary-100" : "even:bg-slate-50/70 hover:bg-slate-50"}`}
                 >
                   {KOLOM_TABEL.map((kolom) => (
-                    <td key={kolom.kunci} className={`max-w-[22rem] truncate whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5 ${KOLOM_MONO.has(kolom.kunci) ? "font-mono tabular-nums" : ""}`}>
+                    <td key={kolom.kunci} className={`max-w-[22rem] truncate whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5 ${KOLOM_MONO.has(kolom.kunci) ? "text-center font-mono tabular-nums" : ""}`}>
                       {String(baris[kolom.kunci] ?? "") || "-"}
                     </td>
                   ))}
@@ -360,28 +418,28 @@ function KontenResumePasien() {
               ))}
             </tbody>
           </table>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <PanelBawah
         tampilan="web"
-        tanggalMulai={tanggalAwal}
-        tanggalSelesai={tanggalAkhir}
-        onGantiTanggalMulai={setTanggalAwal}
-        onGantiTanggalSelesai={setTanggalAkhir}
+        tanggalMulai={tabAktif === "data" ? tanggalAwal : undefined}
+        tanggalSelesai={tabAktif === "data" ? tanggalAkhir : undefined}
+        onGantiTanggalMulai={tabAktif === "data" ? setTanggalAwal : undefined}
+        onGantiTanggalSelesai={tabAktif === "data" ? setTanggalAkhir : undefined}
         kataKunci={kataKunci}
-        onGantiKataKunci={setKataKunci}
-        onCari={() => { noRawatDimuat.current = ""; void muatData(new AbortController(), false); }}
+        onGantiKataKunci={tabAktif === "data" ? setKataKunci : undefined}
+        onCari={tabAktif === "data" ? () => { noRawatDimuat.current = ""; void muatData(new AbortController(), false); } : undefined}
         placeholderCari="No. rawat, nama pasien, dokter, diagnosa, atau prosedur..."
-        onSemua={() => { setTanggalAwal(""); setTanggalAkhir(""); setKataKunci(""); noRawatDimuat.current = ""; void muatData(new AbortController(), false); }}
-        onSimpan={() => void simpan()}
-        onBaru={resetForm}
-        onHapus={() => setKonfirmasiHapus(true)}
-        onGanti={() => data && setForm(data.resume)}
-        onCetak={() => tampilkanToast("Cetak resume belum tersedia di Khanza Web.", "info")}
+        onSemua={tabAktif === "data" ? () => { setTanggalAwal(""); setTanggalAkhir(""); setKataKunci(""); noRawatDimuat.current = ""; void muatData(new AbortController(), false); } : undefined}
+        onSimpan={tabAktif === "input" ? () => void simpan() : undefined}
+        onBaru={() => { resetForm(); setTabAktif("input"); }}
+        onHapus={tabAktif === "input" ? () => setKonfirmasiHapus(true) : undefined}
+        onGanti={() => { if (data) setForm(data.resume); setTabAktif("input"); }}
+        onCetak={tabAktif === "data" ? () => tampilkanToast("Cetak resume belum tersedia di Khanza Web.", "info") : undefined}
         onKembali={() => router.back()}
-        disabledSimpan={!data || !bisaUbah || menyimpan || !form.keluhan_utama.trim() || !form.jalannya_penyakit.trim() || !form.diagnosa_utama.trim()}
-        disabledHapus={!data?.ada || !bisaUbah || menyimpan}
+        disabledSimpan={tabAktif !== "input" || !data || !bisaUbah || menyimpan || !form.keluhan_utama.trim() || !form.jalannya_penyakit.trim() || !form.diagnosa_utama.trim()}
+        disabledHapus={tabAktif !== "input" || !data?.ada || !bisaUbah || menyimpan}
         disabledGanti={!data || !bisaUbah || menyimpan}
         memuat={memuat || menyimpan}
         jumlahRecord={data?.total || 0}
