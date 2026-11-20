@@ -45,7 +45,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 - `src/lib/pasien/`: field, master, penyimpanan, akses, dan penomoran pasien.
 - `src/lib/registrasi/`: tanggal WIT, validasi, penomoran, transaksi, rujukan, dan perlindungan relasi.
 - `src/lib/resume-pasien/`: tipe field, akses izin dokter, dan aturan resume ralan.
-- `src/components/modul/`: header, grid formulir, panel input, dan panel bawah.
+- `src/components/modul/`: header, grid formulir, panel input, panel bawah, dan `MenuKonteksTabel` beserta data menu rawat jalan/rawat inap.
 - `src/components/common/`: Toast, dialog konfirmasi, dan modal informasi.
 - `src/components/auth/`: login, status sesi, dan sinkronisasi antar-tab.
 
@@ -63,6 +63,8 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Riwayat pasien | `/api/riwayat-pasien` | Admin atau izin tindakan ralan. |
 | Resume pasien | `/api/resume-pasien` | Admin atau izin `data_resume_pasien`; tulis hanya dokter/pemilik. |
 | Tindakan rawat inap | `/api/tindakan-rawat-inap` | Admin atau izin tindakan ranap. |
+| Mutasi rawat inap | `/api/rawat-inap/pulang`, `/api/rawat-inap/pindah-kamar` | Admin atau izin `kamar_inap`. |
+| Pasien meninggal dan rujuk keluar | `/api/rawat-inap/pasien-mati`, `/api/rawat-inap/rujuk` | Admin atau izin masing-masing `pasien_meninggal` / `rujukan_keluar`. |
 | Master obat | `/api/farmasi/master-obat`, `/api/farmasi/master-obat/options` | Admin atau izin obat. |
 | Copy resep | `/api/farmasi/copy-resep` | Admin atau izin resep obat. |
 | Input resep dan daftar resep dokter | `/api/farmasi/resep-obat`, `/api/farmasi/daftar-resep-dokter` | Admin atau izin resep obat. |
@@ -71,7 +73,11 @@ Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjam
 
 Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
-Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
+Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Tabelnya menyediakan menu klik kanan sesuai grup `DlgKasirRalan.java`: aksi dengan halaman web tersedia langsung membuka halaman tersebut, `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil, dan item belum tersedia hanya memberi toast. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
+
+Rawat inap menampilkan daftar kunjungan `kamar_inap` dengan filter di `PanelBawah`: mode `Semua`/`Belum Pulang`/`Tgl. Masuk`/`Pulang`, periode dua tanggal, status bayar, bangsal, dan kata kunci. Default mengikuti radio R1 `Belum Pulang` pada `DlgKamarInap.java`; opsi `Semua` tetap tersedia untuk melihat seluruh catatan. Tabelnya memakai `MenuKonteksTabel` yang sama dengan rawat jalan, tetapi memuat 20 grup dari `DlgKamarInap.java`. Aksi yang memiliki halaman web membuka resume, riwayat, tindakan, laboratorium, radiologi, resep, atau penjualan; `Urutkan Data Berdasar` mengurutkan baris tampil berdasarkan No. Rawat, Cara Bayar, No. RM, Nama, Kamar, atau Tanggal Masuk. Tombol `Pulang` dan `Pindah` membuka dialog mutasi. Perintah cetak, status, hapus, bridging, masuk, dan ekspor yang belum diadaptasi hanya memberi toast dan tidak melakukan mutasi.
+
+Mutasi pulang mengikuti `BtnSimpanActionPerformed` `DlgKamarInap.java`: `kamar_inap` diperbarui dengan tanggal/jam keluar, status, diagnosa akhir, lama, tarif, dan biaya; kamar menjadi `KOSONG`. Status `Meninggal` dan `Rujuk` membuka dialog lanjutan yang menulis `pasien_mati` dan `rujuk`. Mutasi pindah menyediakan keempat opsi `Rganti1`–`Rganti4`; opsi 1 menghapus baris lama, opsi 2 mengganti kamar pada baris yang sama, opsi 3 menandai baris lama `Pindah Kamar` dan membuat baris baru, sedangkan opsi 4 memakai tarif tertinggi serta kunci pembaruan anomali sesuai Java. Seluruh penulisan memakai transaksi, `FOR UPDATE`, named lock, validasi server, dan query berparameter.
 
 Pintasan `Riwayat Pasien` pada sidebar tindakan ralan membuka dialog enam tab sesuai `RMRiwayatPerawatan.java`: Kunjungan, S.O.A.P.I.E, Perawatan, Pembelian Obat, Piutang Obat, dan Retensi Berkas. Filter `terakhir`, `semua`, `tanggal`, dan `nomor` mengikuti radio R1–R4. Tab Perawatan memakai sidebar kiri berisi daftar bagian dari `FormMenu` Java, checkbox `Semua`, pencarian teks, dan tombol lipat. Menu ini tidak mengadaptasi PDF, e-sign, sertisign, penulisan file HTML lokal, atau tautan berkas mentah.
 

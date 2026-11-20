@@ -147,6 +147,36 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Daftar tabel dibatasi pada pasien yang sama dengan `no_rawat` aktif. Field, panjang, dan tabel mengikuti schema runtime `sik2`: 26 kolom `resume_pasien`, `kondisi_pulang` hanya `Hidup|Meninggal`, dan tidak ada kolom `tanggal_keluar`.
 - Tombol "Ambil Diagnosa/Prosedur Kunjungan" mengisi ICD-10/ICD-9 dari `diagnosa_pasien` dan `prosedur_pasien` status `Ralan`; cetak belum tersedia di Khanza Web.
 - Verifikasi dengan `npm run test:resume-pasien`.
+
+### 20 November 2026 — menu klik kanan rawat jalan
+
+- Tabel `/rawat-jalan` membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) dengan seluruh grup menu `DlgKasirRalan.java`, lengkap dengan pencarian menu dan navigasi keyboard.
+- Aksi yang sudah tersedia di Khanza Web langsung membuka halaman terkait: Resume, Riwayat Perawatan, Data Tindakan Ralan, Copy Resep, Input Resep Dokter, Lab, Radiologi, Rawat Inap, dan Penjualan Obat.
+- Perintah `Urutkan Data Berdasar` mengurutkan data yang sedang tampil di klien. Item yang modulnya belum diadaptasi menampilkan toast informatif dan tidak mengubah data.
+- Perubahan ini tidak menambah endpoint atau mutasi baru; izin tetap berada pada endpoint yang dipakai halaman tujuan.
+
+### 20 November 2026 — menu klik kanan rawat inap
+
+- Tabel `/rawat-inap` memakai komponen menu kontekstual yang sama dengan rawat jalan, dengan seluruh grup `DlgKamarInap.java` (261 node, 20 grup) tanpa separator Java.
+- Aksi yang sudah tersedia di Khanza Web langsung membuka Resume, Riwayat Perawatan, Diagnosa/Tindakan Rawat Inap, Tindakan Rawat Jalan, Lab, Radiologi, Resep Dokter, dan Penjualan Obat.
+- `Urutkan Data Berdasar` mengurutkan data tampil berdasarkan No. Rawat, Cara Bayar, No. RM, Nama, Kamar, atau Tanggal Masuk. Perintah cetak, status, hapus, dan bridging yang belum diadaptasi hanya menampilkan toast informatif.
+- Komponen tampilan dan pencarian menu diekstrak ke `MenuKonteksTabel` agar rawat jalan dan rawat inap memakai satu pola interaksi.
+
+### 20 November 2026 — filter dan panel bawah rawat inap
+
+- `/rawat-inap` memindahkan seluruh filter ke `PanelBawah`: mode `Semua`, `Belum Pulang`, `Tgl. Masuk`, dan `Pulang`; periode dua tanggal; status bayar; bangsal; kata kunci; `Cari`; dan `Semua`. Default mengikuti radio R1 `Belum Pulang` pada `DlgKamarInap.java`; opsi `Semua` tetap disediakan untuk melihat seluruh catatan.
+- `/api/rawat-inap` menerima `mode`, `tanggal_mulai`, `tanggal_selesai`, `status_bayar`, `bangsal`, dan `cari` dengan allowlist, validasi tanggal, query berparameter, hitung `total`, serta urutan bangsal/tanggal/jam masuk sesuai Java. Parameter `status_pulang` lama tetap diterima.
+- Panel bawah menampilkan `Record`, `Cetak`, `Keluar`, dan tombol `Masuk`, `Pulang`, `Pindah`, `Excel` sesuai `DlgKamarInap.java`. `Pulang` dan `Pindah` hanya aktif setelah baris dipilih; `Masuk`, `Excel`, dan `Cetak` masih menampilkan toast informatif.
+- Verifikasi dengan `npm run test:rawat-inap`.
+
+### 20 November 2026 — mutasi pulang dan pindah kamar rawat inap
+
+- Tombol `Pulang` membuka dialog sesuai `BtnOut`/`BtnSimpan` `DlgKamarInap.java`: tanggal/jam keluar, status pulang, diagnosa akhir, lama, tarif, dan total biaya. Status `Meninggal`/`Rujuk` membuka dialog lanjutan `DlgPasienMati`/`DlgRujuk` setelah penyimpanan utama berhasil.
+- Tombol `Pindah` membuka dialog dengan pencarian kamar kosong, tarif penjamin, lama kamar baru, dan keempat opsi `Rganti1`–`Rganti4` persis Java. Opsi 4 sengaja mempertahankan kunci pembaruan anomali dan aturan tarif sama menghasilkan biaya 0.
+- Endpoint baru `/api/rawat-inap/pulang`, `/api/rawat-inap/pindah-kamar`, `/api/rawat-inap/pasien-mati`, dan `/api/rawat-inap/rujuk` memakai izin `kamar_inap`, `pasien_meninggal`, dan `rujukan_keluar` sesuai `akses.java`.
+- Mutasi memakai transaksi, `FOR UPDATE`, named lock per nomor rawat/tanggal, validasi server, query berparameter, retry benturan nomor rujuk, dan pelepasan koneksi. Status kamar diubah menjadi `KOSONG` saat pulang dan `ISI`/`KOSONG` saat pindah.
+- Komponen `Modal`, `PanelBawah`, `GridFormulirModul`, dan `CustomSelect` dipakai agar dialog mengikuti sistem desain proyek. Verifikasi dengan `npm run test:rawat-inap-mutasi`.
+
 ### 20 November 2026 — copy resep
 
 - Halaman `/farmasi/copy-resep` mengadaptasi `DlgCopyResep`: hanya menampilkan riwayat pasien dan dokter peresep yang sama, mendukung filter tanggal, pencarian, rincian obat/racikan, serta aksi `Copy`, `Ubah`, dan `Hapus`.
@@ -190,11 +220,14 @@ npm run test:pasien
 npm run test:registrasi
 npm run test:rawat-jalan
 npm run test:tindakan-ranap
+npm run test:rawat-inap
+npm run test:rawat-inap-mutasi
 npm run test:master-obat
 npm run test:resep-obat
 npm run test:copy-resep
 npm run test:riwayat-pasien
 npm run test:resume-pasien
+npm run test:menu-konteks
 npm run lint
 npm run build
 ```
