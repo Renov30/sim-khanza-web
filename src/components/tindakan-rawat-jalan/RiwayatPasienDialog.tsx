@@ -13,14 +13,15 @@ import {
   type ResponsRiwayat,
   type TabRiwayat,
 } from "@/lib/riwayat-pasien/types";
-import { CustomSelect } from "@/components/ui/CustomSelect";
 import type { ToastTipe } from "@/components/common/Toast";
+import { PanelBawah } from "@/components/modul/PanelBawah";
 
 interface RiwayatPasienDialogProps {
   terbuka: boolean;
   tampilan?: "dialog" | "halaman";
   noRm: string;
   namaPasien: string;
+  onPilihPasien?: (noRm: string, nama: string) => void;
   onTutup: () => void;
   onToast: (pesan: string, tipe?: ToastTipe) => void;
 }
@@ -30,6 +31,11 @@ interface KolomTabel {
   kunci: string;
   lebar?: string;
   render?: (baris: BarisRiwayat, indeks: number) => ReactNode;
+}
+
+interface PasienPilihan {
+  no_rm: string;
+  nama: string;
 }
 
 const LABEL_TAB: Record<TabRiwayat, string> = {
@@ -357,6 +363,7 @@ export function RiwayatPasienDialog({
   tampilan = "dialog",
   noRm,
   namaPasien,
+  onPilihPasien,
   onTutup,
   onToast,
 }: RiwayatPasienDialogProps) {
@@ -374,7 +381,28 @@ export function RiwayatPasienDialog({
   const [sidebarPerawatanTerbuka, setSidebarPerawatanTerbuka] = useState(true);
   const [cariBagian, setCariBagian] = useState("");
   const [bagianTerpilih, setBagianTerpilih] = useState<Set<string>>(() => new Set(BAGIAN_PERAWATAN));
+  const [pemilihPasienTerbuka, setPemilihPasienTerbuka] = useState(false);
+  const [cariPasien, setCariPasien] = useState("");
+  const [hasilPasien, setHasilPasien] = useState<{ kunci: string; items: PasienPilihan[]; error: string } | null>(null);
   const nomorTidakAda = mode === "nomor" && !nomor.trim();
+
+  useEffect(() => {
+    const kunci = cariPasien.trim();
+    if (!pemilihPasienTerbuka || kunci.length < 2) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ resource: "pasien", cari: kunci });
+        const response = await fetch(`/api/riwayat-pasien?${params}`, { signal: controller.signal, cache: "no-store" });
+        const json: { success?: boolean; data?: { items?: PasienPilihan[] }; error?: string } = await response.json();
+        if (!response.ok || !json.success) throw new Error(json.error || "Gagal mencari pasien.");
+        if (!controller.signal.aborted) setHasilPasien({ kunci, items: json.data?.items || [], error: "" });
+      } catch (error) {
+        if (!controller.signal.aborted) setHasilPasien({ kunci, items: [], error: error instanceof Error ? error.message : "Gagal mencari pasien." });
+      }
+    }, 250);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [cariPasien, pemilihPasienTerbuka]);
 
   useEffect(() => {
     if (!terbuka || tampilan !== "dialog") return;
@@ -428,15 +456,6 @@ export function RiwayatPasienDialog({
     }
   };
 
-  const aturUlang = () => {
-    setMode("terakhir");
-    setNomor("");
-    setTanggalAwal(hariIni);
-    setTanggalAkhir(hariIni);
-    setOffset(0);
-    setVersiCari((nilai) => nilai + 1);
-  };
-
   const cari = () => {
     setOffset(0);
     setVersiCari((nilai) => nilai + 1);
@@ -460,8 +479,10 @@ export function RiwayatPasienDialog({
   if (!terpasang || !terbuka) return null;
 
   const dataTampil = nomorTidakAda ? null : data;
-  const memuatTampil = nomorTidakAda ? false : data === null;
+  const memuatTampil = Boolean(noRm) && !nomorTidakAda && data === null;
   const pasien = dataTampil?.pasien;
+  const kunciCariPasien = cariPasien.trim();
+  const hasilPasienTampil = hasilPasien?.kunci === kunciCariPasien ? hasilPasien : null;
   const items = dataTampil?.items || [];
   const total = dataTampil?.total || 0;
   const limit = dataTampil?.limit || 50;
@@ -471,18 +492,44 @@ export function RiwayatPasienDialog({
   const konten = (
     <div className={tampilan === "dialog" ? "fixed inset-0 z-[99997] flex items-stretch justify-center bg-black/50 p-2 sm:p-4" : "module-page flex h-full w-full flex-col overflow-hidden bg-slate-50 p-2 sm:p-3"} role={tampilan === "dialog" ? "presentation" : undefined}>
       <div role={tampilan === "dialog" ? "dialog" : undefined} aria-modal={tampilan === "dialog" ? true : undefined} aria-label="Riwayat pasien" className={tampilan === "dialog" ? "flex w-full max-w-7xl flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow-xl" : "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm"}>
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
+        {tampilan === "dialog" && <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
           <div>
             <p className="text-[11px] text-slate-600"><span className="font-mono">{noRm}</span> · {namaPasien}</p>
           </div>
-          {tampilan === "dialog" && <button ref={tombolTutup} type="button" onClick={onTutup} aria-label="Tutup riwayat pasien" title="Tutup" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-600">
+          <button ref={tombolTutup} type="button" onClick={onTutup} aria-label="Tutup riwayat pasien" title="Tutup" className="rounded-full p-1 text-slate-500 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-600">
             <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5" />
-          </button>}
-        </div>
+          </button>
+        </div>}
 
-        {pasien && (
-          <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-1.5 border-b border-slate-200 bg-white px-3 py-2 text-[11px] sm:grid-cols-4 lg:grid-cols-6">
-            <div className="col-span-2"><span className="text-slate-500">Pasien: </span><span className="font-mono text-slate-800">{pasien.no_rm}</span><span className="text-slate-800"> · {pasien.nama}</span></div>
+        <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-1.5 border-b border-slate-200 bg-white p-3 text-[11px] sm:grid-cols-4 lg:grid-cols-6">
+            <div className="relative col-span-2 lg:col-span-3">
+              <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1.5">
+                <span className="text-right text-slate-600">Pasien :</span>
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <input readOnly aria-label="Nomor rekam medis pasien" value={pasien?.no_rm || noRm} placeholder="No. RM" className="h-7 w-28 shrink-0 rounded-md border border-slate-300 bg-slate-50 px-2 font-mono text-xs text-slate-800" />
+                  <input readOnly aria-label="Nama pasien" value={pasien?.nama || namaPasien} placeholder="Pilih pasien" className="h-7 min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-800" />
+                  <button type="button" disabled={!onPilihPasien} onClick={() => { setCariPasien(""); setHasilPasien(null); setPemilihPasienTerbuka((nilai) => !nilai); }} aria-label="Pilih atau ganti pasien" title="Pilih atau ganti pasien" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 text-primary-700 hover:bg-slate-100 disabled:opacity-40">
+                    <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              {pemilihPasienTerbuka && (
+                <div className="absolute left-[4.75rem] top-8 z-30 w-[min(38rem,calc(100vw-3rem))] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+                  <div className="flex items-center gap-1.5 border-b border-slate-200 p-2">
+                    <input autoFocus value={cariPasien} onChange={(event) => setCariPasien(event.target.value)} placeholder="Cari No. RM atau nama pasien..." aria-label="Cari pasien" className="h-8 min-w-0 flex-1 rounded-md border border-slate-300 px-2.5 text-xs text-slate-800 focus:border-primary-600 focus:outline-none" />
+                    <button type="button" onClick={() => setPemilihPasienTerbuka(false)} aria-label="Tutup pemilih pasien" title="Tutup" className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"><FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5" /></button>
+                  </div>
+                  <div className="max-h-56 overflow-auto py-1">
+                    {kunciCariPasien.length < 2 ? <p className="px-3 py-3 text-slate-500">Ketik minimal 2 karakter.</p>
+                      : !hasilPasienTampil ? <p className="px-3 py-3 text-slate-500">Mencari pasien...</p>
+                        : hasilPasienTampil.error ? <p className="px-3 py-3 text-red-700">{hasilPasienTampil.error}</p>
+                          : hasilPasienTampil.items.length === 0 ? <p className="px-3 py-3 text-slate-500">Pasien tidak ditemukan.</p>
+                            : hasilPasienTampil.items.map((item) => <button key={item.no_rm} type="button" onClick={() => { onPilihPasien?.(item.no_rm, item.nama); setPemilihPasienTerbuka(false); }} className="block w-full border-b border-slate-100 px-3 py-2 text-left hover:bg-primary-50"><span className="font-mono text-slate-800">{item.no_rm}</span><span className="ml-2 text-slate-700">{item.nama}</span></button>)}
+                  </div>
+                </div>
+              )}
+            </div>
+            {pasien && <>
             <div><span className="text-slate-500">J.K.: </span><span className="text-slate-800">{teks(pasien.jenis_kelamin)}</span></div>
             <div className="col-span-2"><span className="text-slate-500">Tempat &amp; Tgl. Lahir: </span><span className="text-slate-800">{teks(pasien.tempat_lahir)}, {teks(pasien.tanggal_lahir)}</span></div>
             <div className="col-span-2 lg:col-span-3"><span className="text-slate-500">Alamat: </span><span className="text-slate-800">{teks(pasien.alamat)}</span></div>
@@ -493,8 +540,8 @@ export function RiwayatPasienDialog({
             <div><span className="text-slate-500">Pendidikan: </span><span className="text-slate-800">{teks(pasien.pendidikan)}</span></div>
             <div><span className="text-slate-500">Bahasa: </span><span className="text-slate-800">{teks(pasien.bahasa)}</span></div>
             <div><span className="text-slate-500">Cacat Fisik: </span><span className="text-slate-800">{teks(pasien.cacat_fisik)}</span></div>
+            </>}
           </div>
-        )}
 
         <div role="tablist" aria-label="Jenis riwayat pasien" className="flex shrink-0 overflow-x-auto border-b border-slate-200 px-2">
           {TAB_RIWAYAT.map((tab, indeks) => (
@@ -525,27 +572,7 @@ export function RiwayatPasienDialog({
           ))}
         </div>
 
-        <div className="order-2 flex shrink-0 flex-wrap items-end gap-2 border-t border-slate-200 bg-white px-2.5 py-2">
-          <fieldset className="flex items-center gap-2">
-            <legend className="sr-only">Mode pencarian riwayat</legend>
-            {(Object.keys(LABEL_MODE) as ModeRiwayat[]).filter(modeTersedia).map((nilai) => (
-              <label key={nilai} className="flex items-center gap-1 text-[11px] text-slate-700">
-                <input type="radio" name="mode-riwayat" value={nilai} checked={mode === nilai} onChange={() => setMode(nilai)} className="accent-primary-700" />
-                {LABEL_MODE[nilai]}
-              </label>
-            ))}
-          </fieldset>
-          {mode === "tanggal" && <>
-            <label className="text-[11px] text-slate-700">Dari<input type="date" value={tanggalAwal} onChange={(event) => setTanggalAwal(event.target.value)} className="ml-1 h-7 rounded border border-slate-300 px-1.5 text-[11px]" /></label>
-            <label className="text-[11px] text-slate-700">Sampai<input type="date" value={tanggalAkhir} onChange={(event) => setTanggalAkhir(event.target.value)} className="ml-1 h-7 rounded border border-slate-300 px-1.5 text-[11px]" /></label>
-          </>}
-          {mode === "nomor" && <label className="text-[11px] text-slate-700">Nomor<input value={nomor} onChange={(event) => setNomor(event.target.value)} placeholder="No. rawat / nota" className="ml-1 h-7 w-48 rounded border border-slate-300 px-1.5 text-[11px]" /></label>}
-          <button type="button" onClick={cari} className="h-7 rounded-full border border-primary-700 bg-primary-700 px-3 text-[11px] font-semibold text-white focus:outline-none focus:ring-2 focus:ring-primary-500">Cari</button>
-          <button type="button" onClick={aturUlang} className="h-7 rounded-full border border-slate-300 bg-white px-3 text-[11px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500">Atur Ulang</button>
-          <CustomSelect aria-label="Batas data" value={String(limit)} onChange={() => undefined} className="ml-auto h-7 py-0.5 text-[11px]"><option value={String(limit)}>{limit} baris</option></CustomSelect>
-        </div>
-
-        <section id="panel-riwayat-pasien" role="tabpanel" aria-labelledby={`tab-riwayat-${tabAktif}`} tabIndex={0} className={`order-1 min-h-0 flex-1 bg-white ${tabAktif === "perawatan" ? "flex overflow-hidden p-0" : "space-y-3 overflow-auto p-2"}`}>
+        <section id="panel-riwayat-pasien" role="tabpanel" aria-labelledby={`tab-riwayat-${tabAktif}`} tabIndex={0} className={`min-h-0 flex-1 bg-white ${tabAktif === "perawatan" ? "flex overflow-hidden p-0" : "space-y-3 overflow-auto p-2"}`}>
           {tabAktif === "perawatan" && !memuatTampil && items.length > 0 && (
             <SidebarBagianPerawatan
               terbuka={sidebarPerawatanTerbuka}
@@ -561,7 +588,7 @@ export function RiwayatPasienDialog({
           {memuatTampil ? (
             <div className="rounded border border-slate-200 bg-white p-6 text-center text-xs text-slate-500">Memuat riwayat pasien...</div>
           ) : items.length === 0 ? (
-            <div className="rounded border border-slate-200 bg-white p-6 text-center text-xs text-slate-400">Tidak ada riwayat untuk filter ini.</div>
+            <div className="rounded border border-slate-200 bg-white p-6 text-center text-xs text-slate-400">{noRm ? "Tidak ada riwayat untuk filter ini." : "Pilih pasien untuk menampilkan riwayat."}</div>
           ) : tabAktif === "kunjungan" ? (
             <TabelRiwayat
               caption="Riwayat kunjungan pasien"
@@ -735,14 +762,47 @@ export function RiwayatPasienDialog({
           </div>
         </section>
 
-        <div className="order-3 flex shrink-0 items-center justify-between gap-2 border-t border-slate-200 bg-white px-2.5 py-2 text-[11px] text-slate-600">
-          <span>{items.length} dari {total} riwayat · Halaman {halamanSaatIni} / {jumlahHalaman}</span>
-          <div className="flex items-center gap-2">
-            <button type="button" disabled={offset <= 0 || memuatTampil} onClick={() => setOffset((nilai) => Math.max(0, nilai - limit))} aria-label="Halaman sebelumnya" className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary-500"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button>
-            <button type="button" disabled={mode === "terakhir" || offset + limit >= total || memuatTampil} onClick={() => setOffset((nilai) => nilai + limit)} aria-label="Halaman berikutnya" className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary-500"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button>
-            <button type="button" onClick={onTutup} className="h-7 rounded-full border border-slate-300 bg-white px-3 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500"><i className="fas fa-times"></i> Tutup</button>
-          </div>
-        </div>
+        <PanelBawah
+          tampilan="web"
+          filterUtama={(
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700">
+              <fieldset className="flex flex-wrap items-center gap-2">
+                <legend className="sr-only">Mode pencarian riwayat</legend>
+                {(Object.keys(LABEL_MODE) as ModeRiwayat[]).filter(modeTersedia).map((nilai) => (
+                  <label key={nilai} className="flex items-center gap-1 whitespace-nowrap">
+                    <input type="radio" name="mode-riwayat" value={nilai} checked={mode === nilai} onChange={() => { setMode(nilai); setOffset(0); }} className="accent-primary-700" />
+                    {LABEL_MODE[nilai]}
+                  </label>
+                ))}
+              </fieldset>
+              {mode === "tanggal" && <div className="flex items-center gap-1.5">
+                <input aria-label="Tanggal riwayat mulai" type="date" value={tanggalAwal} onChange={(event) => setTanggalAwal(event.target.value)} className="h-7 w-32 rounded-md border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+                <span>s.d.</span>
+                <input aria-label="Tanggal riwayat selesai" type="date" value={tanggalAkhir} onChange={(event) => setTanggalAkhir(event.target.value)} className="h-7 w-32 rounded-md border border-slate-300 px-2 text-xs focus:border-primary-600 focus:outline-none" />
+              </div>}
+              {mode === "nomor" && <div className="flex min-w-64 items-center gap-1.5">
+                <label htmlFor="nomor-riwayat" className="whitespace-nowrap">Nomor :</label>
+                <input id="nomor-riwayat" value={nomor} onChange={(event) => setNomor(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") cari(); }} placeholder="No. rawat / nota" className="h-7 min-w-0 flex-1 rounded-full border border-slate-300 px-2.5 text-xs focus:border-primary-600 focus:outline-none" />
+              </div>}
+              <button type="button" onClick={cari} disabled={!noRm || nomorTidakAda || memuatTampil} aria-label="Cari riwayat" title="Cari riwayat" className="flex h-7 min-w-20 items-center justify-center gap-1.5 rounded-full bg-slate-50 px-3 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40">
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5 text-primary-700" />Cari
+              </button>
+            </div>
+          )}
+          onCetak={() => window.print()}
+          disabledCetak={!noRm || items.length === 0}
+          onKembali={onTutup}
+          labelKembali="Keluar"
+          tampilkanRecord={false}
+          memuat={memuatTampil}
+          pagination={(
+            <>
+              <span>{items.length} dari {total} riwayat · Halaman {halamanSaatIni} / {jumlahHalaman}</span>
+              <button type="button" disabled={offset <= 0 || memuatTampil} onClick={() => setOffset((nilai) => Math.max(0, nilai - limit))} aria-label="Halaman sebelumnya" className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white disabled:opacity-40"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" /></button>
+              <button type="button" disabled={mode === "terakhir" || offset + limit >= total || memuatTampil} onClick={() => setOffset((nilai) => nilai + limit)} aria-label="Halaman berikutnya" className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white disabled:opacity-40"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" /></button>
+            </>
+          )}
+        />
       </div>
     </div>
   );

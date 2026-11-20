@@ -111,6 +111,18 @@ test('riwayat pasien memvalidasi tab, mode, nomor RM, periode, dan nomor', async
   assert.equal(calls.length, 0);
 });
 
+test('pemilih pasien mencari nomor RM dan nama dengan query berparameter', async () => {
+  const { api, calls } = handler({ rows: rowsDefault() });
+  const response = await api.GET(request('resource=pasien&cari=Pasien%20Uji'));
+  const json = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(json.success, true);
+  assert.equal(json.data.items[0].no_rm, identitas.no_rm);
+  const pencarian = calls.find(([sql]) => /p\.no_rkm_medis LIKE \? OR p\.nm_pasien LIKE \?/.test(sql));
+  assert.ok(pencarian);
+  assert.deepEqual(pencarian[1], ['%Pasien Uji%', '%Pasien Uji%', 'Pasien Uji']);
+});
+
 test('R1 kunjungan memakai filter batal, urutan terbaru, dan batas lima', async () => {
   const { api, calls } = handler({ rows: rowsDefault() });
   const response = await api.GET(request(DASAR));

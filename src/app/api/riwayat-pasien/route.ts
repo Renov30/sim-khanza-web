@@ -162,12 +162,27 @@ function kegagalan(error: unknown, pesan: string) {
   return NextResponse.json({ success: false, error: pesan }, { status: 500 });
 }
 
+async function cariPasien(params: URLSearchParams) {
+  const cari = (params.get("cari") || "").trim().slice(0, 70);
+  if (cari.length < 2) return NextResponse.json({ success: true, data: { items: [] } });
+  const pola = `%${cari}%`;
+  const items = await executeQuery<{ no_rm: string; nama: string }>(`
+    SELECT p.no_rkm_medis AS no_rm, p.nm_pasien AS nama
+    FROM pasien p
+    WHERE p.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ?
+    ORDER BY (p.no_rkm_medis = ?) DESC, p.nm_pasien
+    LIMIT 50
+  `, [pola, pola, cari]);
+  return NextResponse.json({ success: true, data: { items } });
+}
+
 export async function GET(req: NextRequest) {
   try {
     const denied = await tindakanRawatJalanAccess();
     if (denied) return denied;
 
     const params = req.nextUrl.searchParams;
+    if (params.get("resource") === "pasien") return cariPasien(params);
     const tab = tabDari(params.get("tab") || "kunjungan");
     const mode = modeDari(params.get("mode") || "terakhir");
     const noRm = (params.get("no_rm") || "").trim();

@@ -40,6 +40,7 @@ export interface PanelBawahProps {
   onNota?: () => void;
   onSemua?: () => void;
   onKembali?: () => void;
+  labelKembali?: string;
   tombolTambahan?: TombolAksiCustom[];
 
   // Disabled states
@@ -90,6 +91,7 @@ export function PanelBawah({
   onNota,
   onSemua,
   onKembali,
+  labelKembali = "Kembali",
   tombolTambahan,
   disabledSimpan = false,
   disabledHapus = false,
@@ -180,7 +182,7 @@ export function PanelBawah({
                     : "text-primary-700";
               return <button key={action.label} type="button" onClick={action.onClick} disabled={memuat || action.disabled} title={action.tooltip} className={`${tampilan === 'web' ? 'h-7 px-3' : 'h-9 px-4'} inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40`}>{action.ikon && <FontAwesomeIcon icon={action.ikon} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} ${warnaIkon}`} />}{action.label}</button>;
             })}
-            <button type="button" onClick={handleKembali} disabled={memuat} aria-label="Kembali ke halaman sebelumnya" title="Kembali ke halaman sebelumnya" className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />Kembali</button>
+            <button type="button" onClick={handleKembali} disabled={memuat} aria-label={`${labelKembali} ke halaman sebelumnya`} title={`${labelKembali} ke halaman sebelumnya`} className={`${tampilan === 'web' ? 'h-7 min-w-20 gap-1.5 px-3' : 'h-9 gap-2 px-4'} inline-flex items-center justify-center rounded-full bg-slate-50 font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-40`}><FontAwesomeIcon icon={faXmark} className={`${tampilan === 'web' ? 'h-3.5 w-3.5' : 'h-4 w-4'} text-red-600`} />{labelKembali}</button>
           </div>
           {tampilkanRecord && <span className="ml-auto text-slate-600">Record : {jumlahRecord}</span>}
           {pagination && <nav aria-label="Pagination data" className="ml-auto flex flex-wrap items-center justify-end gap-2 text-slate-600">{pagination}</nav>}
