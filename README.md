@@ -70,3 +70,9 @@ npm run start
 - [Aturan wajib proyek](AGENTS.md)
 
 Jangan commit `.env*`, dump database, atau data pasien ke repository.
+
+
+## Tampilan Aplikasi
+![Tampilan Home](docs/images/ss-home.png)
+![Tampilan Registrasi](docs/images/ss-reg.png)
+![Tampilan Rawat Jalan](docs/images/ss-rajal.png)
