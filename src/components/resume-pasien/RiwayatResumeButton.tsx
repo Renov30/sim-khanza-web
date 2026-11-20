@@ -65,15 +65,24 @@ export function RiwayatResumeButton({
     };
   }, [jenis, judul, kataKunci, noRawat, terbuka]);
 
+  useEffect(() => {
+    const elemenDialog = dialog.current;
+    if (!elemenDialog) return;
+    if (terbuka && !elemenDialog.open) {
+      elemenDialog.showModal();
+    } else if (!terbuka && elemenDialog.open) {
+      elemenDialog.close();
+    }
+  }, [terbuka]);
+
   const buka = () => {
     setKataKunci("");
     setTerbuka(true);
-    dialog.current?.showModal();
   };
 
   const pilih = (nilai: string) => {
     onPilih(nilai);
-    dialog.current?.close();
+    setTerbuka(false);
   };
 
   return (
@@ -100,7 +109,7 @@ export function RiwayatResumeButton({
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 id={titleId} className="text-sm font-semibold">{judul}</h2>
-          <button type="button" aria-label="Tutup riwayat" onClick={() => dialog.current?.close()} className="p-1 text-slate-600">
+          <button type="button" aria-label="Tutup riwayat" onClick={() => setTerbuka(false)} className="p-1 text-slate-600">
             <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
           </button>
         </div>
