@@ -87,7 +87,7 @@ export function AppHeader({
   const isLaboratActive = pathname.startsWith("/laboratorium") || menuLabTerbuka;
   const isRadiologiActive = pathname.startsWith("/radiologi") || menuRadTerbuka;
   const isFarmasiActive = pathname.startsWith("/farmasi") || menuFarmasiTerbuka;
-  const isRawatInapActive = pathname.startsWith("/rawat-inap");
+  const isRawatInapActive = pathname.startsWith("/rawat-inap") || pathname.startsWith("/tindakan-rawat-inap");
   const isRawatJalanActive = pathname.startsWith("/rawat-jalan") || pathname.startsWith("/tindakan-rawat-jalan");
   const judulHalaman = isMenuOpen && pathname === "/" ? "Daftar Menu" : dapatkanJudulHalaman(pathname);
   const ukuranJudul =
@@ -354,6 +354,18 @@ export function AppHeader({
                     Pelayanan Farmasi & Obat
                   </p>
                 </div>
+                <Link
+                  href="/farmasi/master-obat"
+                  onClick={() => setMenuFarmasiTerbuka(false)}
+                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
+                    pathname === "/farmasi/master-obat"
+                      ? "bg-primary-50 text-primary-800 font-bold"
+                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
+                  }`}
+                >
+                  <FontAwesomeIcon icon={faBoxesStacked} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
+                  <span>Data Obat, Alkes &amp; BHP</span>
+                </Link>
                 <Link
                   href="/farmasi/input-penjualan"
                   onClick={() => setMenuFarmasiTerbuka(false)}

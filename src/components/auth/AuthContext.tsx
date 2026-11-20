@@ -22,6 +22,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+interface ResponsApi {
+  success?: boolean;
+  error?: string;
+  data?: { user?: UserSession };
+}
+
+async function bacaJsonApi(res: Response): Promise<ResponsApi> {
+  const tipe = res.headers.get("content-type") || "";
+  if (!tipe.toLowerCase().includes("application/json")) {
+    return { success: false, error: `Server mengembalikan respons bukan JSON (${res.status}).` };
+  }
+  try {
+    return (await res.json()) as ResponsApi;
+  } catch {
+    return { success: false, error: "Respons server tidak dapat dibaca." };
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/session");
-      const json = await res.json();
+      const json = await bacaJsonApi(res);
       if (json.success && json.data?.user) {
         setUser(json.data.user);
         setIsLoginModalOpen(false);
@@ -46,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refreshSession();
+    void Promise.resolve().then(refreshSession);
   }, [refreshSession]);
 
   // Sinkronisasi Multi-Tab untuk Log Out & Log In
@@ -118,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idUser, password: pass }),
       });
-      const data = await res.json();
+      const data = await bacaJsonApi(res);
 
       if (data.success && data.data?.user) {
         setUser(data.data.user);

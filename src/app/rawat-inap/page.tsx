@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function HalamanRawatInap() {
+  const router = useRouter();
   const [data, setData] = useState<any[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
@@ -138,8 +140,15 @@ export default function HalamanRawatInap() {
                     key={idx}
                     className="hover:bg-slate-50/80"
                   >
-                    <td className="py-2 px-2.5 font-medium text-slate-800">
-                      {item.no_rawat}
+                    <td className="whitespace-nowrap py-2 px-2.5 font-medium text-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/tindakan-rawat-inap?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
+                        aria-label={`Input tindakan untuk nomor rawat ${item.no_rawat}, pasien ${item.nm_pasien}`}
+                      >
+                        {item.no_rawat}
+                      </button>
                     </td>
                     <td className="py-2 px-2.5 font-bold text-slate-800">
                       {item.no_rkm_medis}

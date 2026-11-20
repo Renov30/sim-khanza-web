@@ -6,6 +6,18 @@
   --background: #f8fafc;
   --foreground: #0f172a;
 
+  --color-slate-50: 248 250 252;
+  --color-slate-100: 241 245 249;
+  --color-slate-200: 226 232 240;
+  --color-slate-300: 203 213 225;
+  --color-slate-400: 148 163 184;
+  --color-slate-500: 100 116 139;
+  --color-slate-600: 71 85 105;
+  --color-slate-700: 51 65 85;
+  --color-slate-800: 30 41 59;
+  --color-slate-900: 15 23 42;
+  --color-slate-950: 2 6 23;
+
   /* Sumber tunggal palet merek. Nilai RGB dipisah agar modifier opacity Tailwind tetap bekerja. */
   --color-primary-50: 240 249 255;
   --color-primary-100: 224 246 255;
@@ -48,6 +60,33 @@
   --color-tertiary: rgb(var(--color-tertiary-600));
 }
 
+html.dark {
+  color-scheme: dark;
+  --background: #020617;
+  --foreground: #f8fafc;
+  --color-slate-50: 2 6 23;
+  --color-slate-100: 15 23 42;
+  --color-slate-200: 30 41 59;
+  --color-slate-300: 51 65 85;
+  --color-slate-400: 100 116 139;
+  --color-slate-500: 148 163 184;
+  --color-slate-600: 203 213 225;
+  --color-slate-700: 226 232 240;
+  --color-slate-800: 241 245 249;
+  --color-slate-900: 248 250 252;
+  --color-slate-950: 248 250 252;
+}
+
+html.dark .bg-white {
+  background-color: rgb(var(--color-slate-100));
+}
+html.dark .bg-white\/20 {
+  background-color: rgb(var(--color-slate-100) / 0.2);
+}
+html.dark .bg-white\/60 {
+  background-color: rgb(var(--color-slate-100) / 0.6);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -61,6 +100,10 @@ body {
 .module-page input[readonly]:not([data-lookup-field]) {
   background-color: #f8fafc;
   color: #475569;
+}
+html.dark .module-page input[readonly]:not([data-lookup-field]) {
+  background-color: rgb(var(--color-slate-100));
+  color: rgb(var(--color-slate-600));
 }
 .module-page :where(button, a, input, select):focus-visible {
   outline: 2px solid var(--color-primary);

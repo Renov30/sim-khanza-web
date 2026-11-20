@@ -9,6 +9,11 @@ import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { PanelInputData } from "@/components/modul/PanelInputData";
+import { CustomSelect } from "@/components/ui/CustomSelect";
+import { CopyResepDialog } from "@/components/farmasi/CopyResepDialog";
+import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
+import { RiwayatPasienDialog } from "@/components/tindakan-rawat-jalan/RiwayatPasienDialog";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
 import { PemeriksaanObgynTab } from "@/components/tindakan-rawat-jalan/PemeriksaanObgynTab";
@@ -123,6 +128,8 @@ export default function HalamanTindakanRawatJalan() {
   const [total, setTotal] = useState(0);
   const [versiData, setVersiData] = useState(0);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error" } | null>(null);
+  const [riwayatPasienTerbuka, setRiwayatPasienTerbuka] = useState(false);
+  const [copyResepTerbuka, setCopyResepTerbuka] = useState(false);
   const permintaanRiwayat = useRef<AbortController | null>(null);
   const aksiPanelPemeriksaan = useRef<AksiPanelPemeriksaan | null>(null);
   const [statusPanelPemeriksaan, setStatusPanelPemeriksaan] = useState<StatusPanelPemeriksaan>(STATUS_PANEL_PEMERIKSAAN_AWAL);
@@ -130,6 +137,30 @@ export default function HalamanTindakanRawatJalan() {
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe });
   }, []);
+
+  const bukaRiwayatPasien = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    setRiwayatPasienTerbuka(true);
+  }, [pasien, tampilkanToast]);
+
+  const bukaCopyResep = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    setCopyResepTerbuka(true);
+  }, [pasien, tampilkanToast]);
+
+  const bukaResumePasien = useCallback(() => {
+    if (!pasien) {
+      tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
+      return;
+    }
+    router.push(`/resume-pasien?no_rawat=${encodeURIComponent(pasien.no_rawat)}`);
+  }, [pasien, router, tampilkanToast]);
 
   useEffect(() => {
     if (!waktuOtomatis) return;
@@ -414,7 +445,7 @@ export default function HalamanTindakanRawatJalan() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div className="flex min-h-0 flex-1 gap-2 overflow-hidden">
-      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
+      <SidebarTindakanRalan noRawat={pasien?.no_rawat} onRiwayatPasien={bukaRiwayatPasien} onCopyResep={bukaCopyResep} onResumePasien={bukaResumePasien} onBelumTersedia={(label) => tampilkanToast(`${label} belum tersedia di Khanza Web.`, "info")} />
       <main
         onKeyDown={pindahFieldDenganEnter}
         className="flex min-w-0 flex-1 flex-col space-y-2.5 overflow-hidden"
@@ -657,6 +688,25 @@ export default function HalamanTindakanRawatJalan() {
       )}
       </main>
       </div>
+      <RiwayatPasienDialog
+        key={`riwayat-${riwayatPasienTerbuka ? "buka" : "tutup"}-${pasien?.no_rkm_medis || "-"}-${pasien?.no_rawat || "-"}`}
+        terbuka={riwayatPasienTerbuka}
+        noRm={pasien?.no_rkm_medis || ""}
+        namaPasien={pasien?.nm_pasien || ""}
+        noRawat={pasien?.no_rawat}
+        onTutup={() => setRiwayatPasienTerbuka(false)}
+        onToast={tampilkanToast}
+      />
+      <CopyResepDialog
+        key={`copy-resep-${copyResepTerbuka ? "buka" : "tutup"}-${pasien?.no_rkm_medis || "-"}`}
+        terbuka={copyResepTerbuka}
+        noRawat={pasien?.no_rawat || ""}
+        noRm={pasien?.no_rkm_medis || ""}
+        namaPasien={pasien?.nm_pasien || ""}
+        status="ralan"
+        onTutup={() => setCopyResepTerbuka(false)}
+        onToast={tampilkanToast}
+      />
       <KonfirmasiDialog terbuka={konfirmasiKeluar} judul="Selesaikan Pemeriksaan" pesan={`Tandai ${pasien?.nm_pasien || "pasien"} sudah diperiksa?`} subPesan="Status kunjungan akan diperbarui menjadi Sudah dan berkas menjadi Sudah Kembali." teksBatal="Tidak, Kembali" teksKonfirmasi="Ya, Tandai Sudah" bahaya={false} sedangMemproses={memperbaruiStatus} onBatal={keluarTanpaUbahStatus} onKonfirmasi={() => void tandaiSudahDiperiksa()} />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>

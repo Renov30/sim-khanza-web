@@ -1,5 +1,6 @@
 "use client";
 
+import { SidebarMenuPasien } from "@/components/modul/SidebarMenuPasien";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
@@ -92,29 +93,20 @@ const MENU_SIDEBAR: MenuSidebar[] = [
 interface SidebarTindakanRalanProps {
   noRawat?: string;
   onBelumTersedia: (label: string) => void;
+  onRiwayatPasien: () => void;
+  onCopyResep: () => void;
+  onResumePasien: () => void;
 }
 
-export function SidebarTindakanRalan({ noRawat, onBelumTersedia }: SidebarTindakanRalanProps) {
-  const hrefDenganPasien = (href: string) => noRawat ? `${href}?no_rawat=${encodeURIComponent(noRawat)}` : href;
-
+export function SidebarTindakanRalan({ noRawat, onBelumTersedia, onRiwayatPasien, onCopyResep, onResumePasien }: SidebarTindakanRalanProps) {
   return (
-    <aside aria-label="Menu tindakan rawat jalan" className="hidden min-h-0 w-48 shrink-0 overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm md:flex md:flex-col">
-      <div className="flex h-8 shrink-0 items-center border-b border-slate-200 bg-slate-100/90 px-2">
-        <span className="truncate text-[11px] font-semibold text-slate-700">Menu Pasien</span>
-      </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto p-1" aria-label="Pintasan data pasien">
-        {MENU_SIDEBAR.map((item) => item.href ? (
-          <Link key={item.label} href={hrefDenganPasien(item.href)} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
-            <FontAwesomeIcon icon={faCircle} className="h-1.5 w-1.5 shrink-0 text-primary-600" />
-            <span>{item.label}</span>
-          </Link>
-        ) : (
-          <button key={item.label} type="button" onClick={() => onBelumTersedia(item.label)} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
-            <FontAwesomeIcon icon={faCircle} className="h-1.5 w-1.5 shrink-0 text-slate-400" />
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
-    </aside>
+    <SidebarMenuPasien
+      noRawat={noRawat}
+      onBelumTersedia={onBelumTersedia}
+      onRiwayatPasien={onRiwayatPasien}
+      onCopyResep={onCopyResep}
+      onResumePasien={onResumePasien}
+      ariaLabel="Menu tindakan rawat jalan"
+    />
   );
 }

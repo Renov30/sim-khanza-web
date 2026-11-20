@@ -1,118 +1,172 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import Module, { createRequire } from 'node:module';
 import ts from 'typescript';
 
 const load = createRequire(import.meta.url);
 const { NextRequest, NextResponse } = load('next/server');
-const isRegistrationDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value)
-  && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 
-function handler({ denied, tervalidasi = 0 } = {}) {
-  const calls = [];
-  const header = {
-    no_resep: '202611180001', tgl_peresepan: '2026-11-18', jam_peresepan: '08:00:00',
-    no_rawat: '2026/11/18/000001', no_rkm_medis: '000001', nm_pasien: 'Pasien Uji',
-    kd_dokter: 'D1', nm_dokter: 'Dokter Uji', status_pelayanan: 'Belum Terlayani', status_asal: 'ralan',
+function loadTs(file, mocks, cache) {
+  if (cache.has(file)) return cache.get(file).exports;
+  const mod = new Module(file);
+  mod.filename = file;
+  mod.paths = Module._nodeModulePaths(process.cwd());
+  cache.set(file, mod);
+  mod.require = (id) => {
+    if (mocks[id]) return mocks[id];
+    if (id.startsWith('@/')) {
+      const target = resolve(process.cwd(), 'src', id.slice(2));
+      const candidates = [`${target}.ts`, `${target}.tsx`, resolve(target, 'index.ts')];
+      const ditemukan = candidates.find((candidate) => existsSync(candidate));
+      if (ditemukan) return loadTs(ditemukan, mocks, cache);
+    }
+    return load(id);
   };
-  const connection = {
-    beginTransaction: async () => calls.push(['BEGIN']),
-    commit: async () => calls.push(['COMMIT']),
-    rollback: async () => calls.push(['ROLLBACK']),
-    release: () => calls.push(['RELEASE']),
-    execute: async (sql, params) => {
-      calls.push([sql, params]);
-      if (/SELECT ro\.no_resep, rs\.status_bayar/.test(sql)) return [[{
-        no_resep: header.no_resep, status_bayar: 'Belum Bayar', kd_pj: 'UMU', tervalidasi,
-      }]];
-      if (/DELETE FROM resep_obat/.test(sql)) return [{ affectedRows: 1 }];
-      return [[]];
+  mod._compile(ts.transpileModule(readFileSync(file, 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
     },
-  };
+  }).outputText, file);
+  return mod.exports;
+}
+
+const header = {
+  no_resep: '000001',
+  tgl_peresepan: '2026-01-01',
+  jam_peresepan: '08:00:00',
+  no_rawat: '2026/01/01/000001',
+  no_rkm_medis: '000006',
+  nm_pasien: 'Pasien Uji',
+  kd_dokter: 'D1',
+  nm_dokter: 'dr. Uji',
+  status_pelayanan: 'Belum Terlayani',
+  status: 'ralan',
+};
+
+const detail = [
+  {
+    no_resep: '000001', jenis_item: 'obat', kode_item: 'OB1', nama_item: 'Parasetamol',
+    jumlah: 10, satuan: 'tab', aturan_pakai: '3 x 1', keterangan: '', no_racik: '', kd_racik: '',
+    p1: 0, p2: 0, kandungan: '', jenis: 'Obat', komposisi: '-', harga_ralan: 100,
+    industri: 'Industri Uji', kapasitas: 1, stok: 20,
+  },
+  {
+    no_resep: '000001', jenis_item: 'racikan', kode_item: 'R1', nama_item: 'Racikan Uji',
+    jumlah: 2, satuan: 'Serbuk', aturan_pakai: '2 x 1', keterangan: 'Racikan A', no_racik: '1', kd_racik: 'R',
+    p1: 0, p2: 0, kandungan: '', jenis: 'Racikan', komposisi: '', harga_ralan: 0,
+    industri: '', kapasitas: 0, stok: 0,
+  },
+  {
+    no_resep: '000001', jenis_item: 'bahan', kode_item: 'OB2', nama_item: 'Bahan Uji',
+    jumlah: 5, satuan: 'tab', aturan_pakai: '', keterangan: '', no_racik: '1', kd_racik: '',
+    p1: 1, p2: 2, kandungan: 'Kandungan Uji', jenis: 'Obat', komposisi: '-', harga_ralan: 200,
+    industri: 'Industri Uji', kapasitas: 1, stok: 15,
+  },
+];
+
+function handler({ denied, headers = [header], details = detail } = {}) {
+  const calls = [];
+  const cache = new Map();
   const mocks = {
     '@/lib/db': {
       executeQuery: async (sql, params) => {
         calls.push([sql, params]);
-        if (/FROM reg_periksa r\s+WHERE r\.no_rawat/.test(sql)) return [{
-          no_rawat: '2026/11/20/000001', no_rkm_medis: '000001', kd_dokter: 'D1', kd_poli: 'U1',
-        }];
-        if (/SELECT ro\.no_resep/.test(sql)) return [header];
-        if (/FROM resep_dokter rd/.test(sql)) return [{
-          no_resep: header.no_resep, jenis: 'Obat', jumlah: 10, satuan: 'TAB', aturan_pakai: '3 x 1',
-          kode_item: 'OBAT1', nama_item: 'Obat Uji', no_racik: '',
-        }];
-        if (/FROM resep_dokter_racikan rr/.test(sql)) return [];
-        if (/FROM resep_dokter_racikan_detail rrd/.test(sql)) return [];
+        if (/FROM resep_obat ro/.test(sql)) return headers;
+        if (/FROM resep_dokter rd/.test(sql)) return details;
         return [];
       },
-      pool: { getConnection: async () => connection },
     },
     '@/lib/farmasi/access': {
-      resepObatAccess: async () => denied ? NextResponse.json({ success: false }, { status: denied }) : null,
+      resepObatAccess: async () => denied
+        ? NextResponse.json({ success: false, error: 'Ditolak' }, { status: denied })
+        : null,
     },
-    '@/lib/registrasi/date': { isRegistrationDate },
+    '@/lib/registrasi/date': {
+      isRegistrationDate: (nilai) => /^\d{4}-\d{2}-\d{2}$/.test(nilai) && !Number.isNaN(Date.parse(nilai)),
+    },
   };
-  const file = resolve('src/app/api/farmasi/copy-resep/route.ts');
-  const mod = new Module(file);
-  mod.filename = file;
-  mod.paths = Module._nodeModulePaths(process.cwd());
-  mod.require = (id) => mocks[id] ?? load(id);
-  mod._compile(ts.transpileModule(readFileSync(file, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText, file);
-  return { api: mod.exports, calls };
+  const api = loadTs(resolve('src/app/api/farmasi/copy-resep/route.ts'), mocks, cache);
+  return { api, calls };
+}
+
+function request(kueri = '') {
+  return new NextRequest(`http://localhost/api/farmasi/copy-resep?${kueri}`);
 }
 
 for (const code of [401, 403]) {
   test(`copy resep menolak akses ${code} sebelum query`, async () => {
     const { api, calls } = handler({ denied: code });
-    const response = await api.GET(new NextRequest('http://localhost/api/farmasi/copy-resep?no_rawat=2026%2F11%2F20%2F000001'));
+    const response = await api.GET(request('no_rm=000006&status=ralan'));
     assert.equal(response.status, code);
     assert.equal(calls.length, 0);
   });
 }
 
-test('riwayat copy resep dibatasi pasien dan dokter tujuan serta memuat rincian', async () => {
+test('copy resep memvalidasi nomor RM, status, tanggal, dan nomor resep', async () => {
   const { api, calls } = handler();
-  const response = await api.GET(new NextRequest('http://localhost/api/farmasi/copy-resep?no_rawat=2026%2F11%2F20%2F000001&pakai_tanggal=1&tanggal_mulai=2026-11-01&tanggal_selesai=2026-11-20&cari=Uji'));
-  const json = await response.json();
-  assert.equal(response.status, 200);
-  assert.equal(json.data[0].items[0].kode_item, 'OBAT1');
-  const queryHeader = calls.find(([sql]) => typeof sql === 'string' && /SELECT ro\.no_resep/.test(sql));
-  assert.match(queryHeader[0], /r\.no_rkm_medis = \?/);
-  assert.match(queryHeader[0], /ro\.kd_dokter = \?/);
-  assert.ok(queryHeader[1].includes('000001'));
-  assert.ok(queryHeader[1].includes('D1'));
-});
-
-test('periode copy resep tidak valid ditolak sebelum query', async () => {
-  const { api, calls } = handler();
-  const response = await api.GET(new NextRequest('http://localhost/api/farmasi/copy-resep?no_rawat=2026%2F11%2F20%2F000001&pakai_tanggal=1&tanggal_mulai=2026-11-30&tanggal_selesai=2026-11-01'));
-  assert.equal(response.status, 400);
+  for (const kueri of [
+    'status=ralan',
+    'no_rm=000006&status=acak',
+    'no_rm=000006&status=ralan&tanggal_mulai=2026-1-1',
+    'no_rm=000006&status=ralan&tanggal_mulai=2026-02-01&tanggal_selesai=2026-01-01',
+    'no_resep=',
+  ]) {
+    const response = await api.GET(request(kueri));
+    assert.equal(response.status, 400, kueri);
+  }
   assert.equal(calls.length, 0);
 });
 
-test('hapus resep belum tervalidasi dilakukan dalam transaksi', async () => {
+test('daftar copy resep memakai filter status, dokter, tanggal, dan limit', async () => {
   const { api, calls } = handler();
-  const response = await api.DELETE(new NextRequest('http://localhost/api/farmasi/copy-resep', {
-    method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ no_resep: '202611180001', no_rawat_tujuan: '2026/11/20/000001' }),
-  }));
+  const response = await api.GET(request('no_rm=000006&status=ralan&tanggal_mulai=2026-01-01&tanggal_selesai=2026-01-31&kd_dokter=D1&limit=10'));
+  const json = await response.json();
   assert.equal(response.status, 200);
-  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /FOR UPDATE/.test(sql)));
-  assert.ok(calls.some(([sql]) => typeof sql === 'string' && /DELETE FROM resep_obat/.test(sql)));
-  assert.ok(calls.some(([marker]) => marker === 'COMMIT'));
+  assert.equal(json.success, true);
+  assert.equal(json.data.total, 1);
+  assert.equal(json.data.items[0].status_asal, 'Rawat Jalan');
+  assert.equal(json.data.items[0].detail.length, 3);
+  assert.equal(json.data.items[0].obat.length, 1);
+  assert.equal(json.data.items[0].racikan.length, 1);
+  assert.equal(json.data.items[0].racikan[0].detail.length, 1);
+
+  const headerCall = calls.find(([sql]) => /FROM resep_obat ro/.test(sql));
+  assert.match(headerCall[0], /ro\.tgl_peresepan >= \?/);
+  assert.match(headerCall[0], /LIMIT \?/);
+  assert.deepEqual(headerCall[1], ['000006', 'ralan', '2026-01-01', '2026-01-31', 'D1', 10]);
+
+  const detailCall = calls.find(([sql]) => /FROM resep_dokter rd/.test(sql));
+  assert.deepEqual(detailCall[1], ['000001', '000001', '000001']);
 });
 
-test('hapus resep tervalidasi ditolak dan di-rollback', async () => {
-  const { api, calls } = handler({ tervalidasi: 1 });
-  const response = await api.DELETE(new NextRequest('http://localhost/api/farmasi/copy-resep', {
-    method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ no_resep: '202611180001', no_rawat_tujuan: '2026/11/20/000001' }),
-  }));
-  assert.equal(response.status, 409);
-  assert.ok(calls.some(([marker]) => marker === 'ROLLBACK'));
-  assert.ok(!calls.some(([sql]) => typeof sql === 'string' && /DELETE FROM resep_obat/.test(sql)));
+test('cari per obat menyaring resep berdasarkan nama atau kode', async () => {
+  const cocok = handler();
+  const ada = await cocok.api.GET(request('no_rm=000006&status=ralan&cari_obat=paras'));
+  assert.equal((await ada.json()).data.items.length, 1);
+
+  const tidak = handler();
+  const kosong = await tidak.api.GET(request('no_rm=000006&status=ralan&cari_obat=tidakada'));
+  assert.equal((await kosong.json()).data.items.length, 0);
+});
+
+test('detail copy resep mengembalikan header, obat, dan racikan', async () => {
+  const { api } = handler();
+  const response = await api.GET(request('no_resep=000001'));
+  const json = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(json.data.header.no_resep, '000001');
+  assert.equal(json.data.obat[0].kode_brng, 'OB1');
+  assert.equal(json.data.racikan[0].kd_racik, 'R');
+  assert.equal(json.data.racikan[0].detail[0].p1, '1');
+});
+
+test('detail copy resep mengembalikan 404 untuk resep yang tidak ada', async () => {
+  const { api } = handler({ headers: [], details: [] });
+  const response = await api.GET(request('no_resep=999999'));
+  assert.equal(response.status, 404);
+  assert.equal((await response.json()).success, false);
 });

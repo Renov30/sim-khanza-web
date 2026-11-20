@@ -14,19 +14,16 @@ import {
   faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
+import { useKlien } from "@/lib/klien";
 
 export function LoginModal() {
   const { isLoginModalOpen, setIsLoginModalOpen, login, isLocked } = useAuth();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useKlien();
   const [idUser, setIdUser] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Tutup dengan tombol Escape hanya jika TIDAK dalam status terkunci
   useEffect(() => {
@@ -70,7 +67,7 @@ export function LoginModal() {
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[99990] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4"
+      className="fixed inset-0 z-[99990] flex items-center justify-center bg-tertiary-950/60 backdrop-blur-md p-4"
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
