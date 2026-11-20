@@ -161,6 +161,12 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Tab `Diagnosa` menampilkan waktu registrasi, mendukung pemilihan ICD-10 dan ICD-9-CM, prioritas Khanza, status penyakit Baru/Lama, serta sinkronisasi kode ke resume pasien. Daftar master langsung memuat 20 data dan mengambil halaman berikutnya saat digulir.
 - Tab `Catatan Dokter` memakai waktu WIT otomatis, riwayat terfilter, dan pembatasan koreksi/hapus selama 48 jam hanya untuk dokter pemilik catatan (admin dikecualikan).
 
+### 21 November 2026 — hasil periksa laboratorium PK
+
+- Halaman `/laboratorium/periksa-pk` kini mengadaptasi daftar detail `DlgCariPeriksaLab`: item pemeriksaan, hasil, satuan, nilai rujukan, keterangan, ruang, petugas, dokter perujuk, dan penanggung jawab.
+- Pintasan `Hasil Periksa Lab` pada tab Pemeriksaan Tindakan Rawat Jalan membuka halaman tersebut dengan `no_rawat` kunjungan aktif; pilihan `Periksa Lab PK` di navbar tetap menuju halaman yang sama.
+- Endpoint memvalidasi periode, status, kata kunci, dan No. Rawat; seluruh filter memakai parameter query. Verifikasi dengan `node --test tests/periksa-lab-pk-api.test.mjs`.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.

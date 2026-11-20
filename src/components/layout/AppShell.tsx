@@ -9,6 +9,7 @@ import { AboutModal } from "@/components/common/AboutModal";
 import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import type { HospitalSetting } from "@/lib/types/auth";
+import type { MenuItem } from "@/lib/types/menu";
 
 interface NavigationContextType {
   isMenuOpen: boolean;
@@ -53,7 +54,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => controller.abort();
   }, []);
 
-  const handleModuleClick = (title: string) => {
+  const handleModuleClick = (module: string | MenuItem) => {
+    const title = typeof module === "string" ? module : module.title;
     if (title === "Keluar Aplikasi") {
       setToastMessage("Untuk menutup aplikasi, Anda dapat menutup tab peramban (browser).");
       return;
@@ -68,6 +70,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     setIsMenuOpen(false);
+
+    if (typeof module !== "string" && module.href) {
+      router.push(module.href);
+      return;
+    }
 
     if (title === "Registrasi Pasien" || title === "Pendaftaran Pasien") {
       router.push("/registrasi");
