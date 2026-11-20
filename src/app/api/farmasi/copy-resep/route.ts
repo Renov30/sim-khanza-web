@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeQuery } from "@/lib/db";
+import type { PoolConnection, RowDataPacket } from "mysql2/promise";
+import { executeQuery, pool } from "@/lib/db";
 import { resepObatAccess } from "@/lib/farmasi/access";
 import { isRegistrationDate } from "@/lib/registrasi/date";
 
@@ -64,6 +65,10 @@ const BATAS_TANGGAL = 10;
 const BATAS_NO_RM = 20;
 const BATAS_RESEP = 14;
 const BATAS_CARI = 80;
+
+class CopyResepError extends Error {
+  constructor(message: string, readonly status = 400) { super(message); }
+}
 
 function teks(nilai: unknown, batas: number) {
   return typeof nilai === "string" ? nilai.trim().slice(0, batas) : "";
@@ -285,5 +290,47 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("API copy resep gagal:", error);
     return NextResponse.json({ success: false, error: "Gagal memuat copy resep." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const denied = await resepObatAccess();
+  if (denied) return denied;
+  let connection: PoolConnection | undefined;
+  try {
+    const body: unknown = await req.json();
+    const input = body && typeof body === "object" ? body as Record<string, unknown> : {};
+    const noResep = teks(input.no_resep, BATAS_RESEP);
+    const noRawatTujuan = teks(input.no_rawat_tujuan, 17);
+    if (!noResep || !noRawatTujuan) throw new CopyResepError("Nomor resep dan kunjungan tujuan wajib diisi.");
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.execute<(RowDataPacket & { status_bayar: string; kd_pj: string; tervalidasi: number })[]>(`
+      SELECT rs.status_bayar, rs.kd_pj,
+             CASE WHEN ro.tgl_perawatan IS NULL OR CAST(ro.tgl_perawatan AS CHAR) = '0000-00-00' THEN 0 ELSE 1 END AS tervalidasi
+      FROM resep_obat ro
+      INNER JOIN reg_periksa rs ON rs.no_rawat = ro.no_rawat
+      INNER JOIN reg_periksa rt ON rt.no_rawat = ? AND rt.status_lanjut = 'Ralan'
+      WHERE ro.no_resep = ? AND rs.no_rkm_medis = rt.no_rkm_medis AND ro.kd_dokter = rt.kd_dokter
+      FOR UPDATE
+    `, [noRawatTujuan, noResep]);
+    const resep = rows[0];
+    if (!resep) throw new CopyResepError("Resep tidak ditemukan untuk pasien dan dokter tersebut.", 404);
+    if (Number(resep.tervalidasi)) throw new CopyResepError("Resep sudah tervalidasi dan tidak dapat dihapus.", 409);
+    if (resep.status_bayar === "Sudah Bayar") {
+      const [parsial] = await connection.execute<RowDataPacket[]>("SELECT kd_pj FROM set_input_parsial WHERE kd_pj = ? LIMIT 1", [resep.kd_pj]);
+      if (!parsial[0]) throw new CopyResepError("Billing kunjungan sudah diverifikasi; resep tidak dapat dihapus.", 409);
+    }
+    const [hasil] = await connection.execute("DELETE FROM resep_obat WHERE no_resep = ?", [noResep]);
+    if (!(hasil as { affectedRows?: number }).affectedRows) throw new CopyResepError("Resep tidak ditemukan.", 404);
+    await connection.commit();
+    return NextResponse.json({ success: true, message: `Resep ${noResep} berhasil dihapus.` });
+  } catch (error) {
+    if (connection) await connection.rollback().catch(() => undefined);
+    const status = error instanceof CopyResepError ? error.status : 500;
+    if (!(error instanceof CopyResepError)) console.error("API copy resep hapus gagal:", error);
+    return NextResponse.json({ success: false, error: error instanceof CopyResepError ? error.message : "Resep gagal dihapus." }, { status });
+  } finally {
+    connection?.release();
   }
 }

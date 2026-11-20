@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faFilePrescription, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faFilePrescription, faPenToSquare, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
@@ -44,7 +44,9 @@ interface ResepRiwayat {
   kd_dokter: string;
   nm_dokter: string;
   status_pelayanan: "Belum Terlayani" | "Sudah Terlayani";
-  status_asal: "ralan" | "ranap";
+  status: "ralan" | "ranap";
+  status_asal: "Rawat Jalan" | "Rawat Inap";
+  detail: ItemResep[];
   items: ItemResep[];
 }
 
@@ -134,18 +136,21 @@ export default function HalamanCopyResep() {
       setMemuat(true);
       try {
         const url = new URL("/api/farmasi/copy-resep", window.location.origin);
-        url.searchParams.set("no_rawat", kunjungan!.no_rawat);
-        url.searchParams.set("pakai_tanggal", pakaiTanggal ? "1" : "0");
+        url.searchParams.set("no_rm", kunjungan!.no_rkm_medis);
+        url.searchParams.set("status", "ralan");
+        url.searchParams.set("kd_dokter", kunjungan!.kd_dokter);
+        url.searchParams.set("limit", "100");
         if (pakaiTanggal) {
           url.searchParams.set("tanggal_mulai", tanggalMulai);
           url.searchParams.set("tanggal_selesai", tanggalSelesai);
         }
-        if (filterKataKunci) url.searchParams.set("cari", filterKataKunci);
+        if (filterKataKunci) url.searchParams.set("cari_obat", filterKataKunci);
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
-        const json: { success?: boolean; data?: ResepRiwayat[]; error?: string } = await response.json();
+        const json: { success?: boolean; data?: { items?: ResepRiwayat[] }; error?: string } = await response.json();
         if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat resep sebelumnya");
-        setData(json.data || []);
-        setNoResepTerpilih((lama) => json.data?.some((item) => item.no_resep === lama) ? lama : null);
+        const items = (json.data?.items || []).map((item) => ({ ...item, items: item.detail || [] }));
+        setData(items);
+        setNoResepTerpilih((lama) => items.some((item) => item.no_resep === lama) ? lama : null);
       } catch (error) {
         if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat resep sebelumnya"), "error");
       } finally {
@@ -160,12 +165,12 @@ export default function HalamanCopyResep() {
     if (!kunjungan) return tampilkanToast("Pilih kunjungan tujuan terlebih dahulu.", "error");
     if (!resep) return tampilkanToast("Pilih nomor resep yang akan disalin.", "error");
     if (Number(kunjungan.pasien_ranap)) return tampilkanToast("Pasien sudah masuk kamar inap; gunakan resep rawat inap.", "error");
-    router.push(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&salin_dari=${encodeURIComponent(resep.no_resep)}`);
+    router.push(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&dari_no_resep=${encodeURIComponent(resep.no_resep)}`);
   }, [kunjungan, router, tampilkanToast, terpilih]);
 
   const bukaUbah = () => {
     if (!terpilih) return tampilkanToast("Pilih nomor resep yang akan diubah.", "error");
-    if (terpilih.status_asal !== "ralan") return tampilkanToast("Resep rawat inap harus diubah dari modul rawat inap.", "error");
+    if (terpilih.status !== "ralan") return tampilkanToast("Resep rawat inap harus diubah dari modul rawat inap.", "error");
     if (terpilih.status_pelayanan === "Sudah Terlayani") return tampilkanToast("Resep sudah tervalidasi dan tidak dapat diubah.", "error");
     router.push(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(terpilih.no_rawat)}&edit_resep=${encodeURIComponent(terpilih.no_resep)}`);
   };
@@ -216,8 +221,8 @@ export default function HalamanCopyResep() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <section className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm">
-        <div className="grid grid-cols-1 gap-1.5 text-xs text-slate-700 lg:grid-cols-2">
-          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[5rem_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-3 text-xs text-slate-700 lg:grid-cols-2">
+          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Kunjungan pasien tujuan">
             <label htmlFor="no-rawat-copy-resep" className="whitespace-nowrap sm:text-right">No. Rawat :</label>
             <div className="relative flex min-w-0 flex-wrap items-center gap-2">
               <input
@@ -231,11 +236,11 @@ export default function HalamanCopyResep() {
                   setNoResepTerpilih(null);
                 }}
                 placeholder="No. rawat, RM, atau nama pasien"
-                className="h-7 w-56 rounded-md border border-slate-300 px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
+                className="h-7 w-56 shrink-0 rounded-md border border-slate-300 bg-white px-2 font-mono text-xs text-slate-800 focus:border-primary-600 focus:outline-none"
               />
               <input readOnly aria-label="Identitas pasien tujuan" value={kunjungan ? `${kunjungan.no_rkm_medis}  ${kunjungan.nm_pasien} (${kunjungan.jk}, ${kunjungan.umurdaftar} ${kunjungan.sttsumur})` : ""} placeholder="Identitas pasien tujuan" className="h-7 min-w-56 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
               {!kunjungan && (memuatKunjungan || hasilKunjungan.length > 0) && (
-                <div className="absolute left-0 top-8 z-20 max-h-48 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                <div className="absolute left-0 top-8 z-20 max-h-48 w-full max-w-2xl overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
                   {memuatKunjungan ? <p className="p-2.5 text-slate-500">Mencari kunjungan...</p> : hasilKunjungan.map((item) => (
                     <button key={item.no_rawat} type="button" onClick={() => pilihKunjungan(item)} className="block w-full border-b border-slate-100 px-3 py-2 text-left hover:bg-slate-50">
                       <span className="font-mono text-slate-800">{item.no_rawat} · {item.no_rkm_medis}</span>
@@ -246,9 +251,9 @@ export default function HalamanCopyResep() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[5rem_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Dokter peresep">
             <span className="whitespace-nowrap sm:text-right">Peresep :</span>
-            <input readOnly aria-label="Dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-7 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
+            <input readOnly aria-label="Dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
           </div>
         </div>
       </section>
@@ -259,14 +264,14 @@ export default function HalamanCopyResep() {
             <caption className="sr-only">Daftar resep dokter pada kunjungan pasien sebelumnya</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
               <tr>
-                <th scope="col" className="w-28 border-b border-r border-slate-200 px-2.5 py-2 text-center">No. Resep</th>
-                <th scope="col" className="w-24 border-b border-r border-slate-200 px-2.5 py-2 text-center">Tgl. Resep</th>
-                <th scope="col" className="w-20 border-b border-r border-slate-200 px-2.5 py-2 text-center">Jam</th>
-                <th scope="col" className="w-36 border-b border-r border-slate-200 px-2.5 py-2 text-center">No. Rawat</th>
-                <th scope="col" className="w-24 border-b border-r border-slate-200 px-2.5 py-2 text-center">No. RM</th>
-                <th scope="col" className="min-w-56 border-b border-r border-slate-200 px-2.5 py-2">Pasien</th>
-                <th scope="col" className="min-w-52 border-b border-r border-slate-200 px-2.5 py-2">Dokter Peresep</th>
-                <th scope="col" className="w-32 border-b border-slate-200 px-2.5 py-2 text-center">Status</th>
+                <th scope="col" className="w-28 border-b border-r border-slate-200 px-2 py-2 text-center">No. Resep</th>
+                <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2 text-center">Tgl. Resep</th>
+                <th scope="col" className="w-20 border-b border-r border-slate-200 px-2 py-2 text-center">Jam Resep</th>
+                <th scope="col" className="w-36 border-b border-r border-slate-200 px-2 py-2 text-center">No. Rawat</th>
+                <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2 text-center">No. RM</th>
+                <th scope="col" className="min-w-56 border-b border-r border-slate-200 px-2 py-2 text-center">Pasien</th>
+                <th scope="col" className="min-w-52 border-b border-r border-slate-200 px-2 py-2 text-center">Dokter Peresep</th>
+                <th scope="col" className="w-32 border-b border-slate-200 px-2 py-2 text-center">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -307,7 +312,8 @@ export default function HalamanCopyResep() {
           disabledHapus={!terpilih || terpilih.status_pelayanan === "Sudah Terlayani"}
           tombolTambahan={[
             { label: "Copy", ikon: faCopy, onClick: () => bukaCopy(), disabled: !terpilih, varian: "primer", tooltip: "Salin resep ke kunjungan aktif" },
-            { label: "Ubah", ikon: faPenToSquare, onClick: bukaUbah, disabled: !terpilih || terpilih.status_pelayanan === "Sudah Terlayani" || terpilih.status_asal !== "ralan", tooltip: "Ubah resep sumber" },
+            { label: "Ubah", ikon: faPenToSquare, onClick: bukaUbah, disabled: !terpilih || terpilih.status_pelayanan === "Sudah Terlayani" || terpilih.status !== "ralan", tooltip: "Ubah resep sumber" },
+            { label: "Keluar", ikon: faXmark, onClick: () => router.back(), varian: "sekunder", tooltip: "Kembali ke halaman sebelumnya" },
           ]}
           onSemua={semua}
           jumlahRecord={data.length}
@@ -339,35 +345,35 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
 }) {
   return (
     <>
-      <tr onClick={onPilih} onDoubleClick={onCopy} aria-selected={dipilih} className={`cursor-pointer border-b border-slate-200 ${dipilih ? "bg-primary-50" : "bg-white hover:bg-slate-50"}`}>
-        <td className="px-2.5 py-2 text-center font-mono tabular-nums text-slate-800">{resep.no_resep}</td>
-        <td className="px-2.5 py-2 text-center tabular-nums">{resep.tgl_peresepan}</td>
-        <td className="px-2.5 py-2 text-center font-mono tabular-nums">{resep.jam_peresepan}</td>
-        <td className="px-2.5 py-2 text-center font-mono tabular-nums">{resep.no_rawat}</td>
-        <td className="px-2.5 py-2 text-center font-mono tabular-nums">{resep.no_rkm_medis}</td>
-        <td className="px-2.5 py-2 text-slate-800">{resep.nm_pasien}</td>
-        <td className="px-2.5 py-2">{resep.nm_dokter}</td>
-        <td className="px-2.5 py-2 text-center"><span className={`rounded-full px-2 py-0.5 ${resep.status_pelayanan === "Sudah Terlayani" ? "bg-secondary-100 text-secondary-800" : "bg-slate-100 text-slate-700"}`}>{resep.status_pelayanan}</span></td>
+      <tr onClick={onPilih} onDoubleClick={onCopy} aria-selected={dipilih} className={`cursor-pointer ${dipilih ? "bg-primary-50/60" : "even:bg-slate-50/70 hover:bg-slate-50"}`}>
+        <td className="truncate border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums text-slate-800">{resep.no_resep}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center tabular-nums">{resep.tgl_peresepan}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{resep.jam_peresepan}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{resep.no_rawat}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{resep.no_rkm_medis}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5 text-slate-800">{resep.nm_pasien}</td>
+        <td className="border-b border-r border-slate-100 px-2 py-1.5">{resep.nm_dokter}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center">{resep.status_pelayanan}</td>
       </tr>
-      <tr className={dipilih ? "bg-primary-50/40" : "bg-slate-50/80"}>
-        <td className="border-b border-slate-100" />
-        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Jumlah</th>
-        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Satuan</th>
-        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-left font-semibold">Aturan Pakai</th>
-        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Kode / No.</th>
-        <th scope="col" colSpan={2} className="border-b border-slate-100 px-2 py-1 text-left font-semibold">Nama Obat / Racikan</th>
-        <td className="border-b border-slate-100 px-2 py-1 text-center text-slate-500">{resep.status_asal === "ralan" ? "Rawat Jalan" : "Rawat Inap"}</td>
+      <tr className={dipilih ? "bg-primary-50/40" : "bg-slate-100/70"}>
+        <td className="border-b border-r border-slate-100" />
+        <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Jumlah</th>
+        <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Satuan</th>
+        <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-left font-semibold">Aturan Pakai</th>
+        <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Kode / No.</th>
+        <th scope="col" colSpan={2} className="border-b border-r border-slate-100 px-2 py-1 text-left font-semibold">Nama Obat / Racikan</th>
+        <td className="border-b border-slate-100 px-2 py-1 text-center text-slate-500">{resep.status_asal}</td>
       </tr>
       {resep.items.length === 0 ? (
-        <tr className={dipilih ? "bg-primary-50/30" : "bg-white"}><td /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
+        <tr className={dipilih ? "bg-primary-50/30" : "bg-white"}><td className="border-b border-r border-slate-100" /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
       ) : resep.items.map((item, index) => (
         <tr key={`${resep.no_resep}-${item.jenis}-${item.no_racik}-${item.kode_item}-${index}`} className={dipilih ? "bg-primary-50/30" : "bg-white"}>
-          <td />
-          <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums`}>{item.jumlah}</td>
-          <td className="border-b border-slate-100 px-2 py-1.5 text-center">{item.satuan}</td>
-          <td className="border-b border-slate-100 px-2 py-1.5">{item.aturan_pakai || "-"}</td>
-          <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-slate-100 px-2 py-1.5 text-center font-mono`}>{item.kode_item}</td>
-          <td colSpan={2} className="border-b border-slate-100 px-2 py-1.5 text-slate-800">{item.nama_item}</td>
+          <td className="border-b border-r border-slate-100" />
+          <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums`}>{item.jumlah}</td>
+          <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center">{item.satuan}</td>
+          <td className="border-b border-r border-slate-100 px-2 py-1.5">{item.aturan_pakai || "-"}</td>
+          <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono`}>{item.kode_item}</td>
+          <td colSpan={2} className="border-b border-r border-slate-100 px-2 py-1.5 text-slate-800">{item.nama_item}</td>
           <td className="border-b border-slate-100 px-2 py-1.5 text-center text-slate-500">{item.jenis}</td>
         </tr>
       ))}

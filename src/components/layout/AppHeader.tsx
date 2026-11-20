@@ -26,7 +26,6 @@ import {
   faFilePrescription,
   faDroplet,
   faBoxesStacked,
-  faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface AppHeaderProps {
@@ -425,36 +424,6 @@ export function AppHeader({
                 >
                   <FontAwesomeIcon icon={faPrescription} className="w-3.5 h-3.5 text-secondary-600 shrink-0" />
                   <span>No. Resep</span>
-                </Link>
-                <Link
-                  href="/farmasi/copy-resep"
-                  onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
-                    pathname === "/farmasi/copy-resep"
-                      ? "bg-primary-50 text-primary-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
-                  }`}
-                >
-                  <FontAwesomeIcon icon={faCopy} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
-                  <span>Copy Resep</span>
-                </Link>
-
-                <div className="px-3 py-1 border-t border-b border-slate-100 bg-slate-50/70 mt-1">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    Lainnya
-                  </p>
-                </div>
-                <Link
-                  href="/farmasi"
-                  onClick={() => setMenuFarmasiTerbuka(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
-                    pathname === "/farmasi"
-                      ? "bg-primary-50 text-primary-800 font-bold"
-                      : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
-                  }`}
-                >
-                  <FontAwesomeIcon icon={faPills} className="w-3.5 h-3.5 text-primary-600 shrink-0" />
-                  <span>Pemberian Obat (Dispensasi)</span>
                 </Link>
               </div>
             )}
