@@ -93,6 +93,12 @@ Dokumen ini adalah satu-satunya pedoman wajib proyek bagi developer dan AI agent
 - Modal login berada di lapisan terdepan, tidak dapat dibatalkan, dan tidak dapat ditutup dengan Escape saat terkunci.
 - Login/logout wajib disinkronkan antar-tab menggunakan `BroadcastChannel` dan event `storage`.
 
+### 3.9 Skill wajib konsistensi UI
+
+- Untuk setiap tugas yang membuat, mengubah, merapikan, atau meninjau UI, AI agent wajib membaca seluruh [`skills/khanza-web-ui/SKILL.md`](skills/khanza-web-ui/SKILL.md) sebelum menulis kode.
+- Skill tersebut adalah panduan implementasi praktis. Bila terdapat perbedaan, aturan di `AGENTS.md` tetap menjadi otoritas tertinggi.
+- Jangan membuat pola visual baru ketika komponen atau halaman referensi yang setara sudah tersedia. Pertahankan perbedaan hanya bila aturan bisnis atau kebutuhan aksesibilitas mengharuskannya.
+
 ## 4. Struktur halaman modul
 
 Halaman generik mengikuti urutan:
