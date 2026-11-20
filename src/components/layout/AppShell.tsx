@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
@@ -30,12 +30,21 @@ export function useNavigation() {
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, setIsLoginModalOpen, isLocked } = useAuth();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [setting, setSetting] = useState<HospitalSetting | null>(null);
+  const isMenuOpen = pathname === "/" && searchParams.get("menu") === "1";
+
+  const setIsMenuOpen = (open: boolean) => {
+    if (open) {
+      router.replace("/?menu=1");
+      return;
+    }
+    router.replace("/");
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -68,8 +77,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
       return;
     }
-
-    setIsMenuOpen(false);
 
     if (typeof module !== "string" && module.href) {
       router.push(module.href);
@@ -123,8 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const handleToggleMenu = () => {
     if (pathname !== "/") {
-      router.push("/");
-      setIsMenuOpen(true);
+      router.push("/?menu=1");
     } else {
       setIsMenuOpen(!isMenuOpen);
     }
@@ -157,7 +163,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex-1 overflow-hidden relative flex flex-col">
             {isMenuOpen && pathname === "/" ? (
               <main className="flex-1 overflow-hidden relative flex flex-col bg-white">
-                <MainMenuGrid onModuleClick={handleModuleClick} />
+                <MainMenuGrid key={searchParams.toString()} onModuleClick={handleModuleClick} />
               </main>
             ) : (
               <main className="flex-1 overflow-hidden relative flex flex-col">

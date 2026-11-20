@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
@@ -29,7 +30,9 @@ export default function RootLayout({
       </head>
       <body className="h-full flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans antialiased">
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <Suspense fallback={<div className="h-screen bg-slate-50" />}>
+            <AppShell>{children}</AppShell>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>
