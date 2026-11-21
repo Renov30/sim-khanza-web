@@ -304,6 +304,13 @@ export default function HalamanRegistrasi() {
     return () => document.removeEventListener("click", batalkanPilihanDiLuarTabel);
   }, [resetForm, terpilih]);
 
+  const batalkanPilihanDiAreaTabel = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest("[data-selection-row]")) return;
+    if (terpilih) resetForm();
+    if (rujukanTerpilih) setRujukanTerpilih(null);
+  };
+
   // Data tabel
   const muatData = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -714,7 +721,7 @@ export default function HalamanRegistrasi() {
       </div>
 
       {/* Tabel */}
-      <div ref={tabelRegistrasiRef} className="flex-none h-[32rem] lg:h-auto lg:flex-1 lg:min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+      <div ref={tabelRegistrasiRef} onClick={batalkanPilihanDiAreaTabel} className="flex-none h-[32rem] lg:h-auto lg:flex-1 lg:min-h-0 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
         <div
           id={`panel-registrasi-${tabTabel}`}
           role="tabpanel"
@@ -759,6 +766,7 @@ export default function HalamanRegistrasi() {
                 dataTampilAwal.map((item) => (
                   <tr
                     key={item.no_rawat}
+                    data-selection-row
                     tabIndex={0}
                     onClick={() => handlePilihData(item)}
                     onContextMenu={(event) => bukaMenuKonteks(event, item)}
@@ -847,6 +855,7 @@ export default function HalamanRegistrasi() {
                 ) : dataRujukan.map((item) => (
                   <tr
                     key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
+                    data-selection-row
                     tabIndex={0}
                     onClick={() => setRujukanTerpilih(item)}
                     onContextMenu={(event) => bukaMenuKonteks(event, item)}

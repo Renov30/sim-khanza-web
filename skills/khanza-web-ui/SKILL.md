@@ -64,6 +64,7 @@ Perilaku pilihan baris:
 
 - Jika tabel memiliki pilihan baris, klik baris yang sedang terpilih harus membatalkan pilihan tersebut. Reset juga harus mengembalikan formulir ke kondisi input baru sesuai aturan tombol Baru.
 - Pilihan baris harus dibatalkan ketika pengguna mengeklik di luar area tabel. Gunakan `ref` pada container tabel dan listener klik yang dibersihkan saat unmount; jangan mengandalkan perubahan warna saja.
+- Klik area tabel yang bukan baris data—termasuk header, ruang kosong, dan state kosong/tidak ada data—juga harus membatalkan pilihan. Tandai baris data dengan atribut atau mekanisme yang jelas agar handler tidak membatalkan pilihan saat klik diteruskan dari baris.
 - Klik baris lain memilih baris baru seperti biasa. Jangan mengubah ukuran font, bobot font, atau lebar kolom pada state terpilih.
 - Pastikan pembatalan pilihan tidak mengganggu aksi kontrol yang memang harus tetap memakai data terpilih; bila diperlukan, letakkan kontrol tersebut dalam area pengecualian yang terdokumentasi.
 
