@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { MenuKonteksRawatJalan } from "@/components/modul/MenuKonteksRawatJalan";
+import { tentukanAksiMenu, type AksiMenuKonteks, type ItemMenuKonteks, type KunciSortRawatJalan } from "@/components/modul/menu-konteks-rawat-jalan-data";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
@@ -51,8 +53,24 @@ function warnaStatusPeriksa(status: string) {
   return "border border-slate-200 bg-slate-100 text-slate-700";
 }
 
-function kunciBarisRawatJalan(item: RawatJalanRow) {
-  return `${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`;
+interface UrutanTabel {
+  kunci: KunciSortRawatJalan;
+  arah: "asc" | "desc";
+}
+
+const kunciBaris = (item: RawatJalanRow) => `${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`;
+
+function nilaiSort(item: RawatJalanRow, kunci: KunciSortRawatJalan) {
+  switch (kunci) {
+    case "tanggal": return `${item.tgl_registrasi} ${item.jam_reg}`;
+    case "dokter": return item.nm_dokter;
+    case "poli": return item.nm_poli;
+    case "penjab": return item.png_jawab || item.kd_pj;
+    case "status": return item.stts;
+    case "no_reg": return item.no_reg;
+    case "no_rm": return item.no_rkm_medis;
+    default: return item.no_rawat;
+  }
 }
 
 export default function HalamanRawatJalan() {
@@ -78,6 +96,9 @@ export default function HalamanRawatJalan() {
   const [halaman, setHalaman] = useState(1);
   const [totalData, setTotalData] = useState(0);
   const [versiTabel, setVersiTabel] = useState(0);
+  const [menuKonteks, setMenuKonteks] = useState<{ x: number; y: number; baris: RawatJalanRow } | null>(null);
+  const [barisTerpilih, setBarisTerpilih] = useState("");
+  const [urutanTabel, setUrutanTabel] = useState<UrutanTabel | null>(null);
   const permintaanTabel = useRef<AbortController | null>(null);
 
   const [daftarDokter, setDaftarDokter] = useState<DokterOption[]>([]);
@@ -87,6 +108,14 @@ export default function HalamanRawatJalan() {
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe, key: Date.now() });
   }, []);
+
+  const dataTampil = useMemo(() => {
+    if (!urutanTabel) return data;
+    return [...data].sort((a, b) => {
+      const hasil = nilaiSort(a, urutanTabel.kunci).localeCompare(nilaiSort(b, urutanTabel.kunci), "id", { numeric: true, sensitivity: "base" });
+      return urutanTabel.arah === "asc" ? hasil : -hasil;
+    });
+  }, [data, urutanTabel]);
 
   useEffect(() => () => { permintaanTabel.current?.abort(); }, []);
 
@@ -191,6 +220,30 @@ export default function HalamanRawatJalan() {
     setVersiTabel((versi) => versi + 1);
   };
 
+  const bukaMenuKonteks = useCallback((event: ReactMouseEvent<HTMLTableRowElement>, item: RawatJalanRow) => {
+    event.preventDefault();
+    setBarisTerpilih(kunciBaris(item));
+    setMenuKonteks({ x: event.clientX, y: event.clientY, baris: item });
+  }, []);
+
+  const bukaMenuKonteksDariKeyboard = useCallback((event: ReactKeyboardEvent<HTMLTableRowElement>, item: RawatJalanRow) => {
+    if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+    event.preventDefault();
+    const batas = event.currentTarget.getBoundingClientRect();
+    setBarisTerpilih(kunciBaris(item));
+    setMenuKonteks({ x: batas.left + 16, y: batas.top + 16, baris: item });
+  }, []);
+
+  const pilihMenuKonteks = useCallback((item: ItemMenuKonteks) => {
+    const konteks = menuKonteks;
+    setMenuKonteks(null);
+    if (!konteks) return;
+    const aksi: AksiMenuKonteks = tentukanAksiMenu(item, konteks.baris);
+    if (aksi.jenis === "rute") router.push(aksi.rute);
+    else if (aksi.jenis === "urut") setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
+    else tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+  }, [menuKonteks, router, tampilkanToast]);
+
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <div role="tablist" aria-label="Jenis data rawat jalan" className="flex shrink-0 border-b border-slate-200">
@@ -260,8 +313,14 @@ export default function HalamanRawatJalan() {
                       <p>Tidak ada registrasi rawat jalan yang sesuai</p>
                     </td>
                   </tr>
-                ) : data.map((item) => (
+                ) : dataTampil.map((item) => (
                   <tr
+                    key={kunciBaris(item)}
+                    tabIndex={0}
+                    onContextMenu={(event) => bukaMenuKonteks(event, item)}
+                    onKeyDown={(event) => bukaMenuKonteksDariKeyboard(event, item)}
+                    aria-current={barisTerpilih === kunciBaris(item) ? "true" : undefined}
+                    className={`text-slate-700 hover:bg-slate-50/80 ${barisTerpilih === kunciBaris(item) ? "bg-primary-50/60" : ""}`}
                     key={kunciBarisRawatJalan(item)}
                     onClick={() => handlePilihData(item)}
                     onKeyDown={(event) => {
@@ -405,6 +464,14 @@ export default function HalamanRawatJalan() {
         memuat={memuat}
       />
 
+      <MenuKonteksRawatJalan
+        terbuka={menuKonteks !== null}
+        x={menuKonteks?.x || 0}
+        y={menuKonteks?.y || 0}
+        baris={menuKonteks?.baris || null}
+        onPilih={pilihMenuKonteks}
+        onTutup={() => setMenuKonteks(null)}
+      />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

@@ -20,9 +20,11 @@ export async function GET(req: NextRequest) {
     const limit = Math.max(1, Math.min(Math.trunc(Number(searchParams.get("limit"))) || 100, 200));
     const page = Math.max(1, Math.trunc(Number(searchParams.get("page"))) || 1);
     const statusBayar = searchParams.get("status_bayar") || "Semua";
+    const sep = searchParams.get("sep") || "Semua";
     if ((tanggalMulai && !isRegistrationDate(tanggalMulai)) || (tanggalSelesai && !isRegistrationDate(tanggalSelesai))
       || (tanggalMulai && tanggalSelesai && tanggalMulai > tanggalSelesai)
       || !["Semua", "Belum Bayar", "Sudah Bayar"].includes(statusBayar)
+      || !["Semua", "Belum", "Sudah"].includes(sep)
       || !["awal", "rujukan_internal"].includes(tampilan)) {
       return NextResponse.json({ success: false, error: "Filter registrasi tidak valid." }, { status: 400 });
     }
@@ -38,6 +40,10 @@ export async function GET(req: NextRequest) {
     if (tanggalMulai) { where.push("r.tgl_registrasi >= ?"); params.push(tanggalMulai); }
     if (tanggalSelesai) { where.push("r.tgl_registrasi <= ?"); params.push(tanggalSelesai); }
     if (statusBayar !== "Semua") { where.push("r.status_bayar = ?"); params.push(statusBayar); }
+    if (sep !== "Semua") {
+      where.push(`r.kd_pj IN (SELECT password_asuransi.kd_pj FROM password_asuransi)
+        AND r.no_rawat ${sep === "Sudah" ? "IN" : "NOT IN"} (SELECT bridging_sep.no_rawat FROM bridging_sep)`);
+    }
 
     if (kdDokter.trim()) {
       where.push(`${kolomDokter} = ?`);

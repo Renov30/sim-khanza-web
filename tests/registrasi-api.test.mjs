@@ -62,6 +62,20 @@ test('filter bayar dan pagination diterapkan sebelum LIMIT; total bukan jumlah h
   assert.match(calls[1][0], /status_bayar = \?.*ORDER BY.*LIMIT \? OFFSET \?/s);
   assert.deepEqual(calls[1][1].slice(-2), [100, 200]);
 });
+test('filter SEP memakai subquery BPJS dan menolak nilai di luar allowlist', async () => {
+  const { api, calls } = handler();
+  assert.equal((await api.GET(new NextRequest('http://localhost/api/registrasi?sep=Belum'))).status, 200);
+  for (const indeks of [0, 1]) {
+    assert.match(calls[indeks][0], /password_asuransi/);
+    assert.match(calls[indeks][0], /NOT IN \(SELECT bridging_sep\.no_rawat/);
+  }
+  assert.deepEqual(calls[0][1], []);
+
+  const ditolak = handler();
+  assert.equal((await ditolak.api.GET(new NextRequest('http://localhost/api/registrasi?sep=Sembarang'))).status, 400);
+  assert.equal(ditolak.calls.length, 0);
+});
+
 test('rujukan internal memakai dokter dan poli tujuan dengan filter berparameter', async () => {
   const { api, calls } = handler();
   const url = 'http://localhost/api/registrasi?tampilan=rujukan_internal&kd_dokter=D002&kd_poli=P02&cari=ani';

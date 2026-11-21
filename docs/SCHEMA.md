@@ -40,12 +40,16 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 
 ## Komponen utama aplikasi
 
+- `src/lib/constants/menus.ts`: katalog menu A–T dari `cmbMenu`/`isCombo()` `frmUtama.java` (1.167 entri) plus entri kurasi; ID mengikuti variabel komponen Java dan `permissionKey` mengikuti `akses.getXxx()`.
 - `src/lib/db.ts`: connection pool database Khanza aktif.
 - `src/lib/auth.ts`: autentikasi admin/user Khanza, token HMAC, dan cookie sesi.
 - `src/lib/pasien/`: field, master, penyimpanan, akses, dan penomoran pasien.
 - `src/lib/registrasi/`: tanggal WIT, validasi, penomoran, transaksi, rujukan, dan perlindungan relasi.
+- `src/lib/kepegawaian/`: helper seed/validasi bersama, filter dan mutasi `pegawai`, `petugas`, `dokter`, serta izin admin/`pegawai_admin`/`petugas`/`dokter`.
+- `src/lib/poliklinik/`: validasi, filter, penomoran, mutasi `poliklinik`, dan izin admin/`registrasi`.
+- `src/components/modul/HalamanMasterKepegawaian.tsx`: kerangka UI bersama untuk master petugas, dokter, dan poliklinik.
 - `src/lib/resume-pasien/`: tipe field, akses izin dokter, dan aturan resume ralan.
-- `src/components/modul/`: header, grid formulir, panel input, dan panel bawah.
+- `src/components/modul/`: header, grid formulir, panel input, panel bawah, dan `MenuKonteksTabel` beserta data menu rawat jalan/rawat inap.
 - `src/components/common/`: Toast, dialog konfirmasi, dan modal informasi.
 - `src/components/auth/`: login, status sesi, dan sinkronisasi antar-tab.
 
@@ -58,20 +62,35 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Autentikasi | `/api/auth/login`, `/logout`, `/session` | Login publik; sesi disimpan di cookie HTTP-only. |
 | Pasien | `/api/pasien`, `/api/pasien/nomor`, `/api/pasien/options` | Admin, izin pasien, atau izin registrasi. |
 | Registrasi | `/api/registrasi`, `/api/registrasi/nomor`, `/api/registrasi/options` | Admin atau izin registrasi. |
+| IGD | `/api/igd`, `/api/igd/nomor`, `/api/igd/options` | Admin atau izin IGD. |
 | Rawat jalan (baca) | `/api/rawat-jalan`, `/api/rawat-jalan/billing`, `/api/rawat-jalan/options` | Admin, izin kasir ralan, registrasi, atau tindakan ralan. |
 | Tindakan rawat jalan | `/api/tindakan-rawat-jalan`, `/api/tindakan-rawat-jalan/pemeriksaan` | Admin atau izin tindakan ralan. |
 | Riwayat pasien | `/api/riwayat-pasien` | Admin atau izin tindakan ralan. |
 | Resume pasien | `/api/resume-pasien` | Admin atau izin `data_resume_pasien`; tulis hanya dokter/pemilik. |
 | Tindakan rawat inap | `/api/tindakan-rawat-inap` | Admin atau izin tindakan ranap. |
+| Mutasi rawat inap | `/api/rawat-inap/pulang`, `/api/rawat-inap/pindah-kamar` | Admin atau izin `kamar_inap`. |
+| Pasien meninggal dan rujuk keluar | `/api/rawat-inap/pasien-mati`, `/api/rawat-inap/rujuk` | Admin atau izin masing-masing `pasien_meninggal` / `rujukan_keluar`. |
 | Master obat | `/api/farmasi/master-obat`, `/api/farmasi/master-obat/options` | Admin atau izin obat. |
+| Data petugas | `/api/petugas`, `/api/petugas/options` | Admin atau izin `petugas`. |
+| Data dokter | `/api/dokter`, `/api/dokter/options` | Admin atau izin `dokter`. |
+| Data pegawai (penggajian) | `/api/pegawai`, `/api/pegawai/options` | Admin atau izin `pegawai_admin`. |
+| Data poliklinik | `/api/poliklinik`, `/api/poliklinik/options` | Admin atau izin `registrasi`. |
+| Jadwal praktek dokter | `/api/jadwal-dokter`, `/api/jadwal-dokter/options` | Admin atau izin `jadwal_praktek`. |
+| Tarif rawat jalan | `/api/tarif-ralan`, `/api/tarif-ralan/options`, `/api/tarif-ralan/kode` | Admin atau izin `tarif_ralan`. |
+| Tarif rawat inap | `/api/tarif-ranap`, `/api/tarif-ranap/options`, `/api/tarif-ranap/kode` | Admin atau izin `tarif_ranap`. |
+| Tarif laboratorium | `/api/tarif-lab`, `/api/tarif-lab/options`, `/api/tarif-lab/kode`, `/api/tarif-lab/template` | Admin atau izin `tarif_lab`. |
 | Copy resep | `/api/farmasi/copy-resep` | Admin atau izin resep obat. |
 | Input resep dan daftar resep dokter | `/api/farmasi/resep-obat`, `/api/farmasi/daftar-resep-dokter` | Admin atau izin resep obat. |
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
-Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
+Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Kedua tabel membuka menu kontekstual sesuai `jPopupMenu1`/`jPopupMenu2` `DlgReg.java`: aksi dengan halaman web tersedia langsung membuka halaman terkait, `Belum Terbit SEP BPJS`/`Sudah Terbit SEP BPJS` mengubah filter `sep` pada `/api/registrasi`, dan `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
-Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
+Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Tabelnya menyediakan menu klik kanan sesuai grup `DlgKasirRalan.java`: aksi dengan halaman web tersedia langsung membuka halaman tersebut, `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil, dan item belum tersedia hanya memberi toast. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
+
+Rawat inap menampilkan daftar kunjungan `kamar_inap` dengan filter di `PanelBawah`: mode `Semua`/`Belum Pulang`/`Tgl. Masuk`/`Pulang`, periode dua tanggal, status bayar, bangsal, dan kata kunci. Default mengikuti radio R1 `Belum Pulang` pada `DlgKamarInap.java`; opsi `Semua` tetap tersedia untuk melihat seluruh catatan. Tabelnya memakai `MenuKonteksTabel` yang sama dengan rawat jalan, tetapi memuat 20 grup dari `DlgKamarInap.java`. Aksi yang memiliki halaman web membuka resume, riwayat, tindakan, laboratorium, radiologi, resep, atau penjualan; `Urutkan Data Berdasar` mengurutkan baris tampil berdasarkan No. Rawat, Cara Bayar, No. RM, Nama, Kamar, atau Tanggal Masuk. Tombol `Pulang` dan `Pindah` membuka dialog mutasi. Perintah cetak, status, hapus, bridging, masuk, dan ekspor yang belum diadaptasi hanya memberi toast dan tidak melakukan mutasi.
+
+Mutasi pulang mengikuti `BtnSimpanActionPerformed` `DlgKamarInap.java`: `kamar_inap` diperbarui dengan tanggal/jam keluar, status, diagnosa akhir, lama, tarif, dan biaya; kamar menjadi `KOSONG`. Status `Meninggal` dan `Rujuk` membuka dialog lanjutan yang menulis `pasien_mati` dan `rujuk`. Mutasi pindah menyediakan keempat opsi `Rganti1`–`Rganti4`; opsi 1 menghapus baris lama, opsi 2 mengganti kamar pada baris yang sama, opsi 3 menandai baris lama `Pindah Kamar` dan membuat baris baru, sedangkan opsi 4 memakai tarif tertinggi serta kunci pembaruan anomali sesuai Java. Seluruh penulisan memakai transaksi, `FOR UPDATE`, named lock, validasi server, dan query berparameter.
 
 Pintasan `Riwayat Pasien` pada sidebar tindakan ralan membuka dialog enam tab sesuai `RMRiwayatPerawatan.java`: Kunjungan, S.O.A.P.I.E, Perawatan, Pembelian Obat, Piutang Obat, dan Retensi Berkas. Filter `terakhir`, `semua`, `tanggal`, dan `nomor` mengikuti radio R1–R4. Tab Perawatan memakai sidebar kiri berisi daftar bagian dari `FormMenu` Java, checkbox `Semua`, pencarian teks, dan tombol lipat. Menu ini tidak mengadaptasi PDF, e-sign, sertisign, penulisan file HTML lokal, atau tautan berkas mentah.
 
@@ -79,9 +98,10 @@ Pintasan `Resume Pasien` pada sidebar tindakan ralan membuka `/resume-pasien?no_
 
 `tindakan-rawat-inap` dibuka dari kolom No. Rawat pada `/rawat-inap` dengan `?no_rawat=...` dan memakai tiga penanganan yang sama seperti ralan. Tarif diambil dari `jns_perawatan_inap` dan disaring menurut penjamin `reg_periksa`, bangsal, serta kelas kamar inap aktif (`kamar_inap.stts_pulang = '-'`). Penyimpanan menulis `rawat_inap_dr`, `rawat_inap_pr`, atau `rawat_inap_drpr` dalam satu transaksi dengan `FOR UPDATE` pada kunjungan; kunjungan batal, billing yang sudah dibuat, kamar aktif yang hilang, dan tarif yang tidak sesuai ditolak server. Tabel ini tidak memiliki `stts_bayar`, sehingga kolom status pada riwayat mengikuti `reg_periksa.status_bayar`.
 
+IGD menampilkan kunjungan `reg_periksa` untuk `kd_poli = 'IGDK'` dengan filter periode dua tanggal, kata kunci 13 kolom, status periksa, dan status SEP sesuai `DlgIgd.java`. `/api/igd` memakai allowlist, validasi tanggal, query berparameter, hitung `total`, dan batas `limit` 1–100. Tabelnya memakai `MenuKonteksTabel` dengan 16 grup dari `jPopupMenu1`; aksi yang belum memiliki halaman Khanza Web hanya menampilkan toast, sedangkan `Belum Terbit SEP BPJS` dan `Sudah Terbit SEP BPJS` mengubah filter SEP. Halaman juga memiliki panel input accordion untuk tambah dan ubah kunjungan IGD dengan nomor rawat/antrean server, tarif registrasi, rujukan transaksional, dan modal pencarian pasien yang sama dengan registrasi melalui `PilihPasienDialog`. `/api/igd/options?jenis=pasien` mengembalikan array pasien seperti `/api/registrasi/options`.
+
 ### Eksperimental
 
-- `/api/igd`
 - `/api/rawat-inap`
 - `/api/laboratorium/*`
 - `/api/radiologi/*`
@@ -113,6 +133,16 @@ Endpoint tersebut baru berupa query baca awal dan belum semuanya memiliki pemeri
 - Registrasi `Sudah Bayar`, memiliki biaya perujuk, atau memiliki pelayanan terkait dilindungi dari perubahan tertentu.
 - No. Rawat tetap saat edit; nomor antrean dapat dihitung ulang bila dokter, poli, atau tanggal berubah.
 
+## Aturan bisnis IGD
+
+- Endpoint IGD memakai izin `igd` atau admin; izin registrasi tidak otomatis memberi akses IGD.
+- Unit IGD memakai `kd_poli='IGDK'` dan status lanjut `Ralan`; klien tidak dapat menggantinya.
+- `POST` menetapkan `stts='Belum'` dan `status_bayar='Belum Bayar'`; `PUT` mempertahankan keduanya dari data lama.
+- Nomor rawat dan nomor antrean dihasilkan server memakai aturan yang sama dengan registrasi. Nomor antrean tidak dihitung ulang jika dokter dan tanggal tidak berubah.
+- Pasien dengan `kamar_inap.stts_pulang='-'` ditolak. Ubah pasien juga ditolak jika kunjungan lama sudah memiliki catatan pelayanan.
+- `PUT`/`DELETE` menolak `status_bayar='Sudah Bayar'` dan data dengan `kd_poli` bukan `IGDK`.
+- `DELETE` menolak jika masih ada relasi pelayanan, lalu menghapus `rujuk_masuk` dan `reg_periksa` dalam satu transaksi.
+
 ## Aturan bisnis master obat
 
 - Tabel utama adalah `databarang`, bukan `barang`; harga dan status ada pada tabel yang sama.
@@ -124,6 +154,79 @@ Endpoint tersebut baru berupa query baca awal dan belum semuanya memiliki pemeri
 - Tab Data Barang memakai `status='1'`, tab Data Sampah memakai `status='0'`; status ditentukan tab, bukan dropdown filter.
 - Edit tidak mengganti `kode_brng` agar relasi transaksi Khanza tetap utuh.
 - Daftar difilter dan dipaginasi di server; kode barang tidak ditentukan browser.
+
+Halaman `/pasien` memakai entri menu `btn-data-pasien` (`Data Pasien`) sebagai pintasan registrasi dan `btn-pasien` (`Pasien`) dari katalog master; halaman `/petugas` memakai entri menu `btn-pegawai` (`Data Petugas`), halaman `/dokter` memakai `btn-dokter`, halaman `/pegawai` untuk penggajian memakai `btn-penggajian`, dan halaman `/poliklinik` memakai `btn-data-poliklinik` (`Data Poliklinik`). Daftar difilter dan dipaginasi di server; kolom `photo` tidak diambil, sedangkan `no_ktp` tidak ditampilkan pada tabel meski tetap tersedia untuk pencarian dan isian.
+
+## Aturan bisnis pegawai
+
+- Tabel utama adalah `pegawai` dengan primary key `id` `AUTO_INCREMENT`; nomor pegawai tidak dibuat atau dikunci manual oleh aplikasi.
+- `GET /api/pegawai` menerima `cari`, `departemen`, `bidang`, `jnj_jabatan`, `stts_kerja`, `kode_kelompok`, dan `status`. Default `status=AKTIF`; `status=semua` hanya menghilangkan syarat status, sedangkan nilai di luar allowlist jatuh ke `AKTIF`.
+- Pencarian memakai tujuh `LIKE` berparameter pada NIP, nama, jabatan, jenjang, departemen, bidang, dan `no_ktp`. Pagination dibatasi maksimal 200 baris per halaman.
+- `POST`, `PUT`, `PATCH`, dan `DELETE` memakai transaksi serta validasi server untuk panjang field, enum `jk`/`ms_kerja`/`stts_aktif`, tanggal kalender, dan rentang `wajibmasuk`.
+- `POST` mengisi `pengurang`, `indek`, `cuti_diambil`, dan `dankes` dengan `0`; `mulai_kontrak` kosong ditulis `NULL`. Kolom `photo` sengaja tidak disentuh agar kompatibel dengan data Khanza lain.
+- `DELETE` menandai `stts_aktif='KELUAR'` tanpa menghapus baris, sehingga relasi transaksi tetap utuh. `PATCH` dapat mengubah status ke nilai enum lain, termasuk mengaktifkan kembali pegawai.
+
+## Aturan bisnis petugas dan dokter
+
+- UI `/petugas` dan `/dokter` memakai satu halaman dengan panel input accordion `PanelInputData` dan tabel di bawahnya, bukan tab Input/Data. Aksi mutasi, filter, dan pagination tetap berada di `PanelBawah`.
+- `petugas` memakai `nip` sebagai kunci dan `dokter` memakai `kd_dokter`; keduanya tidak membuat user/password dan tidak mengubah tabel `user`.
+- Field, panjang, dan enum mengikuti schema runtime: `jk` `L|P`, `gol_darah`/`gol_drh` `A|B|O|AB|-`, `stts_nikah` lima nilai sesuai Java, dan `status` `0|1`.
+- `GET /api/petugas` dan `GET /api/dokter` menerima `cari`, `jk`, `gol_darah`/`gol_drh`, `stts_nikah`, `status`, `page`, dan `limit`. Default `status=1`; `semua` menghilangkan syarat status; pagination maksimal 200 baris.
+- `POST`, `PUT`, `PATCH`, dan `DELETE` memakai transaksi, query berparameter, validasi panjang/enum/tanggal, serta validasi allowlist status. `ER_DUP_ENTRY` diterjemahkan menjadi 409.
+- Master pendukung di-seed dengan `INSERT IGNORE` mengikuti `DlgPetugas.java`/`DlgDokter.java`: `jnj_jabatan`, `departemen`, `bidang`, `bank`, `stts_wp`, `stts_kerja`, `kelompok_jabatan`, `resiko_kerja`, `emergency_index`, dan `pendidikan`.
+- Data dasar (nama, jenis kelamin, tempat/tanggal lahir, alamat) dicerminkan ke `pegawai` dalam transaksi yang sama. JK `L|P` ditulis `Pria|Wanita` pada `pegawai`.
+- Kode dokter dibuat server berformat `D` + 7 digit dari nilai maksimum dengan named lock `simrs-khanza-kode-dokter`, bukan dari browser.
+- `DELETE` menandai `status='0'` tanpa menghapus baris. `PATCH status='1'` memulihkan status dan menandai `pegawai.stts_aktif='AKTIF'`; `DELETE` dokter juga menandai `pegawai.stts_aktif='KELUAR'`.
+
+## Aturan bisnis poliklinik
+
+- Halaman `/poliklinik` memakai satu halaman dengan panel input accordion `PanelInputData` dan tabel di bawahnya, mengikuti kerangka petugas/dokter. Aksi, filter status, dan pagination berada di `PanelBawah`.
+- Menu `btn-data-poliklinik` berjudul `Data Poliklinik`, kategori A, dan izin `registrasi`, mengikuti `akses.getRegistrasi()` pada `DlgPoli.java`.
+- Tabel utama adalah `poliklinik` dengan kunci `kd_poli`. Field yang dikelola: `nm_poli`, `registrasi`, `registrasilama`, dan `status`; panjang mengikuti schema runtime 5/50/13/1 karakter.
+- Tarif kosong ditulis `0`. Nilai numerik dibatasi 13 karakter dan dua angka desimal di server agar sesuai kolom `double`.
+- `POST` membuat kode `U` + 4 digit di server dari nilai maksimum yang cocok dengan `^U[0-9]{4}$` dan named lock `simrs-khanza-kode-poli`. Kode yang dikirim browser diabaikan saat membuat data baru.
+- Kunci unit tidak diubah oleh `PUT`; `kd_lama` dipakai hanya untuk klausul `WHERE`. Pembatasan ini menjaga relasi dengan `reg_periksa`, tarif registrasi, dan resume pasien.
+- `GET /api/poliklinik` menerima `cari`, `status`, `page`, dan `limit`. Default `status=1`; `semua` menghilangkan syarat status; pagination maksimal 200 baris.
+- `DELETE` menandai `status='0'` tanpa menghapus baris. `PATCH status='1'` memulihkan unit agar tetap dipakai pilihan unit pada registrasi.
+
+## Aturan bisnis jadwal praktek dokter
+
+- Halaman `/jadwal-dokter` memakai panel input accordion, tabel, dan `PanelBawah`. Menu `btn-jadwal` (`Jadwal Praktek`) dan entri kurasi `jadwal-dokter` (`Jadwal Praktek Dokter`) keduanya memiliki izin `jadwal_praktek` dan diarahkan ke halaman yang sama.
+- Tabel utama adalah `jadwal` dengan kunci primer `(kd_dokter, hari_kerja, jam_mulai)`. Relasi `kd_dokter` ke `dokter` dan `kd_poli` ke `poliklinik` memakai `ON DELETE CASCADE`/`ON UPDATE CASCADE` sesuai dump Khanza.
+- Field yang dikelola: `kd_dokter` (20), `hari_kerja` (allowlist tujuh hari), `jam_mulai`, `jam_selesai`, `kd_poli` (5), dan `kuota` (0–9999). Jam wajib berformat `HH:MM:SS`; tidak ada pembatasan urutan jam karena Java tidak memvalidasinya.
+- `GET /api/jadwal-dokter` menggabungkan `dokter` dan `poliklinik`, menerima `cari`, `kd_dokter`, `kd_poli`, `hari_kerja`, `page`, dan `limit`, dengan urutan mengikuti Java dan batas 200 baris per halaman. Filter di luar allowlist diabaikan.
+- `POST` menulis keenam kolom. `PUT` menerima `kd_dokter_lama`, `hari_kerja_lama`, `jam_mulai_lama`, dan `jam_selesai_lama` sebagai klausul `WHERE` sesuai Java, sehingga kunci dapat diubah. `DELETE` menerima `{ items: [...] }` berisi kunci tiga kolom dan menghapus semua baris dalam satu transaksi.
+- Duplikat kunci menghasilkan 409 dan gagalnya relasi foreign key diterjemahkan menjadi 400. Seluruh mutasi memakai transaksi, rollback, query berparameter, dan otorisasi server.
+- Tabel tidak memiliki kolom `status`; hapus bersifat permanen dan didahului `KonfirmasiDialog`. Ini menjaga kompatibilitas dengan Java.
+- `GET /api/jadwal-dokter/options` menyediakan daftar dokter, poliklinik, hari kerja, jam (00–23), menit, dan detik (00–59) untuk dropdown.
+
+## Aturan bisnis tarif rawat jalan dan rawat inap
+
+- Halaman `/tarif-ralan` dan `/tarif-ranap` memakai komponen bersama `HalamanTarifPerawatan` dengan panel input accordion, tabel padat bertab `Data Tarif`/`Data Sampah`, dan `PanelBawah`. Nama menu `Tarif Ralan`, `Master Tarif Ralan`, `Tarif Pelayanan Rawat Jalan`, `Tarif Rawat Inap`, dan pintasan akun terkait di `AppShell` diarahkan ke rute yang sesuai dengan izin `tarif_ralan`/`tarif_ranap`.
+- Tabel utama ralan adalah `jns_perawatan`; ranap memakai `jns_perawatan_inap`. Keduanya memiliki kunci primer `kd_jenis_prw` dan FK ke `kategori_perawatan`, `penjab`, serta `poliklinik` (ralan) atau `bangsal` (ranap).
+- Kode otomatis memakai prefiks `RJ` untuk ralan dan `RI` untuk ranap dengan 5 digit urutan. Kode kosong pada `POST` diisi server di bawah named lock per modul; `GET /kode` hanya memberikan saran dan tidak menjamin kode belum dipakai.
+- Field yang dikelola: `nm_perawatan` (80), `kd_kategori` (5), `kd_pj` (3), `kd_poli` atau `kd_bangsal` (5), enam komponen tarif (`material`, `bhp`, `tarif_tindakandr`, `tarif_tindakanpr`, `kso`, `menejemen`), dan `kelas` untuk ranap dengan allowlist tujuh nilai dari schema.
+- `total_byrdr`, `total_byrpr`, dan `total_byrdrpr` dihitung server dari komponen tarif dengan pembulatan ke bilangan bulat, mengikuti `isjml()` dan `DecimalFormat("####")` di Java. Nilai total dari klien tidak dipercaya.
+- `GET` menggabungkan kategori, penjab, dan unit; menerima `cari`, `status`, `kd_kategori`, `unit`, `kelas` (ranap), `page`, dan `limit`, dengan batas 200 baris per halaman. Status default `1`; `semua` menampilkan aktif dan nonaktif.
+- `POST` menulis status `1`. `PUT` menerima `kd_jenis_prw_lama` sebagai klausul `WHERE`, sehingga kode dapat diubah. `DELETE` menerima `{ items: [{ kd_jenis_prw }] }` dan melakukan soft delete multi-baris dalam satu transaksi. `PATCH` dengan `status: "1"` memulihkan tarif nonaktif dalam satu transaksi.
+- Duplikat kode menghasilkan 409 dan gagalnya relasi foreign key diterjemahkan menjadi 400. Seluruh mutasi memakai transaksi, rollback, query berparameter, dan otorisasi server.
+- Tab `Data Sampah` memaksa `status=0` pada daftar dan filter status disembunyikan. Klik baris pada tab ini hanya memilih baris, tidak mengisi formulir; aksi Simpan, Baru, Ganti, dan Nonaktifkan disembunyikan. Tombol `Pulihkan` mengirim `PATCH status='1'` untuk baris tercentang, lalu daftar dimuat ulang.
+- Hard delete dari dialog `Data Sampah` Java tidak dipindahkan. Perubahan ini mengurangi risiko kehilangan data tarif yang masih dipakai transaksi.
+
+## Aturan bisnis tarif laboratorium
+
+- Halaman `/tarif-lab` memakai `HalamanTarifLab` dengan panel input accordion, tabel padat bertab `Data Tarif`/`Data Sampah`, dan `PanelBawah`. Menu `btn-tarif-lab` (`Tarif Lab`), entri kurasi `tarif-lab`, dan pintasan akun `Tarif Pemeriksaan Laboratorium` diarahkan ke rute ini dengan izin `tarif_lab`.
+- Tabel utama adalah `jns_perawatan_lab` dengan kunci primer `kd_jenis_prw` dan satu FK `kd_pj` ke `penjab`. Tidak ada relasi ke `kategori_perawatan`, `poliklinik`, atau `bangsal`; `kategori` (`PK`/`PA`/`MB`) dan `kelas` (delapan nilai termasuk `Rawat Jalan`) adalah enum pada tabel itu sendiri.
+- Kode otomatis berformat `J` + 6 digit dan dibuat server di bawah named lock `simrs-khanza-kode-tarif-lab`. Urutan diambil dari `RIGHT(kd_jenis_prw, 6)` hanya untuk kode yang cocok dengan `^J[0-9]{6}$`; ini mencegah loop pada batas 5 digit mentah di `autoNomer3` Java.
+- Field yang dikelola: `nm_perawatan` (80), `kd_pj` (3), `kelas`, `kategori`, dan tujuh komponen tarif (`bagian_rs`, `bhp`, `tarif_perujuk`, `tarif_tindakan_dokter`, `tarif_tindakan_petugas`, `kso`, `menejemen`). `total_byr` dihitung ulang di server dari ketujuh komponen dengan pembulatan ke bilangan bulat, mengikuti `isjml()` dan `DecimalFormat("####")` di Java.
+- `GET /api/tarif-lab` menggabungkan `penjab` dan menerima `cari`, `status`, `kelas`, `kategori`, `page`, dan `limit`, dengan batas 200 baris per halaman. Pencarian mencakup kode, nama pemeriksaan, jenis bayar, kelas, dan kategori. Status default `1`; `semua` menampilkan aktif dan nonaktif.
+- `GET /api/tarif-lab/options` menyediakan kategori, penjab berstatus `1`, delapan kelas, dan status aktif/nonaktif. `GET /api/tarif-lab/kode` hanya memberi saran kode dan tidak menjamin kode belum dipakai.
+- `POST` menulis status `1`. `PUT` menerima `kd_jenis_prw_lama` sebagai klausul `WHERE`, sehingga kode dapat diubah. `DELETE` menerima `{ items: [{ kd_jenis_prw }] }` dan melakukan soft delete multi-baris dalam satu transaksi. `PATCH` dengan `status: "1"` memulihkan tarif nonaktif dalam satu transaksi.
+- Duplikat kode menghasilkan 409 dan gagalnya relasi `kd_pj` diterjemahkan menjadi 400. Seluruh mutasi memakai transaksi, rollback, query berparameter, validasi sebelum database, dan otorisasi server.
+- Hard delete dari `DlgRestoreTarifLab.java` dan cetak `rptTarifLab.jrxml` tidak dipindahkan. Tab `Data Sampah` hanya menampilkan status `0`, menyembunyikan aksi mutasi aktif, dan menyediakan tombol `Pulihkan`.
+- `Template Laboratorium` di `DlgJnsPerawatanLab.java` diadaptasi menjadi sidebar kanan pada `HalamanTarifLab`. Tombol `Item Pemeriksaan` di `PanelBawah` hanya aktif untuk tarif tersimpan berkategori `PK` atau `MB`; kategori `PA` ditolak dengan pesan yang sama seperti Java.
+- Sidebar menampilkan `id_template` sebagai field baca-saji dan kolom tabel karena kolom tersebut adalah `AUTO_INCREMENT` pada `template_laboratorium`. Field yang dikelola pengguna hanya `Pemeriksaan` (200) dan empat `nilai_rujukan_*` (30). Sesuai keputusan web, biaya per item tidak dikelola: server menulis `satuan = ''` dan `biaya_item = 0`, serta tidak menampilkan keduanya di sidebar. Kolom `method` tidak dipakai karena tidak ada pada tabel runtime, meskipun dump lama menyebutkannya.
+- Endpoint `/api/tarif-lab/template?kd_jenis_prw=...` mengembalikan item yang diurutkan server berdasarkan `urut, id_template`, tanpa data biaya item. `POST`/`PUT`/`DELETE` memakai izin `tarif_lab`, validasi sebelum database, query berparameter, named lock `simrs-khanza-template-lab-<kode>`, transaksi, rollback, dan penomoran `urut` ulang setelah mutasi. `DELETE` bersifat hard delete seperti Java; kegagalan foreign key diterjemahkan menjadi 409 dan risikonya disampaikan lewat `KonfirmasiDialog`.
 
 ## Aturan bisnis riwayat pasien
 

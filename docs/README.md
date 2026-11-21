@@ -6,11 +6,20 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 | Area | Status | Catatan |
 |---|---|---|
-| Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab. |
+| Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab, dan katalog 20 kategori / 1.168 menu dari `frmUtama.java`. |
 | Data pasien | Aktif | Cari, tambah, ubah, penomoran RM, master pasien, TNI/POLRI. |
 | Data obat, alkes & BHP | Aktif | Master `databarang`, kode otomatis, harga, expire, status aktif/nonaktif, dan pagination. |
+| Data petugas | Aktif | Master `petugas` sesuai `DlgPetugas.java`, panel input accordion dan tabel satu halaman, filter server, cermin `pegawai`, status aktif/nonaktif, dan izin `petugas`. |
+| Data dokter | Aktif | Master `dokter` sesuai `DlgDokter.java`, panel input accordion dan tabel satu halaman, kode otomatis `D` + 7 digit dengan named lock, cermin `pegawai`, dan izin `dokter`. |
+| Data pegawai (penggajian) | Aktif | Master `pegawai` lewat menu `btn-penggajian`, tab Input/Data, filter server, status `KELUAR`, dan izin `pegawai_admin`. |
+| Data poliklinik | Aktif | Master `poliklinik` dari alur Pilih Unit Poliklinik, panel input accordion dan tabel satu halaman, kode otomatis `U` + 4 digit dengan named lock, tarif registrasi, status aktif/nonaktif, dan izin `registrasi`. |
+| Jadwal praktek dokter | Aktif | Master `jadwal` dari `DlgJadwal.java`, panel input accordion dan tabel, dropdown dokter/poliklinik/hari/jam, kunci komposit empat kolom untuk ubah dan tiga kolom untuk hapus, izin `jadwal_praktek`. |
+| Tarif rawat jalan | Aktif | Master `jns_perawatan` dari `DlgJnsPerawatanRalan.java`, panel input accordion dan tabel 15 kolom, kode otomatis `RJ` + 5 digit dengan named lock, komponen tarif, soft delete, dan izin `tarif_ralan`. |
+| Tarif rawat inap | Aktif | Master `jns_perawatan_inap` dari `DlgJnsPerawatanRanap.java`, panel input accordion dan tabel 16 kolom, kode otomatis `RI` + 5 digit dengan named lock, bangsal dan kelas, soft delete, dan izin `tarif_ranap`. |
+| Tarif laboratorium | Aktif | Master `jns_perawatan_lab` dari `DlgJnsPerawatanLab.java`, panel input accordion dan tabel 14 kolom, kode otomatis `J` + 6 digit dengan named lock, komponen jasa/perujuk, kelas dan kategori enum, sidebar item pemeriksaan dengan `id_template`, soft delete, dan izin `tarif_lab`. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
-| IGD, rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
+| IGD | Aktif | Panel input accordion, penomoran, tarif, rujukan, ubah/hapus terbatas, filter, dan menu kontekstual. |
+| Rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
 | Resume pasien | Eksperimental | Halaman CRUD ralan dari sidebar, izin dokter, dan transaksi `resume_pasien`. |
 | Laboratorium, radiologi, farmasi | Eksperimental | Halaman/query awal; izin, tipe, dan tes belum seragam. |
 | Daftar Pasien Rawat Jalan | Alur daftar tersedia | Pasien terdaftar dan rujukan internal, filter, pagination, akses ke Tindakan. |
@@ -18,11 +27,80 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Input Resep | Alur resep rawat jalan tersedia | Katalog dan stok per depo, resep umum, racikan, aturan pakai, dan penyimpanan. |
 | Copy Resep | Alur salin dan koreksi tersedia | Riwayat pasien/dokter, copy ke kunjungan aktif, ubah, dan hapus resep belum tervalidasi. |
 | Daftar Resep Dokter | Daftar dan detail tersedia | Rawat jalan dan inap. Petugas dapat melihat riwayat validasi dan penyerahan. Aksi validasi dan penyerahan dari web masih tertunda. |
-| IGD, rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
+| Rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
 | Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
 
 ## Riwayat pengembangan
+
+### 21 November 2026 — tarif laboratorium
+
+- Perubahan perilaku yang disengaja: menu `Tarif Lab` (`btn-tarif-lab`), entri kurasi `tarif-lab`, dan pintasan akun `Tarif Pemeriksaan Laboratorium` kini membuka `/tarif-lab` dengan izin `tarif_lab`, sehingga katalog menjadi 1.169 menu. Judul navbar memakai `Tarif Lab`.
+- Halaman `HalamanTarifLab` mengikuti pola tarif ralan/ranap: `PanelInputData`, `GridFormulirModul`, tabel padat bertab `Data Tarif`/`Data Sampah`, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Field, urutan tabel, dan label mengikuti `DlgJnsPerawatanLab.java`, tanpa membawa gaya visual Swing.
+- Berbeda dari ralan/ranap, tabel `jns_perawatan_lab` tidak memiliki `kd_kategori`, poliklinik, bangsal, atau tiga total terpisah. Kategori memakai enum dalam tabel `PK`/`PA`/`MB`; kelas memakai delapan nilai enum schema termasuk `Rawat Jalan`; satu `total_byr` dihitung server dari tujuh komponen (`bagian_rs`, `bhp`, `tarif_perujuk`, tindakan dokter, tindakan petugas, `kso`, `menejemen`) dengan pembulatan bulat seperti `DecimalFormat("####")`.
+- Kode otomatis memakai `J` + 6 digit di bawah named lock `simrs-khanza-kode-tarif-lab`. Ini mengikuti hasil `autoNomer3` Java, tetapi pembacaan urutan memakai `RIGHT(kd_jenis_prw, 6)` dan hanya kode berprefiks `J`; perbaikan teknis ini mencegah `J000099` kembali ke `J000001` setelah melewati batas 5 digit mentah pada query Java.
+- `GET /api/tarif-lab` menggabungkan `penjab`, menerima `cari`, `status`, `kelas`, `kategori`, `page`, dan `limit` dengan batas 200. `GET /options` hanya menawarkan penjab aktif. `GET /kode` memberi saran kode. `POST`, `PUT`, `DELETE`, dan `PATCH` memakai validasi sebelum database, query berparameter, transaksi, rollback, serta penanganan duplikat dan FK.
+- Hapus tetap soft delete `status='0'` dan tab `Data Sampah` menyediakan `Pulihkan`. Hard delete dari dialog restore Java tidak dipindahkan agar tarif yang masih dipakai transaksi tidak hilang. Cetak `rptTarifLab.jrxml` belum menjadi bagian halaman ini.
+- Popup `Template Laboratorium` diadaptasi sebagai sidebar kanan yang dibuka dari `PanelBawah`. Tombol hanya aktif untuk tarif kategori `PK`/`MB` dengan baris tersimpan, mengikuti pemeriksaan `ppTemplateActionPerformed` di `DlgJnsPerawatanLab.java`. Sidebar menyederhanakan input menjadi nama item dan empat nilai rujukan; `id_template` AUTO_INCREMENT tetap tampil sebagai field baca-saji dan kolom tabel, serta mendukung tambah, ubah, dan hapus item dengan konfirmasi.
+- Endpoint `/api/tarif-lab/template` menyediakan `GET`/`POST`/`PUT`/`DELETE` dengan izin `tarif_lab`, validasi panjang teks, named lock per kode tarif, transaksi, penomoran `urut` ulang, dan penghapusan hard delete dengan penanganan FK. Biaya per item tidak dikelola: `satuan` dan `biaya_item` masing-masing ditulis `''` dan `0` oleh server. Kolom `method` tidak dipakai karena tidak ada pada tabel runtime `template_laboratorium`.
+- Verifikasi dengan `npm run test:tarif-lab` (termasuk 10 tes template), `npm run test:tarif-perawatan`, `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
+
+### 21 November 2026 — tarif rawat jalan dan rawat inap
+
+- Perubahan perilaku yang disengaja: menu `Tarif Ralan`, `Master Tarif Ralan`, `Tarif Pelayanan Rawat Jalan`, dan label pintasan akun `Tarif Rawat Jalan` kini membuka `/tarif-ralan`; padanan ranapnya membuka `/tarif-ranap`. Entri kurasi `tarif-ranap` ditambahkan agar berpasangan dengan `tarif-ralan`, sehingga katalog menjadi 1.168 menu.
+- Halaman memakai satu komponen bersama `HalamanTarifPerawatan` dengan konfigurasi per jenis, panel input accordion seperti jadwal dokter, `GridFormulirModul`, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Tabel bertab `Data Tarif` dan `Data Sampah`, menampilkan seluruh komponen tarif, tiga total biaya, jenis bayar, unit/bangsal, kelas untuk ranap, dan status.
+- Kode otomatis mengikuti Java (`RJ`/`RI` + 5 digit) tetapi memakai named lock per modul agar tidak benturan. Field boleh diisi manual; kosong akan diisi otomatis oleh server. `GET .../kode` hanya menyarankan kode ke formulir.
+- Total `total_byrdr`, `total_byrpr`, dan `total_byrdrpr` dihitung ulang di server dari enam komponen tarif dengan pembulatan seperti `DecimalFormat("####")`, bukan dipercaya dari klien. Ini perbaikan teknis; Java mengisi field yang sama lewat `isjml()`.
+- Hapus tetap soft delete `status='0'` sesuai Java. Tab `Data Sampah` memaksa filter `status=0`, menyembunyikan aksi input/ubah/nonaktifkan, dan menyediakan tombol `Pulihkan` yang menjalankan `PATCH status='1'` untuk baris tercentang. Setelah dipulihkan, baris hilang dari sampah dan kembali ke tab `Data Tarif`. Hard delete dari dialog Java tidak dipindahkan.
+- Endpoint baru `/api/tarif-ralan`, `/api/tarif-ranap`, masing-masing `/options` dan `/kode`, memakai izin `tarif_ralan`/`tarif_ranap`, validasi sebelum database, query berparameter, transaksi, dan batas pagination 200. Verifikasi dengan `npm run test:tarif-perawatan`, `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
+
+### 21 November 2026 — jadwal praktek dokter sesuai DlgJadwal.java
+
+- Perubahan perilaku yang disengaja: menu `Jadwal Praktek` (`btn-jadwal`) dan entri kurasi `Jadwal Praktek Dokter` (`jadwal-dokter`) keduanya membuka `/jadwal-dokter` dengan izin `jadwal_praktek`, sehingga tidak ada halaman ganda.
+- Halaman memakai `PanelInputData`, `GridFormulirModul`, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Pemilih dokter/poliklinik Java diadaptasi menjadi dropdown server-side; hari, jam, menit, dan detik juga memakai `CustomSelect`.
+- Field mengikuti schema runtime dan Java: `kd_dokter` maksimal 20, `kd_poli` maksimal 5, `hari_kerja` allowlist `SENIN`–`AKHAD`, jam `HH:MM:SS`, dan `kuota` angka 0–9999. Tidak ada validasi `jam_selesai > jam_mulai` karena Java tidak memilikinya.
+- Kunci utama tabel adalah `(kd_dokter, hari_kerja, jam_mulai)`. `PUT` memakai empat kolom lama sesuai `WHERE` Java, sedangkan `DELETE` memakai tiga kolom sesuai kunci utama dan mendukung banyak baris dalam satu transaksi.
+- Hapus tetap hard delete karena tabel `jadwal` tidak memiliki kolom `status`; risikonya disampaikan lewat `KonfirmasiDialog` sebelum mutasi. Ini kompatibilitas dengan Java, bukan perbaikan perilaku.
+- Endpoint baru `/api/jadwal-dokter` dan `/api/jadwal-dokter/options` memakai izin server, validasi sebelum database, query berparameter, transaksi, dan batas pagination 200. Verifikasi dengan `npm run test:jadwal-dokter`, `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
+
+### 21 November 2026 — pintasan Data Pasien dari registrasi
+
+- Perubahan perilaku yang disengaja: menu `Data Pasien` (`btn-data-pasien`) ditambahkan pada kategori A dengan izin `pasien` agar petugas registrasi dapat langsung membuka pencarian data pasien/rekam medis tanpa membuka menu master rekam medis lebih dulu.
+- Halaman tujuan tetap `/pasien` dengan judul navbar `Data Pasien`; `AppShell` memetakan judul `Data Pasien`, `Cari Data Pasien`, `Cari Data Pasien (Rekam Medis)`, dan `Pasien` ke rute tersebut. Judul lama `Pasien` dari katalog `frmUtama` kini juga memiliki tujuan yang jelas.
+- Tidak ada perubahan API atau aturan bisnis pasien; pencarian, penomoran RM, dan master pendukung tetap memakai endpoint `/api/pasien` yang sudah ada.
+- Verifikasi dengan `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
+
+### 21 November 2026 — data poliklinik sesuai Pilih Unit Poliklinik
+
+- Perubahan perilaku yang disengaja: master unit poliklinik kini dikelola langsung dari web lewat menu `Data Poliklinik` (`btn-data-poliklinik`) di kategori A dengan izin `registrasi` sesuai `akses.getRegistrasi()` pada `DlgPoli.java`. Sebelumnya tabel `poliklinik` hanya menjadi sumber opsi pada registrasi dan resume pasien.
+- Halaman `/poliklinik` memakai `HalamanMasterKepegawaian` yang sama dengan petugas/dokter: panel input accordion, tabel tetap tampil, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Judul navbar `Data Poliklinik` ditambahkan ke `src/lib/navigasi/judul-halaman.ts`.
+- Field mengikuti schema runtime dan Java: `kd_poli` maksimal 5, `nm_poli` maksimal 50, `registrasi`/`registrasilama` numerik, dan `status` `0|1`. Tarif kosong ditulis `0` seperti inisialisasi `txt01`/`txt02` pada `DlgPoli.java`.
+- Perubahan teknis, bukan aturan bisnis: kode dibuat di server berformat `U` + 4 digit dari nilai maksimum dengan named lock `simrs-khanza-kode-poli`, bukan `COUNT()+1` seperti Java, agar tidak tabrakan dengan data eksisting seperti `U0099`. Kode unit tidak dapat diubah setelah data dibuat agar relasi `reg_periksa` dan tarif registrasi tetap konsisten.
+- Hapus lunak memakai `status='0'`; `PATCH status='1'` memulihkan unit. `GET /api/poliklinik/options` menyediakan daftar status untuk filter.
+- Verifikasi dengan `npm run test:poliklinik`, `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
+
+### 21 November 2026 — data petugas dan dokter sesuai frmUtama
+
+- Kanonisasi menu diperbaiki: `btn-pegawai` = `Data Petugas` (`DlgPetugas.java`, izin `petugas`), `btn-dokter` = `Data Dokter` (`DlgDokter.java`, izin `dokter`), dan `btn-penggajian` = `Kepegawaian & Gaji` yang membuka master pegawai (izin `pegawai_admin`). Tidak ada modul petugas ganda.
+- Halaman `/petugas` dan `/dokter` memakai `HalamanMasterKepegawaian` bersama: panel input accordion `PanelInputData`, formulir dua kolom, tabel aksesibel, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Input dan data berada dalam satu halaman tanpa tab.
+- Field, panjang, enum, dan relasi master mengikuti schema runtime: `petugas`/`jabatan` serta `dokter`/`spesialis`. Data dasar dicerminkan ke `pegawai` dalam transaksi yang sama; seed master memakai `INSERT IGNORE` seperti Java.
+- Penulisan petugas memakai NIP eksplisit. Penulisan dokter membuat kode `D` + 7 digit di server dengan named lock; benturan kunci menghasilkan 409. Hapus lunak memakai `status='0'`, sedangkan `PATCH` memulihkan `status='1'`.
+- Tata letak diubah mengikuti `/registrasi`: panel input dapat dibuka/tutup dengan `PanelInputData`, tabel tetap terlihat di bawahnya, dan seluruh aksi serta filter berada di `PanelBawah`.
+- Verifikasi dengan `npm run test:petugas`, `npm run test:dokter`, `npm run test:pegawai`, dan `npm run test:menu-utama`.
+
+### 21 November 2026 — daftar menu lengkap dari frmUtama
+
+- `src/lib/constants/menus.ts` kini memuat 1.139 entri menu hasil adaptasi `cmbMenu` A–T dan seluruh `Panelmenu.add(...)` pada `isCombo()` `frmUtama.java`, ditambah entri kurasi yang sudah ada.
+- ID entri memakai slug variabel komponen Java (misalnya `btn-registrasi`, `btn-permintaan-lab`, `btn-setup-aplikasi`) agar mudah ditelusur kembali ke referensi. Izin dan urutan kategori mengikuti Java; entri tanpa izin tetap tampil sebagai informasi.
+- Perubahan ini hanya melengkapi katalog menu. Halaman tujuan, otorisasi endpoint, dan mutasi tetap mengikuti aturan modul masing-masing; tidak semua menu Java sudah memiliki halaman web.
+- Verifikasi dengan `npm run test:menu-utama`.
+
+### 21 November 2026 — data pegawai dan petugas
+
+- Menu hasil generator `btn-pegawai` menjadi satu-satunya entri kanonik dengan judul `Data Pegawai & Petugas` dan ikon `Users`; entri kurasi `data-pegawai` dihapus agar tidak ada menu ganda. Label ini kemudian dikoreksi menjadi `Data Petugas` pada entri kanonisasi berikutnya.
+- Halaman `/pegawai` mengadaptasi alur pegawai Khanza dengan tab Input/Data, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Kolom `photo` tidak dibaca atau diubah; `no_ktp` hanya dipakai untuk pencarian dan isian, bukan kolom tabel.
+- API `/api/pegawai` dan `/api/pegawai/options` memakai izin admin/`petugas`, filter dan pagination server, query berparameter, transaksi, validasi panjang/enum/tanggal, serta id `auto_increment` tanpa penomoran manual.
+- Hapus pegawai menjadi status `KELUAR`, bukan penghapusan baris; pegawai dapat diaktifkan kembali lewat `PATCH`. Verifikasi dengan `npm run test:pegawai` dan `npm run test:menu-utama`.
 
 ### 6 November 2026 — fondasi
 
@@ -147,6 +225,61 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Daftar tabel dibatasi pada pasien yang sama dengan `no_rawat` aktif. Field, panjang, dan tabel mengikuti schema runtime `sik2`: 26 kolom `resume_pasien`, `kondisi_pulang` hanya `Hidup|Meninggal`, dan tidak ada kolom `tanggal_keluar`.
 - Tombol "Ambil Diagnosa/Prosedur Kunjungan" mengisi ICD-10/ICD-9 dari `diagnosa_pasien` dan `prosedur_pasien` status `Ralan`; cetak belum tersedia di Khanza Web.
 - Verifikasi dengan `npm run test:resume-pasien`.
+
+### 20 November 2026 — menu klik kanan rawat jalan
+
+- Tabel `/rawat-jalan` membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) dengan seluruh grup menu `DlgKasirRalan.java`, lengkap dengan pencarian menu dan navigasi keyboard.
+- Aksi yang sudah tersedia di Khanza Web langsung membuka halaman terkait: Resume, Riwayat Perawatan, Data Tindakan Ralan, Copy Resep, Input Resep Dokter, Lab, Radiologi, Rawat Inap, dan Penjualan Obat.
+- Perintah `Urutkan Data Berdasar` mengurutkan data yang sedang tampil di klien. Item yang modulnya belum diadaptasi menampilkan toast informatif dan tidak mengubah data.
+- Perubahan ini tidak menambah endpoint atau mutasi baru; izin tetap berada pada endpoint yang dipakai halaman tujuan.
+
+### 20 November 2026 — menu klik kanan rawat inap
+
+- Tabel `/rawat-inap` memakai komponen menu kontekstual yang sama dengan rawat jalan, dengan seluruh grup `DlgKamarInap.java` (261 node, 20 grup) tanpa separator Java.
+- Aksi yang sudah tersedia di Khanza Web langsung membuka Resume, Riwayat Perawatan, Diagnosa/Tindakan Rawat Inap, Tindakan Rawat Jalan, Lab, Radiologi, Resep Dokter, dan Penjualan Obat.
+- `Urutkan Data Berdasar` mengurutkan data tampil berdasarkan No. Rawat, Cara Bayar, No. RM, Nama, Kamar, atau Tanggal Masuk. Perintah cetak, status, hapus, dan bridging yang belum diadaptasi hanya menampilkan toast informatif.
+- Komponen tampilan dan pencarian menu diekstrak ke `MenuKonteksTabel` agar rawat jalan dan rawat inap memakai satu pola interaksi.
+
+### 20 November 2026 — filter dan panel bawah rawat inap
+
+- `/rawat-inap` memindahkan seluruh filter ke `PanelBawah`: mode `Semua`, `Belum Pulang`, `Tgl. Masuk`, dan `Pulang`; periode dua tanggal; status bayar; bangsal; kata kunci; `Cari`; dan `Semua`. Default mengikuti radio R1 `Belum Pulang` pada `DlgKamarInap.java`; opsi `Semua` tetap disediakan untuk melihat seluruh catatan.
+- `/api/rawat-inap` menerima `mode`, `tanggal_mulai`, `tanggal_selesai`, `status_bayar`, `bangsal`, dan `cari` dengan allowlist, validasi tanggal, query berparameter, hitung `total`, serta urutan bangsal/tanggal/jam masuk sesuai Java. Parameter `status_pulang` lama tetap diterima.
+- Panel bawah menampilkan `Record`, `Cetak`, `Keluar`, dan tombol `Masuk`, `Pulang`, `Pindah`, `Excel` sesuai `DlgKamarInap.java`. `Pulang` dan `Pindah` hanya aktif setelah baris dipilih; `Masuk`, `Excel`, dan `Cetak` masih menampilkan toast informatif.
+- Verifikasi dengan `npm run test:rawat-inap`.
+
+### 20 November 2026 — mutasi pulang dan pindah kamar rawat inap
+
+- Tombol `Pulang` membuka dialog sesuai `BtnOut`/`BtnSimpan` `DlgKamarInap.java`: tanggal/jam keluar, status pulang, diagnosa akhir, lama, tarif, dan total biaya. Status `Meninggal`/`Rujuk` membuka dialog lanjutan `DlgPasienMati`/`DlgRujuk` setelah penyimpanan utama berhasil.
+- Tombol `Pindah` membuka dialog dengan pencarian kamar kosong, tarif penjamin, lama kamar baru, dan keempat opsi `Rganti1`–`Rganti4` persis Java. Opsi 4 sengaja mempertahankan kunci pembaruan anomali dan aturan tarif sama menghasilkan biaya 0.
+- Endpoint baru `/api/rawat-inap/pulang`, `/api/rawat-inap/pindah-kamar`, `/api/rawat-inap/pasien-mati`, dan `/api/rawat-inap/rujuk` memakai izin `kamar_inap`, `pasien_meninggal`, dan `rujukan_keluar` sesuai `akses.java`.
+- Mutasi memakai transaksi, `FOR UPDATE`, named lock per nomor rawat/tanggal, validasi server, query berparameter, retry benturan nomor rujuk, dan pelepasan koneksi. Status kamar diubah menjadi `KOSONG` saat pulang dan `ISI`/`KOSONG` saat pindah.
+- Komponen `Modal`, `PanelBawah`, `GridFormulirModul`, dan `CustomSelect` dipakai agar dialog mengikuti sistem desain proyek. Verifikasi dengan `npm run test:rawat-inap-mutasi`.
+
+### 21 November 2026 — menu klik kanan registrasi
+
+- Tabel `/registrasi` (registrasi awal dan rujukan internal) membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) sesuai `jPopupMenu1` dan `jPopupMenu2` `DlgReg.java`, tanpa separator Java. Registrasi awal memuat 17 grup / 339 node; rujukan internal memuat 10 grup / 39 node.
+- Aksi dengan halaman web tersedia langsung membuka Resume, Riwayat Perawatan, Diagnosa/Tindakan Rawat Jalan, Lab, Radiologi, Rawat Inap, Resep Dokter, dan Copy Resep. `Belum Terbit SEP BPJS` serta `Sudah Terbit SEP BPJS` mengubah filter SEP; `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil.
+- `/api/registrasi` menerima `sep=Semua|Belum|Sudah` dengan allowlist dan subquery `password_asuransi`/`bridging_sep` seperti aturan `terbitsep` Java. Filter SEP juga tersedia di `PanelBawah` agar bisa dilihat dan direset.
+- Item cetak, surat, bridging, status, hapus data, dan hapus rujukan yang belum memiliki alur web hanya menampilkan toast informatif dan tidak melakukan mutasi.
+- Verifikasi dengan `npm run test:registrasi` dan `npm run test:menu-konteks`.
+
+### 21 November 2026 — filter dan menu klik kanan IGD
+
+- `/igd` memakai `PanelBawah` untuk periode dua tanggal (`DTPCari1`/`DTPCari2`), `Kata kunci`, `Cari`, dan `Semua`. Default periode mengikuti `isCek()` `DlgIgd.java`, yaitu hari ini; filter tambahan Status dan SEP disediakan sebagai adaptasi web.
+- `/api/igd` menyaring `kd_poli = 'IGDK'`, memakai periode inklusif hingga akhir tanggal, kata kunci 13 kolom sesuai `tampil()` Java, allowlist `stts` dan `sep`, query berparameter, hitung `total`, serta urutan `no_rawat`. Parameter tidak valid ditolak sebelum database.
+- Tabel `/igd` membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) dengan seluruh 272 node dan 16 grup dari `jPopupMenu1` `DlgIgd.java` tanpa separator Java. Pencarian menu dan navigasi keyboard memakai `MenuKonteksTabel`.
+- Item dengan halaman web tersedia langsung membuka Resume, Riwayat, Tindakan, Lab, Radiologi, Rawat Inap, dan Resep. `Belum Terbit SEP BPJS` serta `Sudah Terbit SEP BPJS` mengubah filter SEP sesuai `terbitsep` Java; item lain hanya menampilkan toast informatif dan tidak melakukan mutasi.
+- Verifikasi dengan `npm run test:igd` dan `npm run test:menu-konteks`.
+
+### 21 November 2026 — input registrasi IGD
+
+- `/igd` kini memakai `PanelInputData judul=".: Input Data"` seperti `/registrasi`, `GridFormulirModul`, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Klik baris tabel mengisi formulir; `Simpan` berubah menjadi `Ganti` setelah baris dipilih.
+- Formulir mengikuti `DlgIGD.java`: No. RM, nama/alamat pasien, tanggal dan jam kunjungan, dokter, poli tetap IGD, penjamin, status baru/lama, status periksa, status bayar, Asal Rujukan, dan Nama/Keterangan Rujukan. Tanggal/jam otomatis, penomoran rawat/antrean diambil server, dan pemilih pasien memakai modal pencarian yang sama dengan registrasi lewat komponen bersama `PilihPasienDialog`.
+- Endpoint baru `/api/igd/options` dan `/api/igd/nomor` melengkapi `GET/POST/PUT/DELETE /api/igd`. `/api/igd/options?jenis=pasien` mengembalikan array pasien seperti `/api/registrasi/options`. Seluruh endpoint memakai `igdAccess()` (admin atau izin IGD), validasi sebelum database, query berparameter, dan transaksi.
+- Server memaksa `kd_poli='IGDK'` dan `status_lanjut='Ralan'`. `POST` memaksa `stts='Belum'` dan `status_bayar='Belum Bayar'`; `PUT` mempertahankan status lama serta nomor antrean bila dokter/tanggal tidak berubah, dan menolak perubahan pasien bila sudah ada pelayanan.
+- `PUT`/`DELETE` menolak data yang sudah dibayar atau bukan `IGDK`. `DELETE` juga menolak jika masih ada relasi pelayanan, lalu menghapus `rujuk_masuk` dan `reg_periksa` dalam satu transaksi.
+- Verifikasi dengan `npm run test:igd`, ESLint terarah, `npm run build`, `npx tsc --noEmit`, dan `git diff --check`.
+
 ### 20 November 2026 — copy resep
 
 - Halaman `/farmasi/copy-resep` mengadaptasi `DlgCopyResep`: hanya menampilkan riwayat pasien dan dokter peresep yang sama, mendukung filter tanggal, pencarian, rincian obat/racikan, serta aksi `Copy`, `Ubah`, dan `Hapus`.
@@ -201,11 +334,21 @@ npm run test:pasien
 npm run test:registrasi
 npm run test:rawat-jalan
 npm run test:tindakan-ranap
+npm run test:rawat-inap
+npm run test:rawat-inap-mutasi
+npm run test:igd
 npm run test:master-obat
+npm run test:pegawai
+npm run test:petugas
+npm run test:dokter
+npm run test:poliklinik
 npm run test:resep-obat
 npm run test:copy-resep
 npm run test:riwayat-pasien
 npm run test:resume-pasien
+npm run test:tarif-perawatan
+npm run test:tarif-lab
+npm run test:menu-konteks
 npm run lint
 npm run build
 ```
