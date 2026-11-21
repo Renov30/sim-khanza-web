@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
@@ -17,6 +16,7 @@ import {
   type KunciSortRegistrasi,
 } from "@/components/modul/menu-konteks-registrasi-data";
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
+import { PilihPasienDialog, type PasienOption } from '@/components/pasien/PilihPasienDialog';
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
@@ -26,11 +26,7 @@ import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
 import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faHospitalUser,
   faMagnifyingGlass,
-  faPlus,
-  faXmark,
-  faSpinner,
   faChevronLeft,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
@@ -38,8 +34,6 @@ import {
 interface DokterOption { kd_dokter: string; nm_dokter: string }
 interface PoliOption { kd_poli: string; nm_poli: string; registrasi: number; registrasilama: number }
 interface PenjaminOption { kd_pj: string; png_jawab: string }
-interface PasienOption { no_rkm_medis: string; nm_pasien: string; alamat: string; namakeluarga: string; keluarga: string; kd_pj: string; png_jawab: string | null; jk: string; no_tlp: string; no_peserta: string; tgl_daftar: string }
-
 interface PasienReg {
   no_reg: string;
   no_rawat: string;
@@ -151,12 +145,8 @@ export default function HalamanRegistrasi() {
   const [menuKonteks, setMenuKonteks] = useState<{ x: number; y: number; baris: BarisMenuKonteks } | null>(null);
   const [urutanTabel, setUrutanTabel] = useState<UrutanTabel | null>(null);
   const permintaanTabel = useRef<AbortController | null>(null);
-  const permintaanPasien = useRef<AbortController | null>(null);
-  const timerPasien = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     permintaanTabel.current?.abort();
-    permintaanPasien.current?.abort();
-    if (timerPasien.current) clearTimeout(timerPasien.current);
   }, []);
 
   // Pilihan master
@@ -187,11 +177,7 @@ export default function HalamanRegistrasi() {
   const [asalRujukan, setAsalRujukan] = useState("-");
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
 
-  // Pencarian pasien
-  const [daftarPasienCari, setDaftarPasienCari] = useState<PasienOption[]>([]);
   const [modalPasienBuka, setModalPasienBuka] = useState(false);
-  const [kataCariPasien, setKataCariPasien] = useState("");
-  const [sedangMemuatPasien, setSedangMemuatPasien] = useState(false);
 
   // Server menentukan nomor final saat penyimpanan.
   const nomorSiap = nomorBerikutnya?.tanggal === tglReg && nomorBerikutnya.versi === versiNomor;
@@ -561,35 +547,6 @@ export default function HalamanRegistrasi() {
     window.print();
   };
 
-  // Cari pasien
-  const handleCariPasien = (query: string = "") => {
-    setKataCariPasien(query);
-    permintaanPasien.current?.abort();
-    if (timerPasien.current) clearTimeout(timerPasien.current);
-    const controller = new AbortController();
-    permintaanPasien.current = controller;
-    setSedangMemuatPasien(true);
-    setDaftarPasienCari([]);
-    timerPasien.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/registrasi/options?jenis=pasien&cari=${encodeURIComponent(query)}`, { signal: controller.signal });
-        const json = await res.json();
-        if (controller.signal.aborted) return;
-        if (!res.ok || !json.success) throw new Error(json.error || "Gagal mencari pasien");
-        setDaftarPasienCari(json.data || []);
-      } catch (error) {
-        if (!controller.signal.aborted) tampilkanToast(error instanceof Error ? error.message : "Gagal mencari pasien", "error");
-      } finally {
-        if (!controller.signal.aborted) setSedangMemuatPasien(false);
-      }
-    }, query ? 200 : 0);
-  };
-
-  const handleBukaModalPasien = () => {
-    setModalPasienBuka(true);
-    handleCariPasien(noRm || "");
-  };
-
   const isiPasien = (p: PasienOption) => {
     setNoRm(p.no_rkm_medis);
     setNmPasien(p.nm_pasien);
@@ -602,10 +559,6 @@ export default function HalamanRegistrasi() {
       setKdPj(p.kd_pj);
       setNamaPenjab(p.png_jawab || "");
     }
-  };
-
-  const handlePilihPasienCari = (p: PasienOption) => {
-    isiPasien(p);
     setModalPasienBuka(false);
   };
 
@@ -642,7 +595,7 @@ export default function HalamanRegistrasi() {
     return <PatientMasterSelect jenis={label} label={label} value={value} items={items} onChange={(id)=>change(id)} />;
   };
   return (
-    <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
+    <div className="module-page flex h-full w-full flex-col  overflow-y-auto bg-slate-50 p-2 sm:p-3 lg:overflow-hidden">
       {/* Form */}
       <PanelInputData
         judul=".: Input Data"
@@ -687,7 +640,7 @@ export default function HalamanRegistrasi() {
               <RegistrationField label="No. Rekam Medik" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
                 <input aria-label="No. Rekam Medis pasien" type="text" value={noRm} readOnly placeholder="No. RM" className={`${inputClass} w-28 shrink-0 bg-slate-50`} />
                 {input('Nama pasien',nmPasien,undefined,true,'Nama pasien')}
-                <button type="button" onClick={handleBukaModalPasien} aria-label="Cari data pasien" title="Cari Data Pasien" className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"><FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setModalPasienBuka(true)} aria-label="Cari data pasien" title="Cari Data Pasien" className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100"><FontAwesomeIcon icon={faMagnifyingGlass} className="h-3 w-3" /></button>
               </RegistrationField>
               <RegistrationField label="Penanggung Jawab" labelWidth="lg:grid-cols-[7.5rem_minmax(0,1fr)]">
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,0.8fr)] gap-2 items-center w-full">
@@ -975,130 +928,14 @@ export default function HalamanRegistrasi() {
           memuat={sedangMenyimpan || sedangMenghapus}
       />
 
-      {/* Pencarian pasien */}
-      {modalPasienBuka && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            {/* Header */}
-            <div className="px-4 py-3 bg-primary-800 text-white font-bold text-xs flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faHospitalUser} className="w-3.5 h-3.5 text-primary-200" />
-                <span className="text-sm font-semibold tracking-wide">Cari Data Pasien (Rekam Medis)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/pasien"
-                  className="px-2.5 py-1 bg-primary-600 hover:bg-primary-500 border border-primary-400/60 text-white rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs no-underline"
-                  title="Buka Data Pasien & Rekam Medis di halaman ini"
-                >
-                  <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
-                  <span>Pasien Baru</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setModalPasienBuka(false)}
-                  className="text-white hover:text-primary-200 p-1 font-bold text-sm leading-none ml-1 cursor-pointer"
-                  title="Tutup"
-                >
-                  <FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Pencarian */}
-            <div className="p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={kataCariPasien}
-                  onChange={(e) => handleCariPasien(e.target.value)}
-                  placeholder="Ketik No. RM, Nama Pasien, NIK, atau Alamat..."
-                  autoFocus
-                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-primary-600 shadow-2xs"
-                />
-                <FontAwesomeIcon
-                  icon={faMagnifyingGlass}
-                  className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"
-                />
-                {kataCariPasien && (
-                  <button
-                    type="button"
-                    onClick={() => handleCariPasien("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                    title="Bersihkan Pencarian"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              {sedangMemuatPasien && (
-                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 text-primary-600 animate-spin" />
-              )}
-            </div>
-
-            {/* Hasil */}
-            <div className="flex-1 overflow-auto p-2">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-slate-600 font-bold border-b sticky top-0 z-10 shadow-2xs">
-                  <tr>
-                    <th scope="col" className="p-2 w-24">No. RM</th>
-                    <th scope="col" className="p-2">Nama Pasien</th>
-                    <th scope="col" className="p-2 w-10 text-center">JK</th>
-                    <th scope="col" className="p-2">Alamat</th>
-                    <th scope="col" className="p-2 w-28">No. Telp</th>
-                    <th scope="col" className="p-2 w-16 text-center">Pilih</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-[11px]">
-                  {daftarPasienCari.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-400">
-                        {sedangMemuatPasien
-                          ? "Sedang memuat data pasien..."
-                          : kataCariPasien
-                          ? `Pasien dengan kata kunci "${kataCariPasien}" tidak ditemukan.`
-                          : "Belum ada data pasien terdaftar."}
-                      </td>
-                    </tr>
-                  ) : (
-                    daftarPasienCari.map((p) => (
-                      <tr
-                        key={p.no_rkm_medis}
-                        onClick={() => handlePilihPasienCari(p)}
-                        className="hover:bg-primary-50/70 cursor-pointer"
-                      >
-                        <td className="p-2 font-mono font-normal text-slate-700">{p.no_rkm_medis}</td>
-                        <td className="p-2 font-semibold text-slate-800">{p.nm_pasien}</td>
-                        <td className="p-2 text-center text-slate-600">{p.jk}</td>
-                        <td className="p-2 text-slate-500 truncate max-w-xs">{p.alamat || "-"}</td>
-                        <td className="p-2 text-slate-600 font-mono text-[10px]">{p.no_tlp || "-"}</td>
-                        <td className="p-2 text-center">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePilihPasienCari(p);
-                            }}
-                            className="px-2.5 py-1 bg-primary-600 hover:bg-primary-700 text-white rounded text-[10px] font-bold shadow-2xs cursor-pointer"
-                          >
-                            Pilih
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Ringkasan */}
-            <div className="px-3 py-2 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex justify-between items-center">
-              <span>Menampilkan {daftarPasienCari.length} pasien</span>
-              <span>Klik baris untuk langsung memilih pasien</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <PilihPasienDialog
+        terbuka={modalPasienBuka}
+        endpoint="/api/registrasi/options"
+        pencarianAwal={noRm}
+        onTutup={() => setModalPasienBuka(false)}
+        onPilih={isiPasien}
+        onError={(pesan) => tampilkanToast(pesan, "error")}
+      />
 
       {/* Konfirmasi hapus */}
       <KonfirmasiDialog

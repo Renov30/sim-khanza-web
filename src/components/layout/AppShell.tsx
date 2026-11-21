@@ -69,6 +69,41 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     setIsMenuOpen(false);
 
+    if (
+      title === "Jadwal Praktek"
+      || title === "Jadwal Praktek Dokter"
+      || title === "Jadwal Praktek Dokter Spesialis"
+    ) {
+      router.push("/jadwal-dokter");
+      return;
+    }
+    if (
+      title === "Tarif Ralan"
+      || title === "Master Tarif Ralan"
+      || title === "Tarif Rawat Jalan"
+      || title === "Tarif Pelayanan Rawat Jalan"
+    ) {
+      router.push("/tarif-ralan");
+      return;
+    }
+    if (
+      title === "Tarif Ranap"
+      || title === "Master Tarif Ranap"
+      || title === "Tarif Rawat Inap"
+      || title === "Tarif Pelayanan Rawat Inap"
+    ) {
+      router.push("/tarif-ranap");
+      return;
+    }
+    if (
+      title === "Data Pasien"
+      || title === "Cari Data Pasien"
+      || title === "Cari Data Pasien (Rekam Medis)"
+      || title === "Pasien"
+    ) {
+      router.push("/pasien");
+      return;
+    }
     if (title === "Registrasi Pasien" || title === "Pendaftaran Pasien") {
       router.push("/registrasi");
       return;
@@ -85,6 +120,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.push("/radiologi/periksa");
       return;
     }
+    if (title === "Data Petugas" || title === "Petugas") {
+      router.push("/petugas");
+      return;
+    }
+    if (title === "Data Dokter" || title === "Dokter") {
+      router.push("/dokter");
+      return;
+    }
+    if (title === "Kepegawaian & Gaji" || title === "Penggajian (Payroll)" || title === "Data Pegawai") {
+      router.push("/pegawai");
+      return;
+    }
     if (title === "Data Obat, Alkes & BHP" || title === "Data Obat, Alkes & BHP Medis") {
       router.push("/farmasi/master-obat");
       return;
@@ -95,6 +142,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
     if (title === "Rawat Inap & Kamar" || title === "Rawat Inap" || title === "Kamar Inap") {
       router.push("/rawat-inap");
+      return;
+    }
+    if (title === "Data Poliklinik" || title === "Poliklinik") {
+      router.push("/poliklinik");
       return;
     }
     if (

@@ -110,6 +110,8 @@ const MENU_FRMTUTAMA: readonly MenuFrmUtama[] = [
   ["btn-analisa-kamar", "Informasi Kamar", "A", "informasi_kamar", "BedDouble"],
   ["btn-jadwal", "Jadwal Praktek", "A", "jadwal_praktek", "CalendarClock"],
   ["btn-registrasi", "Registrasi", "A", "registrasi", "UserPlus"],
+  ["btn-data-pasien", "Data Pasien", "A", "pasien", "Users"],
+  ["btn-data-poliklinik", "Data Poliklinik", "A", "registrasi", "Building2"],
   ["btn-booking-periksa", "Booking Periksa", "A", "booking_periksa", "UserPlus"],
   ["btn-booking-registrasi", "Booking Registrasi", "A", "booking_registrasi", "UserPlus"],
   ["btn-booking-mcu-perusahaan", "Booking MCU Perusahaan", "A", "booking_mcu_perusahaan", "UserPlus"],
@@ -144,8 +146,8 @@ const MENU_FRMTUTAMA: readonly MenuFrmUtama[] = [
   ["btn-perkiraan-biaya-ranap", "Perkiraan Biaya Ranap", "A", "perkiraan_biaya_ranap", "BedDouble"],
   ["btn-barcode-ralan", "Rawat Jalan", "B", "barcoderalan", "Stethoscope"],
   ["btn-barcode-ranap", "Rawat Inap", "B", "barcoderanap", "BedDouble"],
-  ["btn-pegawai", "Petugas", "C", "petugas", "LayoutGrid"],
-  ["btn-dokter", "Dokter", "C", "dokter", "Stethoscope"],
+  ["btn-pegawai", "Data Petugas", "C", "petugas", "Users"],
+  ["btn-dokter", "Data Dokter", "C", "dokter", "Stethoscope"],
   ["btn-barcode", "Barcode Presensi", "C", "barcode", "CalendarClock"],
   ["btn-sidik-jari", "Sidik Jari", "C", "sidikjari", "LayoutGrid"],
   ["btn-jam-presensi", "Jam Presensi", "C", "jam_masuk", "CalendarClock"],
@@ -1372,15 +1374,6 @@ export const MENU_ITEMS: MenuItem[] = [
 
   // --- Kategori C: Kepegawaian & Presensi ---
   {
-    id: "data-pegawai",
-    title: "Data Pegawai & Petugas",
-    categoryCode: "C",
-    categoryName: "Kepegawaian",
-    iconName: "Users",
-    description: "Master biodata dokter, paramedis, staf admin, dan berkas kepegawaian",
-    permissionKey: "petugas",
-  },
-  {
     id: "presensi-harian",
     title: "Presensi Harian",
     categoryCode: "C",
@@ -1466,6 +1459,15 @@ export const MENU_ITEMS: MenuItem[] = [
     iconName: "Tags",
     description: "Pengaturan tarif konsultasi, tindakan keperawatan, dan jasa medik",
     permissionKey: "tarif_ralan",
+  },
+  {
+    id: "tarif-ranap",
+    title: "Master Tarif Ranap",
+    categoryCode: "K",
+    categoryName: "Keuangan",
+    iconName: "BedDouble",
+    description: "Pengaturan tarif tindakan, perawatan, bangsal, dan kelas rawat inap",
+    permissionKey: "tarif_ranap",
   },
   {
     id: "jurnal-keuangan",
