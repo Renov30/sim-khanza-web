@@ -534,10 +534,10 @@ export default function HalamanDataPasien() {
         tabIndex={0}
         className={tabAktif === "data" ? "flex h-[32rem] flex-none flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-2xs lg:h-auto lg:min-h-0 lg:flex-1" : "hidden"}
       >
-        <div className="flex-1 overflow-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
+          <table className="min-w-[88rem] w-full border-collapse text-left text-[11px]">
             <caption className="sr-only">Daftar pasien. Pilih baris untuk memuat data pasien ke formulir.</caption>
-            <thead className="bg-slate-100/90 sticky top-0 z-10 text-slate-700 font-bold border-b border-slate-200 shadow-2xs">
+            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
               <tr>
                 <th scope="col" className="py-2 px-2.5 text-center w-16">No. RM</th>
                 <th scope="col" className="py-2 px-2.5">Nama Pasien</th>
@@ -553,16 +553,16 @@ export default function HalamanDataPasien() {
                 <th scope="col" className="py-2 px-2.5">No. Peserta</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
+            <tbody className="divide-y divide-slate-100 bg-white font-mono text-[11px]">
               {memuat ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-500 font-sans">
+                  <td colSpan={12} className="h-36 !border-0 text-center font-sans text-slate-500">
                     Memuat data master pasien...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-400 font-sans">
+                  <td colSpan={12} className="h-44 !border-0 text-center font-sans text-slate-400">
                     <FontAwesomeIcon icon={faHospitalUser} className="w-8 h-8 text-slate-300 mb-2" />
                     <p>Tidak ada data pasien yang sesuai</p>
                   </td>
@@ -579,7 +579,7 @@ export default function HalamanDataPasien() {
                     }}
                     className={`cursor-pointer ${
                       terpilih?.no_rkm_medis === item.no_rkm_medis
-                        ? "bg-primary-50/90 text-slate-700"
+                        ? "bg-primary-100 text-slate-700"
                         : "hover:bg-slate-50/80 text-slate-700"
                     }`}
                   >

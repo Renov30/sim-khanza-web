@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MENU_CATEGORIES, MENU_ITEMS } from "@/lib/constants/menus";
+import type { MenuItem } from "@/lib/types/menu";
 import { MenuCard } from "./MenuCard";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,26 +15,99 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 interface MainMenuGridProps {
-  onModuleClick: (title: string) => void;
+  onModuleClick: (item: MenuItem) => void;
+}
+
+type KelompokMenu = "registrasi" | "igd" | "laboratorium" | "radiologi" | "farmasi" | "rawat-inap" | "rawat-jalan" | "sdm" | "keuangan" | "manajemen";
+
+const KELOMPOK_MENU: ReadonlyArray<{ id: KelompokMenu; label: string }> = [
+  { id: "registrasi", label: "Registrasi" },
+  { id: "igd", label: "IGD" },
+  { id: "laboratorium", label: "Laboratorium" },
+  { id: "radiologi", label: "Radiologi" },
+  { id: "farmasi", label: "Farmasi" },
+  { id: "rawat-inap", label: "Rawat Inap" },
+  { id: "rawat-jalan", label: "Rawat Jalan" },
+  { id: "sdm", label: "SDM" },
+  { id: "keuangan", label: "Keuangan" },
+  { id: "manajemen", label: "Manajemen" },
+];
+
+function termasukKelompok(item: MenuItem, kelompok: KelompokMenu) {
+  const href = item.href ?? "";
+
+  switch (kelompok) {
+    case "registrasi":
+      return item.id === "data-pasien" || item.id === "reg-pasien" || item.id === "booking-registrasi";
+    case "igd":
+      return item.id === "igd";
+    case "laboratorium":
+      return href.startsWith("/laboratorium") || item.id === "periksa-lab";
+    case "radiologi":
+      return href.startsWith("/radiologi") || item.id === "periksa-radiologi";
+    case "farmasi":
+      return href.startsWith("/farmasi") || item.categoryCode === "D" || item.id === "pemberian-obat";
+    case "rawat-inap":
+      return href.includes("rawat-inap") || item.id.includes("ranap") || item.title.includes("Rawat Inap");
+    case "rawat-jalan":
+      return href.includes("rawat-jalan") || item.id.includes("ralan") || item.title.includes("Rawat Jalan");
+    case "sdm":
+      return item.categoryCode === "C";
+    case "keuangan":
+      return item.categoryCode === "I" || item.categoryCode === "K";
+    case "manajemen":
+      return item.categoryCode === "T";
+  }
+}
+
+function adalahKelompokMenu(nilai: string | null): nilai is KelompokMenu {
+  return KELOMPOK_MENU.some((kelompok) => kelompok.id === nilai);
+}
+
+function buatUrlDaftarMenu(kategori: string, kelompok: KelompokMenu | "ALL", cari: string) {
+  const params = new URLSearchParams({ menu: "1" });
+  if (kategori !== "ALL") params.set("kategori", kategori);
+  if (kelompok !== "ALL") params.set("kelompok", kelompok);
+  if (cari.trim()) params.set("cari", cari.trim());
+  return `/?${params.toString()}`;
 }
 
 export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedCategory = searchParams.get("kategori") ?? "ALL";
+  const kelompokDariUrl = searchParams.get("kelompok");
+  const selectedGroup = adalahKelompokMenu(kelompokDariUrl)
+    ? kelompokDariUrl
+    : "ALL";
+  const queryFromUrl = searchParams.get("cari") ?? "";
+  const [searchQuery, setSearchQuery] = useState(queryFromUrl);
+
+  useEffect(() => {
+    if (searchQuery === queryFromUrl) return;
+
+    const timer = window.setTimeout(() => {
+      router.replace(buatUrlDaftarMenu(selectedCategory, selectedGroup, searchQuery));
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [queryFromUrl, router, searchQuery, selectedCategory, selectedGroup]);
 
   const filteredItems = useMemo(() => {
     return MENU_ITEMS.filter((item) => {
       const matchCategory =
         selectedCategory === "ALL" || item.categoryCode === selectedCategory;
+      const matchGroup =
+        selectedGroup === "ALL" || termasukKelompok(item, selectedGroup);
       const query = searchQuery.toLowerCase().trim();
       const matchSearch =
         !query ||
         item.title.toLowerCase().includes(query) ||
         item.categoryName.toLowerCase().includes(query) ||
         (item.description && item.description.toLowerCase().includes(query));
-      return matchCategory && matchSearch;
+      return matchCategory && matchGroup && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, selectedGroup, searchQuery]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
@@ -47,7 +122,9 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
             </label>
             <CustomSelect
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                router.replace(buatUrlDaftarMenu(e.target.value, "ALL", searchQuery));
+              }}
               containerClassName="relative flex-1"
             >
               <option value="ALL">
@@ -84,29 +161,33 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           </div>
         </div>
 
-        {/* Quick Category Pills */}
+        {/* Pengelompokan berdasarkan area penggunaan modul */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
           <button
-            onClick={() => setSelectedCategory("ALL")}
+            onClick={() => {
+              router.replace(buatUrlDaftarMenu("ALL", "ALL", searchQuery));
+            }}
             className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
-              selectedCategory === "ALL"
+              selectedGroup === "ALL"
                 ? "bg-primary-700 text-white shadow-2xs"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
             Semua Modul
           </button>
-          {MENU_CATEGORIES.slice(0, 10).map((cat) => (
+          {KELOMPOK_MENU.map((kelompok) => (
             <button
-              key={cat.code}
-              onClick={() => setSelectedCategory(cat.code)}
+              key={kelompok.id}
+              onClick={() => {
+                router.replace(buatUrlDaftarMenu("ALL", kelompok.id, searchQuery));
+              }}
               className={`px-2.5 py-1 rounded-md font-medium shrink-0 ${
-                selectedCategory === cat.code
+                selectedGroup === kelompok.id
                   ? "bg-primary-700 text-white shadow-2xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              [{cat.code}] {cat.title.split(" ")[1]?.replace(",", "") || cat.code}
+              {kelompok.label}
             </button>
           ))}
         </div>
@@ -121,7 +202,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               <MenuCard
                 key={item.id}
                 item={item}
-                onClick={(clicked) => onModuleClick(clicked.title)}
+                onClick={onModuleClick}
               />
             ))}
           </div>
@@ -136,8 +217,8 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
             </p>
             <button
               onClick={() => {
-                setSelectedCategory("ALL");
                 setSearchQuery("");
+                router.replace(buatUrlDaftarMenu("ALL", "ALL", ""));
               }}
               className="mt-3 text-xs font-semibold text-primary-700 hover:text-primary-800 underline"
             >

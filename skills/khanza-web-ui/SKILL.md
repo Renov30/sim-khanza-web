@@ -11,7 +11,9 @@ Gunakan `AGENTS.md` sebagai otoritas utama. Skill ini menerjemahkan aturan UI pr
 
 Tentukan pola halaman yang paling dekat, lalu inspeksi kode aktualnya sebelum menulis markup:
 
-- Halaman transaksi padat dan tabel obat: `src/app/farmasi/resep-obat/page.tsx`.
+- Halaman transaksi padat: `src/app/farmasi/resep-obat/page.tsx`.
+- Pola tab Input/Data: `src/app/pasien/page.tsx`.
+- Pola tabel daftar: `src/app/farmasi/copy-resep/page.tsx`; untuk state kosong tanpa garis sel, lihat `src/app/resume-pasien/page.tsx`.
 - Halaman klinis bertab dan panel aksi bersama: `src/app/tindakan-rawat-jalan/page.tsx` beserta komponen tabnya.
 - Panel aksi, filter, pagination, dan tombol kembali: `src/components/modul/PanelBawah.tsx`.
 - Form desktop: `src/components/modul/GridFormulirModul.tsx`.
@@ -45,21 +47,22 @@ Pola halaman penuh:
 
 ## Tabel
 
-Ikuti tabel pada halaman Input Resep:
+Ikuti pola tabel pada halaman Copy Resep:
 
-- Pembungkus konten memakai `min-h-0 flex-1 overflow-auto`.
+- Panel tabel memakai `flex min-h-0 flex-1 flex-col overflow-hidden`; pembungkus scroll di dalamnya memakai `min-h-0 flex-1 overflow-auto` dan `aria-busy` saat memuat.
 - Tabel memakai `border-collapse`, `text-[11px]`, dan lebar minimum yang mencegah kolom kritis terjepit.
 - Header sticky memakai `sticky top-0 z-10 bg-slate-100 text-slate-700`.
-- Header: `border-b border-r border-slate-200 px-2 py-2` dan `scope="col"`.
-- Sel: `border-b border-r border-slate-100 px-2 py-1.5`.
-- Baris biasa dapat memakai `even:bg-slate-50/70`; pilihan memakai `bg-primary-50/60` tanpa mengubah font atau ukuran kolom.
+- Header: `border-b border-slate-200 px-2 py-2 text-center` dan `scope="col"`.
+- Jangan gunakan border vertikal maupun grid border pada tabel modul. Gunakan pola minimal seperti `src/app/rawat-inap/page.tsx`: header cukup memiliki `border-b border-slate-200`; pisahkan baris data dengan `divide-y divide-slate-100`, dan gunakan padding `px-2 py-1.5` pada sel.
+- Baris data biasa berlatar putih dan memakai `hover:bg-slate-50/80`; jangan gunakan zebra striping. Pilihan memakai `bg-primary-100` tanpa mengubah font atau ukuran kolom. Bila satu entri terdiri dari beberapa baris atau sel turunan, terapkan `bg-primary-100` yang sama pada seluruh bagian entri; jangan beri sel tertentu warna pilihan yang lebih gelap atau lebih terang.
+- Sel loading dan kosong memakai `colSpan`, `h-36` atau `h-44`, rata tengah, dan tidak memiliki border (`border-0`) agar garis tidak muncul di tengah area kosong.
 - Teks data tetap netral. Gunakan monospace/tabular hanya untuk kode, nomor, tanggal, jam, jumlah, dan nilai uang.
-- Sediakan `caption` yang aksesibel. Empty/loading state berada dalam tabel dengan `colSpan` yang benar.
+- Sediakan `caption` yang aksesibel. Empty/loading state berada dalam tabel dengan `colSpan` yang benar, rata tengah, dan tinggi konsisten (`h-44` untuk empty, `h-36` saat memuat).
 - Jangan membuat variasi warna tabel khusus per halaman kecuali menunjukkan status yang nyata.
 
 ## Tab, form, dan panel bawah
 
-- Tab aktif: `border-primary-600 text-primary-700`; tab tidak aktif: `border-transparent text-slate-600`.
+- Tab Input/Data mengikuti `src/app/pasien/page.tsx`: pembungkus `flex shrink-0 border-b border-slate-200`, tombol `px-4 py-2 text-xs font-semibold border-b-2`, tab aktif `bg-white border-primary-700 text-slate-900`, dan tab tidak aktif `border-transparent text-slate-500 hover:bg-slate-100`.
 - Tab wajib memiliki semantik ARIA dan navigasi keyboard panah, Home, serta End bila memiliki lebih dari dua pilihan.
 - Field standar setinggi `h-7`, teks `text-xs`, border `border-slate-300`, dan fokus `border-primary-600`.
 - Gunakan `rounded-md`; jangan mencampur radius tanpa alasan.
@@ -67,6 +70,12 @@ Ikuti tabel pada halaman Input Resep:
 - Gunakan `PanelBawah`, bukan footer aksi buatan sendiri. Filter hanya tampil pada tab yang memakainya; aksi mutasi hanya tampil pada tab Input.
 - Tombol Baru mereset semua state form, default, pilihan tabel, dan parameter mode yang relevan.
 - Tombol kembali berada di panel bawah dan memakai riwayat browser dengan fallback `/`.
+
+## Pemilih dalam modal
+
+- Daftar pilihan dalam modal mengikuti `src/components/pasien/PatientMasterSelect.tsx`, termasuk pada pemilih riwayat atau master data lain.
+- Setiap pilihan harus berupa kontrol yang dapat difokuskan dan memakai `hover:bg-slate-100 focus:bg-slate-100 focus:outline-none`; untuk pilihan berbentuk baris tabel, pakai `hover:bg-slate-100 focus-within:bg-slate-100` pada `<tr>`.
+- Jangan memakai transisi pada hover atau fokus. Pertahankan padding, teks `text-xs text-slate-700`, serta state kosong/memuat yang ringkas.
 
 ## Warna dan perilaku
 

@@ -805,7 +805,7 @@ export default function HalamanInputResep() {
           }}
         >
           {modeInput === "nonracikan" ? (
-            <table className="w-full min-w-[1320px] border-collapse text-center text-[11px] text-slate-700">
+            <table className="w-full min-w-[1320px] border-collapse text-center text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
               <caption className="sr-only">Daftar obat umum yang tersedia di depo</caption>
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
@@ -822,7 +822,7 @@ export default function HalamanInputResep() {
                   <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2">Stok</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {!kunjungan ? (
                   <tr><td colSpan={11} className="p-10 text-center text-slate-400">Pilih kunjungan untuk memuat daftar obat.</td></tr>
                 ) : memuatObat ? (
@@ -832,7 +832,7 @@ export default function HalamanInputResep() {
                 ) : katalog.map((item) => {
                   const terpilih = obat.find((baris) => baris.kode_brng === item.kode_brng);
                   return (
-                    <tr key={item.kode_brng} className={terpilih ? "bg-primary-50/60" : "even:bg-slate-50/70"}>
+                    <tr key={item.kode_brng} className={terpilih ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center"><input type="checkbox" checked={Boolean(terpilih)} onChange={() => terpilih ? setObat((lama) => lama.filter((baris) => baris.kode_brng !== item.kode_brng)) : tambahDariKatalog(item)} aria-label={`${terpilih ? "Hapus" : "Pilih"} ${item.nama_brng}`} className="h-4 w-4 accent-primary-600" /></td>
                       <td className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`Jumlah ${item.nama_brng}`} type="number" min="0" step="any" value={terpilih?.jumlah || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, jumlah: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-center text-xs disabled:border-transparent disabled:bg-transparent" /></td>
                       <td className="border-b border-r border-slate-100 px-1.5 py-1"><div className="flex min-w-0 items-center gap-1"><input disabled={!terpilih} aria-label={`Aturan pakai ${item.nama_brng}`} value={terpilih?.aturan_pakai || ""} onChange={(event) => setObat((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, aturan_pakai: event.target.value } : baris))} onKeyDown={(event) => { if (event.key === "ArrowRight" && terpilih) { event.preventDefault(); bukaPemilihAturan({ jenis: "obat", kode: item.kode_brng }); } }} placeholder={terpilih ? "Contoh: 3 x 1 sesudah makan" : ""} className="h-7 min-w-0 flex-1 rounded border border-slate-300 px-2 text-left text-xs disabled:border-transparent disabled:bg-transparent" /><button type="button" disabled={!terpilih} onClick={() => bukaPemilihAturan({ jenis: "obat", kode: item.kode_brng })} aria-label={`Pilih aturan pakai ${item.nama_brng}`} title="Pilih aturan pakai" className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100 disabled:border-transparent disabled:bg-transparent disabled:text-slate-300"><FontAwesomeIcon icon={faList} className="h-3 w-3" /></button></div></td>
@@ -851,7 +851,7 @@ export default function HalamanInputResep() {
               </tbody>
             </table>
           ) : (
-            <table className="w-full min-w-[1120px] border-collapse text-center text-[11px] text-slate-700">
+            <table className="w-full min-w-[1120px] border-collapse text-center text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
               <caption className="sr-only">Daftar bahan obat untuk racikan aktif</caption>
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
@@ -867,7 +867,7 @@ export default function HalamanInputResep() {
                   <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2">Stok</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 bg-white">
                 {!kunjungan ? (
                   <tr><td colSpan={10} className="p-10 text-center text-slate-400">Pilih kunjungan untuk memuat bahan racikan.</td></tr>
                 ) : memuatObat ? (
@@ -877,7 +877,7 @@ export default function HalamanInputResep() {
                 ) : katalog.map((item) => {
                   const terpilih = bahan.find((baris) => baris.kode_brng === item.kode_brng);
                   return (
-                    <tr key={item.kode_brng} className={terpilih ? "bg-primary-50/60" : "even:bg-slate-50/70"}>
+                    <tr key={item.kode_brng} className={terpilih ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}>
                       <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center"><input type="checkbox" checked={Boolean(terpilih)} onChange={() => terpilih ? setBahan((lama) => lama.filter((baris) => baris.kode_brng !== item.kode_brng)) : tambahDariKatalog(item)} aria-label={`${terpilih ? "Hapus" : "Pilih"} ${item.nama_brng}`} className="h-4 w-4 accent-primary-600" /></td>
                       {(['p1', 'p2', 'kandungan', 'jumlah'] as const).map((kolom) => (
                         <td key={kolom} className="border-b border-r border-slate-100 px-1.5 py-1"><input disabled={!terpilih} aria-label={`${kolom} ${item.nama_brng}`} type={kolom === "kandungan" ? "text" : "number"} min={kolom === "kandungan" ? undefined : "0"} step="any" value={terpilih?.[kolom] || ""} onChange={(event) => setBahan((lama) => lama.map((baris) => baris.kode_brng === item.kode_brng ? { ...baris, [kolom]: event.target.value } : baris))} className="h-7 w-full rounded border border-slate-300 px-2 text-center text-xs disabled:border-transparent disabled:bg-transparent" /></td>

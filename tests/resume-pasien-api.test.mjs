@@ -143,6 +143,16 @@ test('GET mengembalikan identitas, resume, daftar, dan unggulan', async () => {
   assert.deepEqual(kunjungan[1], [form.no_rawat]);
 });
 
+test('GET riwayat resume memakai sumber data dan parameter yang diizinkan', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest(`http://localhost/api/resume-pasien?resource=riwayat&jenis=laborat&no_rawat=${encodeURIComponent(form.no_rawat)}&cari=Hb`));
+  assert.equal(response.status, 200);
+  const json = await response.json();
+  assert.equal(json.success, true);
+  const riwayat = calls.find(([sql]) => typeof sql === 'string' && /FROM detail_periksa_lab/.test(sql));
+  assert.deepEqual(riwayat[1], [form.no_rawat, '%Hb%', '%Hb%']);
+});
+
 test('POST memakai transaksi dan identitas dokter dari sesi', async () => {
   const { api, calls } = handler({ admin: false, username: 'D1' });
   const response = await api.POST(permintaan('POST', { ...form, kd_dokter: 'D99' }));

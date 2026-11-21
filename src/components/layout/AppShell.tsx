@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
@@ -9,6 +9,7 @@ import { AboutModal } from "@/components/common/AboutModal";
 import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import type { HospitalSetting } from "@/lib/types/auth";
+import type { MenuItem } from "@/lib/types/menu";
 
 interface NavigationContextType {
   isMenuOpen: boolean;
@@ -29,12 +30,21 @@ export function useNavigation() {
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated, setIsLoginModalOpen, isLocked } = useAuth();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [setting, setSetting] = useState<HospitalSetting | null>(null);
+  const isMenuOpen = pathname === "/" && searchParams.get("menu") === "1";
+
+  const setIsMenuOpen = (open: boolean) => {
+    if (open) {
+      router.replace("/?menu=1");
+      return;
+    }
+    router.replace("/");
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,7 +63,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => controller.abort();
   }, []);
 
-  const handleModuleClick = (title: string) => {
+  const handleModuleClick = (module: string | MenuItem) => {
+    const title = typeof module === "string" ? module : module.title;
     if (title === "Keluar Aplikasi") {
       setToastMessage("Untuk menutup aplikasi, Anda dapat menutup tab peramban (browser).");
       return;
@@ -67,7 +78,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       return;
     }
 
-    setIsMenuOpen(false);
+    if (typeof module !== "string" && module.href) {
+      router.push(module.href);
+      return;
+    }
 
     if (
       title === "Jadwal Praktek"
@@ -177,8 +191,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const handleToggleMenu = () => {
     if (pathname !== "/") {
-      router.push("/");
-      setIsMenuOpen(true);
+      router.push("/?menu=1");
     } else {
       setIsMenuOpen(!isMenuOpen);
     }

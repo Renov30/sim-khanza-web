@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDatabase, faFileMedical, faFlask, faHeartPulse, faMagnifyingGlass, faTooth, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -62,6 +63,7 @@ function formKosong(nip = ""): FormPemeriksaan {
 }
 
 export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanRalanTabProps>(function PemeriksaanRalanTab({ pasien, onStatusPanelChange }, ref) {
+  const router = useRouter();
   const [form, setForm] = useState<FormPemeriksaan>(() => formKosong(pasien.kd_dokter));
   const [data, setData] = useState<Pemeriksaan[]>([]);
   const [pegawai, setPegawai] = useState<Pegawai[]>([]);
@@ -265,7 +267,7 @@ export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanR
     { label: "Data PCare", ikon: faDatabase },
     { label: "ICare FKTP", ikon: faHeartPulse },
     { label: "Odontogram", ikon: faTooth },
-    { label: "Hasil Periksa Lab", ikon: faFlask },
+    { label: "Hasil Periksa Lab", ikon: faFlask, aksi: () => router.push(`/laboratorium/periksa-pk?no_rawat=${encodeURIComponent(pasien.no_rawat)}`) },
     { label: "Permintaan Lab", ikon: faFileMedical },
   ];
 
@@ -322,7 +324,7 @@ export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanR
         </div>
 
         <aside aria-label="Pintasan pemeriksaan" className="grid content-start gap-1 sm:grid-cols-2 xl:grid-cols-1">
-          {pintasan.map((item) => <button key={item.label} type="button" onClick={() => setToast({ pesan: `${item.label} belum terintegrasi pada halaman ini.`, tipe: "info" })} className="flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-left text-[11px] font-medium text-slate-700 hover:border-primary-300 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"><FontAwesomeIcon icon={item.ikon} className="w-4 text-primary-600" /><span>{item.label}</span></button>)}
+          {pintasan.map((item) => <button key={item.label} type="button" onClick={item.aksi || (() => setToast({ pesan: `${item.label} belum terintegrasi pada halaman ini.`, tipe: "info" }))} className="flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-left text-[11px] font-medium text-slate-700 hover:border-primary-300 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"><FontAwesomeIcon icon={item.ikon} className="w-4 text-primary-600" /><span>{item.label}</span></button>)}
         </aside>
       </div>
     </section>

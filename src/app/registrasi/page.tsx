@@ -705,12 +705,13 @@ export default function HalamanRegistrasi() {
           role="tabpanel"
           aria-labelledby={`tab-registrasi-${tabTabel}`}
           tabIndex={0}
-          className="flex-1 overflow-auto"
+          className="min-h-0 flex-1 overflow-auto"
+          aria-busy={memuat}
         >
           {tabTabel === "awal" ? (
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="min-w-[82rem] w-full border-collapse text-left text-[11px]">
             <caption className="sr-only">Daftar registrasi pasien. Pilih nomor registrasi untuk memuat data ke formulir.</caption>
-            <thead className="bg-slate-100/90 sticky top-0 z-10 text-slate-700 font-bold border-b border-slate-200 shadow-2xs">
+            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
               <tr>
                 <th scope="col" className="py-2 px-2.5 text-center w-14">No.Reg</th>
                 <th scope="col" className="py-2 px-2.5">No. Rawat</th>
@@ -726,16 +727,16 @@ export default function HalamanRegistrasi() {
                 <th scope="col" className="py-2 px-2.5 text-center">Status Bayar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
+            <tbody className="divide-y divide-slate-100 bg-white font-mono text-[11px]">
               {memuat ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-500 font-sans">
+                  <td colSpan={12} className="h-36 !border-0 text-center font-sans text-slate-500">
                     Memuat data registrasi...
                   </td>
                 </tr>
               ) : dataTampilAwal.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-400 font-sans">
+                  <td colSpan={12} className="h-44 !border-0 text-center font-sans text-slate-400">
                     <p>Tidak ada data registrasi yang sesuai</p>
                   </td>
                 </tr>
@@ -749,7 +750,7 @@ export default function HalamanRegistrasi() {
                     onKeyDown={(event) => bukaMenuKonteksDariKeyboard(event, item)}
                     className={`cursor-pointer ${
                       terpilih?.no_rawat === item.no_rawat
-                        ? "bg-primary-50/90 text-slate-700"
+                        ? "bg-primary-100 text-slate-700"
                         : "hover:bg-slate-50/80 text-slate-700"
                     }`}
                   >
@@ -805,9 +806,9 @@ export default function HalamanRegistrasi() {
             </tbody>
           </table>
           ) : (
-            <table className="w-full border-collapse text-left text-xs">
+            <table className="min-w-[82rem] w-full border-collapse text-left text-[11px]">
               <caption className="sr-only">Daftar rujukan internal poli.</caption>
-              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/90 font-bold text-slate-700 shadow-2xs">
+              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
                 <tr>
                   <th scope="col" className="px-2.5 py-2">No. Rawat</th>
                   <th scope="col" className="px-2.5 py-2">Tgl & Jam Reg</th>
@@ -823,12 +824,12 @@ export default function HalamanRegistrasi() {
                   <th scope="col" className="px-2.5 py-2 text-center">Stts Rawat</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
+              <tbody className="divide-y divide-slate-100 bg-white font-mono text-[11px]">
                 {memuat ? (
-                  <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-500">Memuat rujukan internal poli...</td></tr>
-                ) : dataTampilRujukan.length === 0 ? (
-                  <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-400">Tidak ada rujukan internal poli yang sesuai</td></tr>
-                ) : dataTampilRujukan.map((item) => (
+                  <tr><td colSpan={12} className="h-36 !border-0 text-center font-sans text-slate-500">Memuat rujukan internal poli...</td></tr>
+                ) : dataRujukan.length === 0 ? (
+                  <tr><td colSpan={12} className="h-44 !border-0 text-center font-sans text-slate-400">Tidak ada rujukan internal poli yang sesuai</td></tr>
+                ) : dataRujukan.map((item) => (
                   <tr
                     key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
                     tabIndex={0}
