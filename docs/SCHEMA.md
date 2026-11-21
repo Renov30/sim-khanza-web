@@ -40,6 +40,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 
 ## Komponen utama aplikasi
 
+- `src/lib/constants/menus.ts`: katalog menu A–T dari `cmbMenu`/`isCombo()` `frmUtama.java` (1.139 entri) plus entri kurasi; ID mengikuti variabel komponen Java dan `permissionKey` mengikuti `akses.getXxx()`.
 - `src/lib/db.ts`: connection pool database Khanza aktif.
 - `src/lib/auth.ts`: autentikasi admin/user Khanza, token HMAC, dan cookie sesi.
 - `src/lib/pasien/`: field, master, penyimpanan, akses, dan penomoran pasien.
@@ -71,7 +72,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 
 Pasien mendukung pencarian, tambah, ubah, nomor RM server, master wilayah/penjamin, serta TNI/POLRI. Penghapusan pasien masih berisiko karena belum mempunyai pemeriksaan bisnis selengkap registrasi.
 
-Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
+Registrasi mendukung filter, pagination, registrasi awal, rujukan internal, nomor rawat/antrean server, tarif server, umur, status baru/lama, transaksi rujukan, dan penghapusan terbatas. Kedua tabel membuka menu kontekstual sesuai `jPopupMenu1`/`jPopupMenu2` `DlgReg.java`: aksi dengan halaman web tersedia langsung membuka halaman terkait, `Belum Terbit SEP BPJS`/`Sudah Terbit SEP BPJS` mengubah filter `sep` pada `/api/registrasi`, dan `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil. Registrasi terbayar atau yang sudah memiliki pelayanan tidak dapat diubah/dihapus melalui alur biasa.
 
 Rawat jalan menampilkan daftar registrasi ralan dengan tab registrasi awal/rujukan internal, filter tanggal, penjamin, poli, dokter, status, dan status bayar. Tabelnya menyediakan menu klik kanan sesuai grup `DlgKasirRalan.java`: aksi dengan halaman web tersedia langsung membuka halaman tersebut, `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil, dan item belum tersedia hanya memberi toast. Modul tindakan ralan mendukung penanganan dokter, petugas, serta gabungan dengan tarif tervalidasi server dan penyimpanan transaksional. Pemeriksaan klinis umum mendukung tanda vital, SOAP, penampil data per kunjungan, dan CRUD terbatas. Obstetri, ginekologi, diagnosa, catatan dokter, pembayaran, dan cetak nota belum tersedia sepenuhnya.
 
@@ -85,9 +86,10 @@ Pintasan `Resume Pasien` pada sidebar tindakan ralan membuka `/resume-pasien?no_
 
 `tindakan-rawat-inap` dibuka dari kolom No. Rawat pada `/rawat-inap` dengan `?no_rawat=...` dan memakai tiga penanganan yang sama seperti ralan. Tarif diambil dari `jns_perawatan_inap` dan disaring menurut penjamin `reg_periksa`, bangsal, serta kelas kamar inap aktif (`kamar_inap.stts_pulang = '-'`). Penyimpanan menulis `rawat_inap_dr`, `rawat_inap_pr`, atau `rawat_inap_drpr` dalam satu transaksi dengan `FOR UPDATE` pada kunjungan; kunjungan batal, billing yang sudah dibuat, kamar aktif yang hilang, dan tarif yang tidak sesuai ditolak server. Tabel ini tidak memiliki `stts_bayar`, sehingga kolom status pada riwayat mengikuti `reg_periksa.status_bayar`.
 
+IGD menampilkan kunjungan `reg_periksa` untuk `kd_poli = 'IGDK'` dengan filter periode dua tanggal, kata kunci 13 kolom, status periksa, dan status SEP sesuai `DlgIgd.java`. `/api/igd` memakai allowlist, validasi tanggal, query berparameter, hitung `total`, dan batas `limit` 1–100. Tabelnya memakai `MenuKonteksTabel` dengan 16 grup dari `jPopupMenu1`; aksi yang belum memiliki halaman Khanza Web hanya menampilkan toast, sedangkan `Belum Terbit SEP BPJS` dan `Sudah Terbit SEP BPJS` mengubah filter SEP.
+
 ### Eksperimental
 
-- `/api/igd`
 - `/api/rawat-inap`
 - `/api/laboratorium/*`
 - `/api/radiologi/*`

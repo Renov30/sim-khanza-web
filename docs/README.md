@@ -6,7 +6,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 | Area | Status | Catatan |
 |---|---|---|
-| Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab. |
+| Shell, menu, dan autentikasi | Aktif | Login Khanza, cookie sesi, penguncian UI, sinkronisasi lintas tab, dan katalog 20 kategori / 1.139 menu dari `frmUtama.java`. |
 | Data pasien | Aktif | Cari, tambah, ubah, penomoran RM, master pasien, TNI/POLRI. |
 | Data obat, alkes & BHP | Aktif | Master `databarang`, kode otomatis, harga, expire, status aktif/nonaktif, dan pagination. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
@@ -23,6 +23,13 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
 
 ## Riwayat pengembangan
+
+### 21 November 2026 — daftar menu lengkap dari frmUtama
+
+- `src/lib/constants/menus.ts` kini memuat 1.139 entri menu hasil adaptasi `cmbMenu` A–T dan seluruh `Panelmenu.add(...)` pada `isCombo()` `frmUtama.java`, ditambah entri kurasi yang sudah ada.
+- ID entri memakai slug variabel komponen Java (misalnya `btn-registrasi`, `btn-permintaan-lab`, `btn-setup-aplikasi`) agar mudah ditelusur kembali ke referensi. Izin dan urutan kategori mengikuti Java; entri tanpa izin tetap tampil sebagai informasi.
+- Perubahan ini hanya melengkapi katalog menu. Halaman tujuan, otorisasi endpoint, dan mutasi tetap mengikuti aturan modul masing-masing; tidak semua menu Java sudah memiliki halaman web.
+- Verifikasi dengan `npm run test:menu-utama`.
 
 ### 6 November 2026 — fondasi
 
@@ -177,6 +184,22 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Mutasi memakai transaksi, `FOR UPDATE`, named lock per nomor rawat/tanggal, validasi server, query berparameter, retry benturan nomor rujuk, dan pelepasan koneksi. Status kamar diubah menjadi `KOSONG` saat pulang dan `ISI`/`KOSONG` saat pindah.
 - Komponen `Modal`, `PanelBawah`, `GridFormulirModul`, dan `CustomSelect` dipakai agar dialog mengikuti sistem desain proyek. Verifikasi dengan `npm run test:rawat-inap-mutasi`.
 
+### 21 November 2026 — menu klik kanan registrasi
+
+- Tabel `/registrasi` (registrasi awal dan rujukan internal) membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) sesuai `jPopupMenu1` dan `jPopupMenu2` `DlgReg.java`, tanpa separator Java. Registrasi awal memuat 17 grup / 339 node; rujukan internal memuat 10 grup / 39 node.
+- Aksi dengan halaman web tersedia langsung membuka Resume, Riwayat Perawatan, Diagnosa/Tindakan Rawat Jalan, Lab, Radiologi, Rawat Inap, Resep Dokter, dan Copy Resep. `Belum Terbit SEP BPJS` serta `Sudah Terbit SEP BPJS` mengubah filter SEP; `Urutkan Data Berdasar` mengurutkan baris yang sedang tampil.
+- `/api/registrasi` menerima `sep=Semua|Belum|Sudah` dengan allowlist dan subquery `password_asuransi`/`bridging_sep` seperti aturan `terbitsep` Java. Filter SEP juga tersedia di `PanelBawah` agar bisa dilihat dan direset.
+- Item cetak, surat, bridging, status, hapus data, dan hapus rujukan yang belum memiliki alur web hanya menampilkan toast informatif dan tidak melakukan mutasi.
+- Verifikasi dengan `npm run test:registrasi` dan `npm run test:menu-konteks`.
+
+### 21 November 2026 — filter dan menu klik kanan IGD
+
+- `/igd` memakai `PanelBawah` untuk periode dua tanggal (`DTPCari1`/`DTPCari2`), `Kata kunci`, `Cari`, dan `Semua`. Default periode mengikuti `isCek()` `DlgIgd.java`, yaitu hari ini; filter tambahan Status dan SEP disediakan sebagai adaptasi web.
+- `/api/igd` menyaring `kd_poli = 'IGDK'`, memakai periode inklusif hingga akhir tanggal, kata kunci 13 kolom sesuai `tampil()` Java, allowlist `stts` dan `sep`, query berparameter, hitung `total`, serta urutan `no_rawat`. Parameter tidak valid ditolak sebelum database.
+- Tabel `/igd` membuka menu klik kanan (`Shift+F10` / tombol Context Menu juga didukung) dengan seluruh 272 node dan 16 grup dari `jPopupMenu1` `DlgIgd.java` tanpa separator Java. Pencarian menu dan navigasi keyboard memakai `MenuKonteksTabel`.
+- Item dengan halaman web tersedia langsung membuka Resume, Riwayat, Tindakan, Lab, Radiologi, Rawat Inap, dan Resep. `Belum Terbit SEP BPJS` serta `Sudah Terbit SEP BPJS` mengubah filter SEP sesuai `terbitsep` Java; item lain hanya menampilkan toast informatif dan tidak melakukan mutasi.
+- Verifikasi dengan `npm run test:igd` dan `npm run test:menu-konteks`.
+
 ### 20 November 2026 — copy resep
 
 - Halaman `/farmasi/copy-resep` mengadaptasi `DlgCopyResep`: hanya menampilkan riwayat pasien dan dokter peresep yang sama, mendukung filter tanggal, pencarian, rincian obat/racikan, serta aksi `Copy`, `Ubah`, dan `Hapus`.
@@ -222,6 +245,7 @@ npm run test:rawat-jalan
 npm run test:tindakan-ranap
 npm run test:rawat-inap
 npm run test:rawat-inap-mutasi
+npm run test:igd
 npm run test:master-obat
 npm run test:resep-obat
 npm run test:copy-resep

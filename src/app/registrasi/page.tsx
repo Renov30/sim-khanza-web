@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
+import { MenuKonteksRegistrasi } from "@/components/modul/MenuKonteksRegistrasi";
+import {
+  MENU_KONTEKS_REGISTRASI,
+  MENU_KONTEKS_RUJUKAN_INTERNAL,
+  tentukanAksiMenu,
+  type AksiMenuKonteks,
+  type BarisMenuKonteks,
+  type ItemMenuKonteks,
+  type KunciSortRegistrasi,
+} from "@/components/modul/menu-konteks-registrasi-data";
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
@@ -81,6 +92,24 @@ interface RujukanInternal {
   status_bayar: string;
 }
 
+interface UrutanTabel {
+  kunci: KunciSortRegistrasi;
+  arah: "asc" | "desc";
+}
+
+function nilaiSort(item: PasienReg | RujukanInternal, kunci: KunciSortRegistrasi): string {
+  switch (kunci) {
+    case "tanggal": return `${item.tgl_registrasi} ${item.jam_reg}`;
+    case "dokter": return item.nm_dokter;
+    case "poli": return item.nm_poli;
+    case "penjab": return item.png_jawab || item.kd_pj || "";
+    case "status": return item.stts;
+    case "no_reg": return "no_reg" in item ? item.no_reg : "";
+    case "no_rm": return item.no_rkm_medis;
+    default: return item.no_rawat;
+  }
+}
+
 function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minmax(0,1fr)]"}:{label:string;children:React.ReactNode;labelWidth?:string}) {
   return <div className={`grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[7.5rem_minmax(0,1fr)] ${labelWidth} min-w-0`} role="group" aria-label={label}>
     <span className="font-sans text-xs font-normal text-slate-700 sm:text-right whitespace-nowrap">{label} :</span>
@@ -89,6 +118,7 @@ function RegistrationField({label,children,labelWidth="lg:grid-cols-[4.5rem_minm
 }
 
 export default function HalamanRegistrasi() {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<PasienReg[]>([]);
@@ -114,9 +144,12 @@ export default function HalamanRegistrasi() {
   const [filterDokter, setFilterDokter] = useState("");
   const [filterPoli, setFilterPoli] = useState("");
   const [statusBayar, setStatusBayar] = useState("Semua");
+  const [statusSep, setStatusSep] = useState("Semua");
   const [halaman, setHalaman] = useState(1);
   const [totalData, setTotalData] = useState(0);
   const [versiTabel, setVersiTabel] = useState(0);
+  const [menuKonteks, setMenuKonteks] = useState<{ x: number; y: number; baris: BarisMenuKonteks } | null>(null);
+  const [urutanTabel, setUrutanTabel] = useState<UrutanTabel | null>(null);
   const permintaanTabel = useRef<AbortController | null>(null);
   const permintaanPasien = useRef<AbortController | null>(null);
   const timerPasien = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -283,6 +316,7 @@ export default function HalamanRegistrasi() {
       if (tanggalMulai) url.searchParams.set("tanggal_mulai", tanggalMulai);
       if (tanggalSelesai) url.searchParams.set("tanggal_selesai", tanggalSelesai);
       url.searchParams.set("status_bayar", statusBayar);
+      if (statusSep !== "Semua") url.searchParams.set("sep", statusSep);
       url.searchParams.set("page", String(halaman));
       if (filterDokter.trim()) url.searchParams.set("kd_dokter", filterDokter.trim());
       if (filterPoli.trim()) url.searchParams.set("kd_poli", filterPoli.trim());
@@ -308,7 +342,7 @@ export default function HalamanRegistrasi() {
     } finally {
       if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunciFilter, statusBayar, halaman, tampilkanToast]);
+  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterDokter, filterPoli, kataKunciFilter, statusBayar, statusSep, halaman, tampilkanToast]);
 
   // Hanya kata kunci yang ditunda; filter lain langsung memuat data.
   useEffect(() => {
@@ -350,6 +384,35 @@ export default function HalamanRegistrasi() {
     setSttsBayar(item.status_bayar || "Belum Bayar");
     setAsalRujukan(item.asal_rujukan || "-");
   };
+
+  const bukaMenuKonteks = useCallback((event: ReactMouseEvent<HTMLTableRowElement>, baris: BarisMenuKonteks) => {
+    event.preventDefault();
+    setMenuKonteks({ x: event.clientX, y: event.clientY, baris });
+  }, []);
+
+  const bukaMenuKonteksDariKeyboard = useCallback((event: ReactKeyboardEvent<HTMLTableRowElement>, baris: BarisMenuKonteks) => {
+    if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+    event.preventDefault();
+    const batas = event.currentTarget.getBoundingClientRect();
+    setMenuKonteks({ x: batas.left + 16, y: batas.top + 16, baris });
+  }, []);
+
+  const pilihMenuKonteks = useCallback((item: ItemMenuKonteks) => {
+    const konteks = menuKonteks;
+    setMenuKonteks(null);
+    if (!konteks) return;
+    const aksi: AksiMenuKonteks = tentukanAksiMenu(item, konteks.baris);
+    if (aksi.jenis === "rute") router.push(aksi.rute);
+    else if (aksi.jenis === "filter") {
+      setStatusSep(aksi.nilai);
+      setHalaman(1);
+      tampilkanToast(`Filter SEP diubah menjadi ${aksi.nilai}.`, "info");
+    } else if (aksi.jenis === "urut") {
+      setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
+    } else {
+      tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+    }
+  }, [menuKonteks, router, tampilkanToast]);
 
   // Simpan
   const handleSimpan = async () => {
@@ -546,9 +609,24 @@ export default function HalamanRegistrasi() {
     setModalPasienBuka(false);
   };
 
-  const dataTersaring = data;
+  const dataTampilAwal = useMemo(() => {
+    if (!urutanTabel) return data;
+    return [...data].sort((a, b) => {
+      const hasil = nilaiSort(a, urutanTabel.kunci).localeCompare(nilaiSort(b, urutanTabel.kunci), "id", { numeric: true, sensitivity: "base" });
+      return urutanTabel.arah === "asc" ? hasil : -hasil;
+    });
+  }, [data, urutanTabel]);
 
-  const inputClass = "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600";
+  const dataTampilRujukan = useMemo(() => {
+    if (!urutanTabel) return dataRujukan;
+    return [...dataRujukan].sort((a, b) => {
+      const hasil = nilaiSort(a, urutanTabel.kunci).localeCompare(nilaiSort(b, urutanTabel.kunci), "id", { numeric: true, sensitivity: "base" });
+      return urutanTabel.arah === "asc" ? hasil : -hasil;
+    });
+  }, [dataRujukan, urutanTabel]);
+
+  const inputClass =
+ "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600";
   const input = (label:string,value:string,change?: (value:string)=>void,readOnly=false,placeholder='') => (
     <input aria-label={label} type="text" value={value} onChange={change ? (event)=>change(event.target.value) : undefined} readOnly={readOnly} placeholder={placeholder} className={`${inputClass} w-full`} />
   );
@@ -702,17 +780,20 @@ export default function HalamanRegistrasi() {
                     Memuat data registrasi...
                   </td>
                 </tr>
-              ) : dataTersaring.length === 0 ? (
+              ) : dataTampilAwal.length === 0 ? (
                 <tr>
                   <td colSpan={12} className="py-8 text-center text-slate-400 font-sans">
                     <p>Tidak ada data registrasi yang sesuai</p>
                   </td>
                 </tr>
               ) : (
-                dataTersaring.map((item) => (
+                dataTampilAwal.map((item) => (
                   <tr
                     key={item.no_rawat}
+                    tabIndex={0}
                     onClick={() => handlePilihData(item)}
+                    onContextMenu={(event) => bukaMenuKonteks(event, item)}
+                    onKeyDown={(event) => bukaMenuKonteksDariKeyboard(event, item)}
                     className={`cursor-pointer ${
                       terpilih?.no_rawat === item.no_rawat
                         ? "bg-primary-50/90 text-slate-700"
@@ -792,12 +873,15 @@ export default function HalamanRegistrasi() {
               <tbody className="divide-y divide-slate-150 font-mono text-[11px]">
                 {memuat ? (
                   <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-500">Memuat rujukan internal poli...</td></tr>
-                ) : dataRujukan.length === 0 ? (
+                ) : dataTampilRujukan.length === 0 ? (
                   <tr><td colSpan={12} className="py-8 text-center font-sans text-slate-400">Tidak ada rujukan internal poli yang sesuai</td></tr>
-                ) : dataRujukan.map((item) => (
+                ) : dataTampilRujukan.map((item) => (
                   <tr
                     key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
+                    tabIndex={0}
                     onClick={() => setRujukanTerpilih(item)}
+                    onContextMenu={(event) => bukaMenuKonteks(event, item)}
+                    onKeyDown={(event) => bukaMenuKonteksDariKeyboard(event, item)}
                     className={`cursor-pointer ${rujukanTerpilih?.no_rawat === item.no_rawat && rujukanTerpilih.kd_dokter === item.kd_dokter && rujukanTerpilih.kd_poli === item.kd_poli ? "bg-primary-50/90" : "hover:bg-slate-50/80"} text-slate-700`}
                   >
                     <td className="px-2.5 py-2">{item.no_rawat}</td>
@@ -842,6 +926,14 @@ export default function HalamanRegistrasi() {
                   </CustomSelect>
                 </div>
               </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="whitespace-nowrap font-normal text-slate-700">SEP :</span>
+                <div className="w-24">
+                  <CustomSelect aria-label="Filter status SEP" value={statusSep} onChange={(event)=>{setStatusSep(event.target.value);setHalaman(1);}} className="h-7 py-0.5 font-normal rounded-md">
+                    <option value="Semua">Semua</option><option value="Belum">Belum</option><option value="Sudah">Sudah</option>
+                  </CustomSelect>
+                </div>
+              </div>
             </div>
           }
           onSimpan={tabTabel === "awal" ? handleSimpan : undefined}
@@ -858,6 +950,7 @@ export default function HalamanRegistrasi() {
             setFilterDokter("");
             setFilterPoli("");
             setStatusBayar("Semua");
+            setStatusSep("Semua");
             setHalaman(1);
             setVersiTabel((versi) => versi + 1);
           }}
@@ -1018,6 +1111,16 @@ export default function HalamanRegistrasi() {
         onBatal={() => setDialogHapusBuka(false)}
         onKonfirmasi={handleKonfirmasiHapus}
         sedangMemproses={sedangMenghapus}
+      />
+
+      <MenuKonteksRegistrasi
+        terbuka={menuKonteks !== null}
+        x={menuKonteks?.x || 0}
+        y={menuKonteks?.y || 0}
+        baris={menuKonteks?.baris || null}
+        menu={tabTabel === "awal" ? MENU_KONTEKS_REGISTRASI : MENU_KONTEKS_RUJUKAN_INTERNAL}
+        onPilih={pilihMenuKonteks}
+        onTutup={() => setMenuKonteks(null)}
       />
 
       {/* Notifikasi */}
