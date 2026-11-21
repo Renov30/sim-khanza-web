@@ -179,8 +179,8 @@ export function CopyResepDialog({ terbuka, noRawat, noRm, namaPasien, status, on
                 <tr><td colSpan={7} className="px-2 py-10 text-center text-slate-400">Tidak ada resep pada kunjungan sebelumnya.</td></tr>
               ) : items.map((resep) => (
                 <Fragment key={resep.no_resep}>
-                  <tr className={terpilih === resep.no_resep ? "bg-primary-50" : ""} onDoubleClick={() => setTerpilih(resep.no_resep)}>
-                    <td className="whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5"><button type="button" onClick={() => setTerpilih(resep.no_resep)} className="font-mono text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600">{resep.no_resep}</button></td>
+                  <tr className={terpilih === resep.no_resep ? "bg-primary-100" : ""} onDoubleClick={() => setTerpilih((lama) => lama === resep.no_resep ? null : resep.no_resep)}>
+                    <td className="whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5"><button type="button" onClick={() => setTerpilih((lama) => lama === resep.no_resep ? null : resep.no_resep)} className="font-mono text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600">{resep.no_resep}</button></td>
                     <td className="whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5">{teks(resep.tgl_peresepan)}</td>
                     <td className="whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5">{teks(resep.jam_peresepan)}</td>
                     <td className="whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5 font-mono">{teks(resep.no_rawat)}</td>
@@ -188,7 +188,7 @@ export function CopyResepDialog({ terbuka, noRawat, noRm, namaPasien, status, on
                     <td className="border-b border-r border-slate-100 px-2 py-1.5">{teks(resep.nm_pasien)}<span className="block text-slate-500">{teks(resep.nm_dokter)}</span></td>
                     <td className="whitespace-nowrap border-b border-slate-100 px-2 py-1.5">{teks(resep.status_pelayanan)}</td>
                   </tr>
-                  <tr className={terpilih === resep.no_resep ? "bg-primary-50/60" : ""}>
+                    <tr className={terpilih === resep.no_resep ? "bg-primary-100" : ""}>
                     <td colSpan={7} className="border-b border-slate-100 p-0">
                       <table className="w-full border-collapse text-[10px] text-slate-600">
                         <caption className="sr-only">Rincian resep {resep.no_resep}</caption>

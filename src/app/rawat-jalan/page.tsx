@@ -201,6 +201,10 @@ export default function HalamanRawatJalan() {
   };
 
   const handlePilihData = (item: RawatJalanRow) => {
+    if (barisTerpilih === kunciBaris(item)) {
+      setBarisTerpilih("");
+      return;
+    }
     setBarisTerpilih(kunciBaris(item));
   };
 

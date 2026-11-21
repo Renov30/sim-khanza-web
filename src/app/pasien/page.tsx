@@ -238,6 +238,10 @@ export default function HalamanDataPasien() {
 
   // Pilih baris (getData)
   const handlePilihData = (p: PasienData) => {
+    if (terpilih?.no_rkm_medis === p.no_rkm_medis) {
+      resetForm();
+      return;
+    }
     const values = Object.fromEntries(additionalPatientFields.map((field) => [field.key, String(p[field.key] ?? '')]));
     for(const group of ['tni','polri']) for(const kind of ['golongan','pangkat','satuan','jabatan']) values[`${kind}_${group}`]=String(p[`${kind}_${group}`] ?? '');
     setDetail(values);

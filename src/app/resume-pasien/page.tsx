@@ -262,6 +262,10 @@ function KontenResumePasien() {
   };
 
   const pilihBaris = (baris: BarisResume) => {
+    if (barisTerpilih === baris.no_rawat) {
+      setBarisTerpilih("");
+      return;
+    }
     setBarisTerpilih(baris.no_rawat);
     if (baris.no_rawat === noRawat) {
       if (data) setForm(data.resume);

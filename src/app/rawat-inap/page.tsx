@@ -117,9 +117,14 @@ export default function HalamanRawatInap() {
   }, []);
 
   const pilihBaris = useCallback((item: BarisApi) => {
+    if (barisTerpilih === kunciBaris(item)) {
+      setBarisTerpilih("");
+      setDataTerpilih(null);
+      return;
+    }
     setBarisTerpilih(kunciBaris(item));
     setDataTerpilih(item);
-  }, []);
+  }, [barisTerpilih]);
 
   const dataTampil = useMemo(() => {
     if (!urutanTabel) return data;
@@ -403,7 +408,7 @@ export default function HalamanRawatInap() {
                       }
                     }}
                     aria-current={barisTerpilih === kunciBaris(item) ? "true" : undefined}
-                    className={`hover:bg-slate-50/80 ${barisTerpilih === kunciBaris(item) ? "bg-primary-50/60" : ""}`}
+                    className={`hover:bg-slate-50/80 ${barisTerpilih === kunciBaris(item) ? "bg-primary-100" : ""}`}
                   >
                     <td className="whitespace-nowrap py-2 px-2.5 font-medium text-slate-800">
                       <button

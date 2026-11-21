@@ -422,7 +422,7 @@ export const PemeriksaanObgynTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanO
           <tbody className="divide-y divide-slate-100">
             {memuat ? <tr><td colSpan={kolomAktif.length + 2} className="py-10 text-center text-slate-500">Memuat pemeriksaan {namaJenis}...</td></tr>
               : data.length === 0 ? <tr><td colSpan={kolomAktif.length + 2} className="py-10 text-center text-slate-400">Belum ada pemeriksaan {namaJenis}.</td></tr>
-                : data.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pilih(item)} className={`cursor-pointer ${terpilih?.tgl_perawatan === item.tgl_perawatan && terpilih?.jam_rawat === item.jam_rawat ? "bg-primary-50/90" : "hover:bg-slate-50"}`}>
+                : data.map((item) => <tr key={`${item.tgl_perawatan}-${item.jam_rawat}`} onClick={() => pilih(item)} className={`cursor-pointer ${terpilih?.tgl_perawatan === item.tgl_perawatan && terpilih?.jam_rawat === item.jam_rawat ? "bg-primary-100" : "hover:bg-slate-50"}`}>
                   <td className="whitespace-nowrap px-2.5 py-2">{item.tgl_perawatan}</td>
                   <td className="whitespace-nowrap px-2.5 py-2">{item.jam_rawat}</td>
                   {kolomAktif.map((kolom) => <td key={kolom} className="max-w-72 whitespace-pre-wrap px-2.5 py-2 align-top">{item[kolom] || "-"}</td>)}

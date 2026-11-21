@@ -63,6 +63,10 @@ interface Riwayat {
   stts_bayar: string;
 }
 
+function kunciRiwayat(item: Riwayat) {
+  return `${item.no_rawat}-${item.kd_jenis_prw}-${item.tgl_perawatan}-${item.jam_rawat}-${item.kd_dokter || ""}-${item.nip || ""}`;
+}
+
 const TAB_RAWAT: { id: TabRawatJalan; label: string }[] = [
   { id: "dokter", label: "Penanganan Dokter" },
   { id: "petugas", label: "Penanganan Petugas" },
@@ -114,6 +118,7 @@ export default function HalamanTindakanRawatJalan() {
   const [memperbaruiStatus, setMemperbaruiStatus] = useState(false);
 
   const [riwayat, setRiwayat] = useState<Riwayat[]>([]);
+  const [riwayatTerpilih, setRiwayatTerpilih] = useState<string | null>(null);
   const [memuatRiwayat, setMemuatRiwayat] = useState(true);
   const [tanggalMulai, setTanggalMulai] = useState(hariIni);
   const [tanggalSelesai, setTanggalSelesai] = useState(hariIni);
@@ -574,7 +579,7 @@ export default function HalamanTindakanRawatJalan() {
           <tbody className="divide-y divide-slate-100 bg-white text-[11px] text-slate-700">
             {memuatRiwayat ? <tr><td colSpan={7} className="h-36 !border-0 text-center text-slate-500">Memuat tindakan...</td></tr>
               : riwayat.length === 0 ? <tr><td colSpan={7} className="h-44 !border-0 text-center text-slate-400"><FontAwesomeIcon icon={faStethoscope} className="mb-2 h-7 w-7 text-slate-300" /><p>Belum ada tindakan pada periode ini.</p></td></tr>
-                : riwayat.map((item) => <tr key={`${item.no_rawat}-${item.kd_jenis_prw}-${item.tgl_perawatan}-${item.jam_rawat}-${item.kd_dokter || ""}-${item.nip || ""}`} className="bg-white hover:bg-slate-50/80">
+                : riwayat.map((item) => <tr key={kunciRiwayat(item)} onClick={() => setRiwayatTerpilih((lama) => lama === kunciRiwayat(item) ? null : kunciRiwayat(item))} className={`cursor-pointer ${riwayatTerpilih === kunciRiwayat(item) ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
                   <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.no_rawat}</td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.no_rkm_medis}</span><span className="block text-slate-800">{item.nm_pasien}</span></td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}</td>
