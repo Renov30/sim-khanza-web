@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import type { BarisApi } from "@/lib/types/api";
 import { useRouter } from "next/navigation";
 import { MenuKonteksRawatInap } from "@/components/modul/MenuKonteksRawatInap";
@@ -18,6 +18,8 @@ import {
   faArrowRight,
   faBedPulse,
   faCheck,
+  faChevronLeft,
+  faChevronRight,
   faCircleExclamation,
   faFileCirclePlus,
   faMagnifyingGlass,
@@ -90,6 +92,7 @@ export default function HalamanRawatInap() {
   const router = useRouter();
   const [data, setData] = useState<BarisApi[]>([]);
   const [totalData, setTotalData] = useState(0);
+  const [halaman, setHalaman] = useState(1);
   const [memuat, setMemuat] = useState(true);
   const [kataKunci, setKataKunci] = useState("");
   const [modeFilter, setModeFilter] = useState<ModeFilter>("belum");
@@ -107,6 +110,7 @@ export default function HalamanRawatInap() {
   const [dialogPindah, setDialogPindah] = useState<BarisRawatInapMutasi | null>(null);
   const [hasilPulang, setHasilPulang] = useState<HasilPulang | null>(null);
   const [dialogLanjutan, setDialogLanjutan] = useState<"mati" | "rujuk" | null>(null);
+  const permintaanTabel = useRef<AbortController | null>(null);
 
   const tampilkanToast = useCallback((pesan: string, tipe: "info" | "sukses" | "error" = "info") => {
     setToast({ pesan, tipe, key: Date.now() });
@@ -150,6 +154,9 @@ export default function HalamanRawatInap() {
   }, [menuKonteks, router, tampilkanToast]);
 
   const muatData = useCallback(async () => {
+    permintaanTabel.current?.abort();
+    const controller = new AbortController();
+    permintaanTabel.current = controller;
     setMemuat(true);
     setPesanError(null);
     try {
@@ -162,30 +169,38 @@ export default function HalamanRawatInap() {
       if (statusBayar !== "Semua") url.searchParams.set("status_bayar", statusBayar);
       if (bangsal.trim()) url.searchParams.set("bangsal", bangsal.trim());
       if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
+      url.searchParams.set("page", String(halaman));
       url.searchParams.set("limit", "100");
 
-      const res = await fetch(url.toString());
-      const json = await res.json() as { success?: boolean; data?: BarisApi[]; total?: number; error?: string };
+      const res = await fetch(url.toString(), { signal: controller.signal, cache: "no-store" });
+      const json = await res.json() as { success?: boolean; data?: BarisApi[]; total?: number; page?: number; error?: string };
+      if (controller.signal.aborted) return;
       if (json.success) {
         setData(Array.isArray(json.data) ? json.data : []);
         setTotalData(Number(json.total) || 0);
+        setHalaman(Number(json.page) || 1);
       } else {
         setData([]);
         setTotalData(0);
         setPesanError(json.error || "Gagal memuat data rawat inap");
       }
     } catch (err: unknown) {
-      setData([]);
-      setTotalData(0);
-      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
+      if (!controller.signal.aborted) {
+        setData([]);
+        setTotalData(0);
+        setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
+      }
     } finally {
-      setMemuat(false);
+      if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [bangsal, kataKunci, modeFilter, statusBayar, tanggalMulai, tanggalSelesai]);
+  }, [bangsal, halaman, kataKunci, modeFilter, statusBayar, tanggalMulai, tanggalSelesai]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void muatData(), 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      permintaanTabel.current?.abort();
+    };
   }, [muatData]);
 
   const resetFilter = useCallback(() => {
@@ -195,6 +210,7 @@ export default function HalamanRawatInap() {
     setTanggalSelesai(tanggalHariIni());
     setStatusBayar("Semua");
     setBangsal("");
+    setHalaman(1);
     setBarisTerpilih("");
     setDataTerpilih(null);
     setUrutanTabel(null);
@@ -248,7 +264,7 @@ export default function HalamanRawatInap() {
               name="mode-filter-rawat-inap"
               value={nilai}
               checked={modeFilter === nilai}
-              onChange={() => setModeFilter(nilai)}
+              onChange={() => { setModeFilter(nilai); setHalaman(1); }}
               className="h-3 w-3 accent-primary-600"
             />
             {label}
@@ -263,7 +279,7 @@ export default function HalamanRawatInap() {
       <CustomSelect
         containerClassName="w-36"
         value={statusBayar}
-        onChange={(event) => setStatusBayar(event.target.value)}
+        onChange={(event) => { setStatusBayar(event.target.value); setHalaman(1); }}
         aria-label="Status bayar"
       >
         <option value="Semua">Stts. Bayar: Semua</option>
@@ -277,14 +293,14 @@ export default function HalamanRawatInap() {
             id="filter-bangsal-rawat-inap"
             type="text"
             value={bangsal}
-            onChange={(event) => setBangsal(event.target.value)}
+            onChange={(event) => { setBangsal(event.target.value); setHalaman(1); }}
             placeholder="Nama bangsal"
             className="h-7 w-full rounded-md border border-slate-300 px-2 pr-7 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary-600"
           />
           {bangsal && (
             <button
               type="button"
-              onClick={() => setBangsal("")}
+              onClick={() => { setBangsal(""); setHalaman(1); }}
               aria-label="Hapus filter bangsal"
               className="absolute inset-y-0 right-0 flex w-7 items-center justify-center text-slate-400 hover:text-slate-600"
             >
@@ -455,10 +471,10 @@ export default function HalamanRawatInap() {
         jumlahRecord={totalData}
         tanggalMulai={tanggalMulai}
         tanggalSelesai={tanggalSelesai}
-        onGantiTanggalMulai={setTanggalMulai}
-        onGantiTanggalSelesai={setTanggalSelesai}
+        onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }}
+        onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }}
         kataKunci={kataKunci}
-        onGantiKataKunci={setKataKunci}
+        onGantiKataKunci={(nilai) => { setKataKunci(nilai); setHalaman(1); }}
         onCari={() => void muatData()}
         placeholderCari="No. Rawat, No. RM, Pasien, Kamar, Bangsal..."
         filterTambahan={filterTambahan}
@@ -466,6 +482,14 @@ export default function HalamanRawatInap() {
         onCetak={() => tampilkanToast("Cetak laporan rawat inap belum tersedia di Khanza Web.", "info")}
         tombolTambahan={tombolTambahan}
         labelKembali="Keluar"
+        pagination={
+          <>
+            <span>{data.length} dari {totalData} rawat inap · Halaman {halaman} / {Math.max(1, Math.ceil(totalData / 100))}</span>
+            <button type="button" disabled={memuat || halaman <= 1} onClick={() => { setBarisTerpilih(""); setDataTerpilih(null); setHalaman((page) => page - 1); }} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman sebelumnya" title="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" aria-hidden="true" /></button>
+            <button type="button" disabled={memuat || halaman * 100 >= totalData} onClick={() => { setBarisTerpilih(""); setDataTerpilih(null); setHalaman((page) => page + 1); }} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman berikutnya" title="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" aria-hidden="true" /></button>
+          </>
+        }
+        tampilkanRecord={false}
       />
 
       <MenuKonteksRawatInap

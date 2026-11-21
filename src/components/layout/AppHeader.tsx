@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthContext";
@@ -35,6 +35,10 @@ interface AppHeaderProps {
   onAboutClick: () => void;
 }
 
+const tanpaLangganan = () => () => {};
+const snapshotKlien = () => true;
+const snapshotServer = () => false;
+
 export function AppHeader({
   isMenuOpen,
   onToggleMenu,
@@ -43,6 +47,9 @@ export function AppHeader({
 }: AppHeaderProps) {
   const pathname = usePathname();
   const { user, isAuthenticated, hasPermission, setIsLoginModalOpen } = useAuth();
+  const sudahHydrasi = useSyncExternalStore(tanpaLangganan, snapshotKlien, snapshotServer);
+  const autentikasiAktif = sudahHydrasi && isAuthenticated;
+  const penggunaAktif = sudahHydrasi ? user : null;
   const [menuLabTerbuka, setMenuLabTerbuka] = useState(false);
   const [menuRadTerbuka, setMenuRadTerbuka] = useState(false);
   const [menuFarmasiTerbuka, setMenuFarmasiTerbuka] = useState(false);
@@ -70,7 +77,7 @@ export function AppHeader({
   }, []);
 
   const handleToolAction = (permKey: string, title: string) => {
-    if (!isAuthenticated) {
+    if (!autentikasiAktif) {
       setIsLoginModalOpen(true);
       return;
     }
@@ -132,7 +139,7 @@ export function AppHeader({
           {/* 2. Registrasi */}
           <button
             onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
-            disabled={isAuthenticated && !hasPermission("registrasi")}
+            disabled={autentikasiAktif && !hasPermission("registrasi")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
                 ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
@@ -147,7 +154,7 @@ export function AppHeader({
           {/* 3. IGD/UGD */}
           <button
             onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
-            disabled={isAuthenticated && !hasPermission("igd")}
+            disabled={autentikasiAktif && !hasPermission("igd")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
                 ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
@@ -435,7 +442,7 @@ export function AppHeader({
           {/* 7. Rawat Inap */}
           <button
             onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
-            disabled={isAuthenticated && !hasPermission("kamar_inap")}
+            disabled={autentikasiAktif && !hasPermission("kamar_inap")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
                 ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
@@ -450,7 +457,7 @@ export function AppHeader({
           {/* 8. Rawat Jalan */}
           <button
             onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
-            disabled={isAuthenticated && !hasPermission("tindakan_ralan")}
+            disabled={autentikasiAktif && !hasPermission("tindakan_ralan")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
                 ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
@@ -465,7 +472,7 @@ export function AppHeader({
 
         {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
         <div className="ml-auto flex shrink-0 items-center justify-end min-w-0">
-          {isAuthenticated && user ? (
+          {autentikasiAktif && penggunaAktif ? (
             <UserAccountMenu
               onModuleClick={onModuleClick}
               onAboutClick={onAboutClick}

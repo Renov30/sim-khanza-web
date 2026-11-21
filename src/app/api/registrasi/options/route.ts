@@ -51,17 +51,29 @@ export async function GET(req: NextRequest) {
 
     if (jenis === "pasien") {
       const rm = searchParams.get("rm")?.trim();
+      const offsetParameter = searchParams.get("offset");
+      const offset = offsetParameter === null ? 0 : Number(offsetParameter);
+      if (!Number.isInteger(offset) || offset < 0 || offset > 1_000_000) {
+        return NextResponse.json({ success: false, error: "Offset pencarian pasien tidak valid." }, { status: 400 });
+      }
+      const limit = 50;
       const sql = `
         SELECT pasien.no_rkm_medis, pasien.nm_pasien, pasien.jk, pasien.alamat, pasien.namakeluarga, pasien.keluarga,
           pasien.kd_pj, penjab.png_jawab, pasien.no_peserta, pasien.no_tlp, DATE_FORMAT(pasien.tgl_daftar, '%Y-%m-%d') AS tgl_daftar
         FROM pasien
         LEFT JOIN penjab ON penjab.kd_pj = pasien.kd_pj
         ${rm ? "WHERE pasien.no_rkm_medis = ?" : cari ? "WHERE pasien.no_rkm_medis LIKE ? OR pasien.nm_pasien LIKE ? OR pasien.no_ktp LIKE ? OR pasien.alamat LIKE ?" : ""}
-        ORDER BY pasien.no_rkm_medis DESC LIMIT 50
+        ORDER BY pasien.no_rkm_medis DESC LIMIT ? OFFSET ?
       `;
-      const params = rm ? [rm] : cari ? Array(4).fill(`%${cari}%`) : [];
-      const data = await executeQuery(sql, params);
-      return NextResponse.json({ success: true, data });
+      const filterParams = rm ? [rm] : cari ? Array(4).fill(`%${cari}%`) : [];
+      const jumlahAmbil = rm ? 1 : limit + 1;
+      const data = await executeQuery<Record<string, unknown>>(sql, [...filterParams, jumlahAmbil, rm ? 0 : offset]);
+      const hasMore = !rm && data.length > limit;
+      return NextResponse.json({
+        success: true,
+        data: data.slice(0, limit),
+        meta: { hasMore, offset: rm ? 0 : offset, limit },
+      });
     }
 
     if (jenis === "next-rm" || jenis === "next_rm") {

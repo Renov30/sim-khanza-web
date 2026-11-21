@@ -282,6 +282,19 @@ test('opsi IGD memakai unit tetap dan menolak akses tanpa izin', async () => {
   assert.ok(Array.isArray(jsonPasien.data));
   assert.equal(jsonPasien.data[0].no_rkm_medis, '000001');
   assert.ok(queryCalls(pasien.calls).some(({ sql }) => sql.includes('FROM pasien')));
+  const queryPasien = queryCalls(pasien.calls).find(({ sql }) => sql.includes('FROM pasien'));
+  assert.deepEqual(queryPasien.params, ['%Uji%', '%Uji%', '%Uji%', '%Uji%', 51, 0]);
+  assert.deepEqual(jsonPasien.meta, { hasMore: false, offset: 0, limit: 50 });
+
+  const halamanBerikutnya = muatRute('src/app/api/igd/options/route.ts');
+  const resBerikutnya = await halamanBerikutnya.api.GET(new NextRequest('http://localhost/api/igd/options?jenis=pasien&offset=50'));
+  assert.equal(resBerikutnya.status, 200);
+  const queryBerikutnya = queryCalls(halamanBerikutnya.calls).find(({ sql }) => sql.includes('FROM pasien'));
+  assert.deepEqual(queryBerikutnya.params, [51, 50]);
+
+  const offsetTidakValid = muatRute('src/app/api/igd/options/route.ts');
+  assert.equal((await offsetTidakValid.api.GET(new NextRequest('http://localhost/api/igd/options?jenis=pasien&offset=-1'))).status, 400);
+  assert.equal(queryCalls(offsetTidakValid.calls).length, 0);
 
   const ditolak = muatRute('src/app/api/igd/options/route.ts', { aksesDitolak: true });
   assert.equal((await ditolak.api.GET(new NextRequest('http://localhost/api/igd/options'))).status, 403);

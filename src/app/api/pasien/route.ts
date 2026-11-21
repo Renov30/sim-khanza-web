@@ -14,10 +14,24 @@ export async function GET(req: NextRequest) {
   try {
     const denied = await patientAccess(); if (denied) return denied;
     const { searchParams } = new URL(req.url);
-    const cari = searchParams.get("cari") || "";
-    const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
+    const cari = (searchParams.get("cari") || "").trim();
+    const pageParameter = searchParams.get("page");
+    const limitParameter = searchParams.get("limit");
+    const page = pageParameter === null ? 1 : Number(pageParameter);
+    const limit = limitParameter === null ? 100 : Number(limitParameter);
+    if (cari.length > 100 || !Number.isInteger(page) || page < 1 || page > 1_000_000 || !Number.isInteger(limit) || limit < 1 || limit > 200) {
+      return NextResponse.json({ success: false, error: "Filter data pasien tidak valid." }, { status: 400 });
+    }
 
-    let sql = `
+    const where: string[] = [];
+    const params: string[] = [];
+    if (cari) {
+      where.push("(p.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR p.no_ktp LIKE ? OR p.no_peserta LIKE ? OR p.alamat LIKE ?)");
+      params.push(...Array<string>(5).fill(`%${cari}%`));
+    }
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const sql = `
       SELECT 
         p.no_rkm_medis, p.nm_pasien, p.no_ktp, p.jk, 
         p.tmp_lahir, DATE_FORMAT(p.tgl_lahir, '%Y-%m-%d') as tgl_lahir,
@@ -38,25 +52,30 @@ export async function GET(req: NextRequest) {
       LEFT JOIN propinsi pr ON pr.kd_prop=p.kd_prop
       LEFT JOIN pasien_tni pt ON pt.no_rkm_medis = p.no_rkm_medis
       LEFT JOIN pasien_polri pp ON pp.no_rkm_medis = p.no_rkm_medis
-      WHERE 1=1
+      ${whereSql}
+      ORDER BY p.no_rkm_medis DESC
+      LIMIT ? OFFSET ?
     `;
-    const params: (string | number)[] = [];
+    const countSql = `SELECT COUNT(*) AS total FROM pasien p ${whereSql}`;
+    const offset = (page - 1) * limit;
+    const [counts, rows] = await Promise.all([
+      executeQuery<{ total: number }>(countSql, params),
+      executeQuery<Record<string, unknown>>(sql, [...params, limit, offset]),
+    ]);
+    const total = Number(counts[0]?.total || 0);
+    const currentPage = Math.min(page, Math.max(1, Math.ceil(total / limit)));
 
-    if (cari.trim()) {
-      sql += ` AND (p.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ? OR p.no_ktp LIKE ? OR p.no_peserta LIKE ? OR p.alamat LIKE ?)`;
-      const kw = `%${cari.trim()}%`;
-      params.push(kw, kw, kw, kw, kw);
+    if (currentPage !== page) {
+      const rowsUlang = await executeQuery<Record<string, unknown>>(sql, [...params, limit, (currentPage - 1) * limit]);
+      return NextResponse.json({ success: true, data: rowsUlang, total, page: currentPage, limit });
     }
-
-    sql += ` ORDER BY p.no_rkm_medis DESC LIMIT ?`;
-    params.push(limit);
-
-    const rows = await executeQuery<Record<string, unknown>>(sql, params);
 
     return NextResponse.json({
       success: true,
       data: rows,
-      total: rows.length,
+      total,
+      page: currentPage,
+      limit,
     });
   } catch (error: unknown) {
     console.error("Error in GET api/pasien:", error);

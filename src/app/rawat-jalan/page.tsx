@@ -80,7 +80,6 @@ export default function HalamanRawatJalan() {
 
   const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<RawatJalanRow[]>([]);
-  const [terpilih, setTerpilih] = useState<RawatJalanRow | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
 
@@ -198,11 +197,11 @@ export default function HalamanRawatJalan() {
   const gantiTab = (tab: "awal" | "rujukan_internal") => {
     setTabTabel(tab);
     setHalaman(1);
-    setTerpilih(null);
+    setBarisTerpilih("");
   };
 
   const handlePilihData = (item: RawatJalanRow) => {
-    setTerpilih(item);
+    setBarisTerpilih(kunciBaris(item));
   };
 
   const resetFilter = () => {
@@ -216,7 +215,7 @@ export default function HalamanRawatJalan() {
     setStatusPeriksa("Semua");
     setStatusBayar("Semua");
     setHalaman(1);
-    setTerpilih(null);
+    setBarisTerpilih("");
     setVersiTabel((versi) => versi + 1);
   };
 
@@ -317,22 +316,18 @@ export default function HalamanRawatJalan() {
                   <tr
                     key={kunciBaris(item)}
                     tabIndex={0}
-                    onContextMenu={(event) => bukaMenuKonteks(event, item)}
-                    onKeyDown={(event) => bukaMenuKonteksDariKeyboard(event, item)}
-                    aria-current={barisTerpilih === kunciBaris(item) ? "true" : undefined}
-                    className={`text-slate-700 hover:bg-slate-50/80 ${barisTerpilih === kunciBaris(item) ? "bg-primary-50/60" : ""}`}
-                    key={kunciBarisRawatJalan(item)}
                     onClick={() => handlePilihData(item)}
+                    onContextMenu={(event) => bukaMenuKonteks(event, item)}
                     onKeyDown={(event) => {
+                      bukaMenuKonteksDariKeyboard(event, item);
                       if (event.target !== event.currentTarget) return;
                       if (event.key !== "Enter" && event.key !== " ") return;
                       event.preventDefault();
                       handlePilihData(item);
                     }}
-                    tabIndex={0}
-                    aria-current={terpilih && kunciBarisRawatJalan(terpilih) === kunciBarisRawatJalan(item) ? "true" : undefined}
+                    aria-current={barisTerpilih === kunciBaris(item) ? "true" : undefined}
                     className={`cursor-pointer text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-700 ${
-                      terpilih && kunciBarisRawatJalan(terpilih) === kunciBarisRawatJalan(item)
+                      barisTerpilih === kunciBaris(item)
                         ? "bg-primary-100"
                         : "bg-white hover:bg-slate-50/80"
                     }`}

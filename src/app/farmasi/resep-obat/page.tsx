@@ -650,9 +650,10 @@ export default function HalamanInputResep() {
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
       <section className="shrink-0 rounded-lg border border-slate-200/80 bg-white p-3 shadow-sm">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <div className="space-y-1.5 font-sans text-xs font-normal text-slate-700">
-          <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Kunjungan pasien">
+        <div className="space-y-3 font-sans text-xs font-normal text-slate-700">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <div className="min-w-0 xl:flex-1">
+            <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Kunjungan pasien">
             <label htmlFor="no-rawat-resep" className="whitespace-nowrap sm:text-right">No. Rawat :</label>
             <div className="relative flex min-w-0 flex-wrap items-center gap-2">
               <input
@@ -691,7 +692,9 @@ export default function HalamanInputResep() {
               )}
             </div>
           </div>
+          </div>
 
+          <div className="xl:w-[31rem]">
           <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Waktu resep">
             <label htmlFor="tanggal-resep" className="whitespace-nowrap sm:text-right">Tgl. Resep :</label>
             <div className="flex flex-wrap items-center gap-2">
@@ -704,10 +707,14 @@ export default function HalamanInputResep() {
               {Number(kunjungan?.pasien_ranap) > 0 && <span className="font-semibold text-red-700">Pasien sudah masuk kamar inap.</span>}
             </div>
           </div>
+          </div>
 
+          <div className="min-w-0 xl:w-[22rem]">
           <div className="grid grid-cols-1 items-center gap-1.5 sm:grid-cols-[4.75rem_minmax(0,1fr)]" role="group" aria-label="Dokter peresep">
             <label htmlFor="dokter-resep" className="whitespace-nowrap sm:text-right">Peresep :</label>
             <input id="dokter-resep" readOnly aria-label="Nama dokter peresep" value={kunjungan?.nm_dokter || ""} className="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700" />
+          </div>
+          </div>
           </div>
 
           {sumberDraft && (
@@ -720,9 +727,6 @@ export default function HalamanInputResep() {
               </div>
             </div>
           )}
-
-          </div>
-          <div aria-hidden="true" className="hidden lg:block" />
         </div>
       </section>
 

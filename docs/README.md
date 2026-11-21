@@ -33,6 +33,18 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 ## Riwayat pengembangan
 
+### 21 November 2026 — pagination Data Pasien dan Rawat Inap
+
+- Tab `Data Pasien` dan halaman `/rawat-inap` kini menampilkan maksimal 100 baris per halaman dengan kontrol halaman pada `PanelBawah`, mengikuti pola Registrasi. Ringkasan menampilkan jumlah baris halaman aktif, total hasil, dan posisi halaman.
+- `GET /api/pasien` sekarang menghitung total hasil terfilter serta menerima `page` dan `limit`; `GET /api/rawat-inap` menambahkan `page` dan `OFFSET` pada total/filter yang sudah ada. Keduanya memvalidasi pagination dan mengoreksi permintaan ke halaman terakhir bila total menyusut setelah mutasi.
+- Verifikasi dengan `npm run test:pasien`, `npm run test:rawat-inap`, ESLint terarah, `npx tsc --noEmit`, dan `git diff --check`.
+
+### 21 November 2026 — pemuatan bertahap pencarian pasien
+
+- Modal `Cari Data Pasien` bersama pada Registrasi dan IGD tetap memuat 50 pasien pada pembukaan atau perubahan kata kunci, lalu otomatis mengambil 50 pasien berikutnya ketika daftar digulir mendekati bawah sampai hasil habis.
+- Endpoint `/api/registrasi/options?jenis=pasien` dan `/api/igd/options?jenis=pasien` menerima `offset` tervalidasi, mengambil satu baris ekstra untuk menentukan `hasMore`, dan tetap memakai pencarian No. RM, nama, NIK, atau alamat yang sama. Perubahan ini menjaga beban awal tetap kecil tanpa membatasi petugas pada 50 hasil pertama.
+- Verifikasi dengan `npm run test:registrasi`, `npm run test:igd`, ESLint terarah, `npx tsc --noEmit`, dan `git diff --check`.
+
 ### 21 November 2026 — tarif laboratorium
 
 - Perubahan perilaku yang disengaja: menu `Tarif Lab` (`btn-tarif-lab`), entri kurasi `tarif-lab`, dan pintasan akun `Tarif Pemeriksaan Laboratorium` kini membuka `/tarif-lab` dengan izin `tarif_lab`, sehingga katalog menjadi 1.169 menu. Judul navbar memakai `Tarif Lab`.

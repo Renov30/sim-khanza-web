@@ -133,11 +133,13 @@ function KontenResumePasien() {
   const searchParams = useSearchParams();
   const noRawat = searchParams.get("no_rawat")?.trim() || "";
   const noRawatDimuat = useRef("");
+  const nomorPermintaan = useRef(0);
   const [data, setData] = useState<ResumePasienData | null>(null);
   const [form, setForm] = useState<ResumePasienForm>(resumeKosong());
   const [tanggalAwal, setTanggalAwal] = useState("");
   const [tanggalAkhir, setTanggalAkhir] = useState("");
   const [kataKunci, setKataKunci] = useState("");
+  const [versiMuat, setVersiMuat] = useState(0);
   const [tabAktif, setTabAktif] = useState<"input" | "data">("input");
   const [barisTerpilih, setBarisTerpilih] = useState("");
   const [memuat, setMemuat] = useState(false);
@@ -149,7 +151,8 @@ function KontenResumePasien() {
     setToast({ pesan, tipe });
   }, []);
 
-  const muatData = useCallback(async (controller: AbortController, perbaruiForm: boolean) => {
+  const muatData = useCallback(async (perbaruiForm: boolean) => {
+    const permintaanSaatIni = ++nomorPermintaan.current;
     if (!noRawat) {
       setData(null);
       setForm(resumeKosong());
@@ -164,10 +167,10 @@ function KontenResumePasien() {
       if (tanggalAkhir) parameter.set("tanggal_akhir", tanggalAkhir);
       if (kataKunci.trim()) parameter.set("kata_kunci", kataKunci.trim());
       const response = await fetch(`/api/resume-pasien?${parameter.toString()}`, {
-        signal: controller.signal,
         cache: "no-store",
       });
       const json: { success?: boolean; data?: ResumePasienData; error?: string } = await response.json();
+      if (permintaanSaatIni !== nomorPermintaan.current) return;
       if (!response.ok || !json.success || !json.data) throw new Error(json.error || "Gagal memuat resume pasien.");
       setData(json.data);
       if (perbaruiForm) {
@@ -180,22 +183,21 @@ function KontenResumePasien() {
         }
       }
     } catch (error) {
-      if (!controller.signal.aborted) tampilkanToast(pesanDari(error, "Gagal memuat resume pasien."), "error");
+      if (permintaanSaatIni === nomorPermintaan.current) tampilkanToast(pesanDari(error, "Gagal memuat resume pasien."), "error");
     } finally {
-      if (!controller.signal.aborted) setMemuat(false);
+      if (permintaanSaatIni === nomorPermintaan.current) setMemuat(false);
     }
   }, [noRawat, tanggalAwal, tanggalAkhir, kataKunci, tampilkanToast]);
 
   useEffect(() => {
-    const controller = new AbortController();
     const timer = setTimeout(() => {
-      void muatData(controller, noRawat !== noRawatDimuat.current);
+      void muatData(noRawat !== noRawatDimuat.current);
     }, kataKunci.trim() ? 250 : 0);
     return () => {
       clearTimeout(timer);
-      controller.abort();
+      nomorPermintaan.current += 1;
     };
-  }, [muatData, noRawat, kataKunci]);
+  }, [muatData, noRawat, kataKunci, versiMuat]);
 
   const ubah = <K extends keyof ResumePasienForm>(kunci: K, nilai: ResumePasienForm[K]) => {
     setForm((lama) => ({ ...lama, [kunci]: nilai }));
@@ -231,7 +233,7 @@ function KontenResumePasien() {
       if (!response.ok || !json.success) throw new Error(json.error || "Resume gagal disimpan.");
       tampilkanToast(json.message || "Resume pasien berhasil disimpan.", "sukses");
       noRawatDimuat.current = "";
-      await muatData(new AbortController(), true);
+      await muatData(true);
     } catch (error) {
       tampilkanToast(pesanDari(error, "Resume gagal disimpan."), "error");
     } finally {
@@ -251,7 +253,7 @@ function KontenResumePasien() {
       setKonfirmasiHapus(false);
       tampilkanToast(json.message || "Resume pasien berhasil dihapus.", "sukses");
       noRawatDimuat.current = "";
-      await muatData(new AbortController(), true);
+      await muatData(true);
     } catch (error) {
       tampilkanToast(pesanDari(error, "Resume gagal dihapus."), "error");
     } finally {
@@ -429,9 +431,9 @@ function KontenResumePasien() {
         onGantiTanggalSelesai={tabAktif === "data" ? setTanggalAkhir : undefined}
         kataKunci={kataKunci}
         onGantiKataKunci={tabAktif === "data" ? setKataKunci : undefined}
-        onCari={tabAktif === "data" ? () => { noRawatDimuat.current = ""; void muatData(new AbortController(), false); } : undefined}
+        onCari={tabAktif === "data" ? () => { noRawatDimuat.current = ""; setVersiMuat((versi) => versi + 1); } : undefined}
         placeholderCari="No. rawat, nama pasien, dokter, diagnosa, atau prosedur..."
-        onSemua={tabAktif === "data" ? () => { setTanggalAwal(""); setTanggalAkhir(""); setKataKunci(""); noRawatDimuat.current = ""; void muatData(new AbortController(), false); } : undefined}
+        onSemua={tabAktif === "data" ? () => { setTanggalAwal(""); setTanggalAkhir(""); setKataKunci(""); noRawatDimuat.current = ""; setVersiMuat((versi) => versi + 1); } : undefined}
         onSimpan={tabAktif === "input" ? () => void simpan() : undefined}
         onBaru={() => { resetForm(); setTabAktif("input"); }}
         onHapus={tabAktif === "input" ? () => setKonfirmasiHapus(true) : undefined}

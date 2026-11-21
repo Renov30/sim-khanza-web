@@ -31,7 +31,10 @@ export async function GET(req: NextRequest) {
     const statusBayar = (searchParams.get("status_bayar") || "Semua") as (typeof STATUS_BAYAR)[number];
     const tanggalMulai = searchParams.get("tanggal_mulai") || "";
     const tanggalSelesai = searchParams.get("tanggal_selesai") || "";
-    const limit = Number(searchParams.get("limit")) || 50;
+    const pageParameter = searchParams.get("page");
+    const limitParameter = searchParams.get("limit");
+    const page = pageParameter === null ? 1 : Number(pageParameter);
+    const limit = limitParameter === null ? 100 : Number(limitParameter);
 
     if (!MODE_FILTER.includes(mode)) return responsTidakValid("Mode filter tidak dikenal");
     if (!STATUS_BAYAR.includes(statusBayar)) return responsTidakValid("Status bayar tidak dikenal");
@@ -39,6 +42,7 @@ export async function GET(req: NextRequest) {
       return responsTidakValid("Status pulang tidak dikenal");
     }
     if (cari.length > 100 || bangsal.length > 100) return responsTidakValid("Pencarian terlalu panjang");
+    if (!Number.isInteger(page) || page < 1 || page > 1_000_000) return responsTidakValid("Halaman data tidak valid");
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) return responsTidakValid("Batas data tidak valid");
 
     if (mode === "masuk" || mode === "pulang") {
@@ -106,12 +110,19 @@ export async function GET(req: NextRequest) {
              ki.ttl_biaya, ki.stts_pulang, ki.lama,
              d.nm_dokter
       ${sumber}${klausa}
-      ORDER BY b.nm_bangsal, ki.tgl_masuk, ki.jam_masuk
-      LIMIT ?
+      ORDER BY b.nm_bangsal, ki.tgl_masuk, ki.jam_masuk, ki.no_rawat, ki.kd_kamar
+      LIMIT ? OFFSET ?
     `;
-    const rows = await executeQuery<Record<string, unknown>>(sql, [...params, limit]);
+    const offset = (page - 1) * limit;
+    const rows = await executeQuery<Record<string, unknown>>(sql, [...params, limit, offset]);
+    const currentPage = Math.min(page, Math.max(1, Math.ceil(total / limit)));
 
-    return NextResponse.json({ success: true, data: rows, total });
+    if (currentPage !== page) {
+      const rowsUlang = await executeQuery<Record<string, unknown>>(sql, [...params, limit, (currentPage - 1) * limit]);
+      return NextResponse.json({ success: true, data: rowsUlang, total, page: currentPage, limit });
+    }
+
+    return NextResponse.json({ success: true, data: rows, total, page: currentPage, limit });
   } catch (error: unknown) {
     console.error("Error in api/rawat-inap:", error);
     return NextResponse.json(

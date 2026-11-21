@@ -9,7 +9,7 @@ const { NextRequest, NextResponse } = load('next/server');
 const compiled = load('../.next/registrasi-tests/src/lib/registrasi/validation.js');
 
 // Isolasi handler HTTP dari koneksi nyata; aturan bisnis diuji terpisah.
-function handler({ denied, paid = false, related = false, missing = false, referralFails = false } = {}, filePath = 'src/app/api/registrasi/route.ts') {
+function handler({ denied, paid = false, related = false, missing = false, referralFails = false, queryResult } = {}, filePath = 'src/app/api/registrasi/route.ts') {
   const calls = [];
   const conn = {
     beginTransaction: async () => { calls.push(['begin']); },
@@ -20,7 +20,7 @@ function handler({ denied, paid = false, related = false, missing = false, refer
   };
   const mocks = {
     '@/lib/db': { pool: { getConnection: async () => { calls.push(['connect']); return conn; } }, executeQuery: async (sql, params) => {
-      calls.push([sql, params]); return sql.startsWith('SELECT COUNT') ? [{ total: 250 }] : [];
+      calls.push([sql, params]); return queryResult ?? (sql.startsWith('SELECT COUNT') ? [{ total: 250 }] : []);
     } },
     '@/lib/registrasi/access': { registrationAccess: async () => denied ? NextResponse.json({ success: false }, { status: denied }) : null },
     '@/lib/registrasi/date': load('../.next/registrasi-tests/src/lib/registrasi/date.js'),
@@ -120,7 +120,30 @@ test('pencarian pasien mendukung NIK dan alamat dengan empat parameter', async (
   assert.match(calls[0][0], /penjab\.png_jawab/);
   assert.match(calls[0][0], /LEFT JOIN penjab ON penjab\.kd_pj = pasien\.kd_pj/);
   assert.match(calls[0][0], /no_ktp LIKE \? OR pasien\.alamat LIKE \?/);
-  assert.deepEqual(calls[0][1], ['%123%', '%123%', '%123%', '%123%']);
+  assert.deepEqual(calls[0][1], ['%123%', '%123%', '%123%', '%123%', 51, 0]);
+  const result = await res.json();
+  assert.deepEqual(result.meta, { hasMore: false, offset: 0, limit: 50 });
+});
+test('pencarian pasien menerapkan offset dan mengambil satu baris ekstra', async () => {
+  const { api, calls } = handler({}, 'src/app/api/registrasi/options/route.ts');
+  const res = await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien&offset=50'));
+  assert.equal(res.status, 200);
+  assert.match(calls[0][0], /LIMIT \? OFFSET \?/);
+  assert.deepEqual(calls[0][1], [51, 50]);
+});
+test('pencarian pasien mengirim 50 data dan penanda halaman berikutnya', async () => {
+  const rows = Array.from({ length: 51 }, (_, index) => ({ no_rkm_medis: String(index + 1).padStart(6, '0') }));
+  const { api } = handler({ queryResult: rows }, 'src/app/api/registrasi/options/route.ts');
+  const res = await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien'));
+  const result = await res.json();
+  assert.equal(result.data.length, 50);
+  assert.equal(result.meta.hasMore, true);
+});
+test('pencarian pasien menolak offset tidak valid', async () => {
+  const { api, calls } = handler({}, 'src/app/api/registrasi/options/route.ts');
+  const res = await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien&offset=-1'));
+  assert.equal(res.status, 400);
+  assert.equal(calls.length, 0);
 });
 test('API pencarian pasien menolak pengguna tanpa sesi', async () => {
   const { api, calls } = handler({ denied: 401 }, 'src/app/api/registrasi/options/route.ts');
@@ -132,5 +155,5 @@ test('No. RM yang diketik dicari tepat, bukan pencarian sebagian', async () => {
   const { api, calls } = handler({}, 'src/app/api/registrasi/options/route.ts');
   await api.GET(new NextRequest('http://localhost/api/registrasi/options?jenis=pasien&rm=000001'));
   assert.match(calls[0][0], /WHERE pasien\.no_rkm_medis = \?/);
-  assert.deepEqual(calls[0][1], ['000001']);
+  assert.deepEqual(calls[0][1], ['000001', 1, 0]);
 });

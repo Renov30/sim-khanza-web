@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -29,7 +29,7 @@
     "test:resume-pasien": "node --test tests/resume-pasien-api.test.mjs",
     "test:menu-konteks": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/menu-tests tests/menu-konteks.test.ts && node --test .next/menu-tests/tests/menu-konteks.test.js",
     "test:menu-utama": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/menu-utama-tests tests/menu-utama.test.ts && node --test .next/menu-utama-tests/tests/menu-utama.test.js",
-    "test:pasien": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/pasien-tests tests/pasien-fields.test.ts tests/pasien-numbering.test.ts && node --test .next/pasien-tests/tests/pasien-fields.test.js .next/pasien-tests/tests/pasien-numbering.test.js",
+    "test:pasien": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/pasien-tests tests/pasien-fields.test.ts tests/pasien-numbering.test.ts && node --test .next/pasien-tests/tests/pasien-fields.test.js .next/pasien-tests/tests/pasien-numbering.test.js tests/pasien-api.test.mjs",
     "db:index-kinerja": "node --env-file=.env.local scripts/db/index-kinerja.mjs"
   },
   "dependencies": {

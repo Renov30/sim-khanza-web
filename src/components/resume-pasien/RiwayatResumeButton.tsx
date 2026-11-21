@@ -33,6 +33,7 @@ export function RiwayatResumeButton({
   onPilih: (nilai: string) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const nomorPermintaan = useRef(0);
   const titleId = useId();
   const [terbuka, setTerbuka] = useState(false);
   const [kataKunci, setKataKunci] = useState("");
@@ -43,25 +44,26 @@ export function RiwayatResumeButton({
 
   useEffect(() => {
     if (!terbuka || !noRawat) return;
-    const controller = new AbortController();
+    const permintaanSaatIni = ++nomorPermintaan.current;
     const timer = setTimeout(async () => {
       setMemuat(true);
       setError("");
       try {
         const parameter = new URLSearchParams({ resource: "riwayat", jenis, no_rawat: noRawat, cari: kataKunci.trim() });
-        const response = await fetch(`/api/resume-pasien?${parameter.toString()}`, { signal: controller.signal, cache: "no-store" });
+        const response = await fetch(`/api/resume-pasien?${parameter.toString()}`, { cache: "no-store" });
         const json: { success?: boolean; data?: { items?: ItemRiwayatResume[] }; error?: string } = await response.json();
+        if (permintaanSaatIni !== nomorPermintaan.current) return;
         if (!response.ok || !json.success) throw new Error(json.error || `Gagal memuat ${judul.toLowerCase()}.`);
-        if (!controller.signal.aborted) setItems(json.data?.items || []);
+        setItems(json.data?.items || []);
       } catch (nilaiError) {
-        if (!controller.signal.aborted) setError(nilaiError instanceof Error ? nilaiError.message : `Gagal memuat ${judul.toLowerCase()}.`);
+        if (permintaanSaatIni === nomorPermintaan.current) setError(nilaiError instanceof Error ? nilaiError.message : `Gagal memuat ${judul.toLowerCase()}.`);
       } finally {
-        if (!controller.signal.aborted) setMemuat(false);
+        if (permintaanSaatIni === nomorPermintaan.current) setMemuat(false);
       }
     }, kataKunci ? 250 : 0);
     return () => {
-      controller.abort();
       clearTimeout(timer);
+      nomorPermintaan.current += 1;
     };
   }, [jenis, judul, kataKunci, noRawat, terbuka]);
 

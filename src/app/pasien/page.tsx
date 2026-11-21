@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from '@/components/auth/AuthContext';
 import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { additionalPatientFields, emptyPatientDetails, fullPatientAge } from '@/lib/pasien/fields';
@@ -15,6 +15,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHospitalUser,
   faCopy,
+  faChevronLeft,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 
 export interface PasienData {
@@ -82,7 +84,12 @@ export default function HalamanDataPasien() {
 
   // Filter
   const [kataKunci, setKataKunci] = useState("");
+  const [kataKunciFilter, setKataKunciFilter] = useState("");
+  const [halaman, setHalaman] = useState(1);
+  const [totalData, setTotalData] = useState(0);
+  const [versiTabel, setVersiTabel] = useState(0);
   const [daftarPenjab, setDaftarPenjab] = useState<PenjaminOption[]>([]);
+  const permintaanTabel = useRef<AbortController | null>(null);
 
   // Form pasien
   const [noRm, setNoRm] = useState("");
@@ -151,29 +158,50 @@ export default function HalamanDataPasien() {
   // Data pasien
   const muatData = useCallback(async () => {
     if (!isAuthenticated) return;
+    permintaanTabel.current?.abort();
+    const controller = new AbortController();
+    permintaanTabel.current = controller;
     setMemuat(true);
     try {
       const url = new URL("/api/pasien", window.location.origin);
-      if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
+      if (kataKunciFilter) url.searchParams.set("cari", kataKunciFilter);
+      url.searchParams.set("page", String(halaman));
       url.searchParams.set("limit", "100");
 
-      const res = await fetch(url.toString());
-      const json = await res.json();
+      const res = await fetch(url.toString(), { signal: controller.signal, cache: "no-store" });
+      const json = await res.json() as { success?: boolean; data?: PasienData[]; total?: number; page?: number; error?: string };
+      if (controller.signal.aborted) return;
       if (json.success) {
         setData(json.data || []);
+        setTotalData(Number(json.total) || 0);
+        setHalaman(Number(json.page) || 1);
       } else {
         tampilkanToast(json.error || "Gagal memuat data pasien", "error");
       }
     } catch (error: unknown) {
-      tampilkanToast(pesanError(error, "Terjadi kesalahan jaringan"), "error");
+      if (!controller.signal.aborted) tampilkanToast(pesanError(error, "Terjadi kesalahan jaringan"), "error");
     } finally {
-      setMemuat(false);
+      if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [isAuthenticated, kataKunci, tampilkanToast]);
+  }, [halaman, isAuthenticated, kataKunciFilter, tampilkanToast]);
 
   useEffect(() => {
-    muatData();
-  }, [muatData]);
+    const berikutnya = kataKunci.trim();
+    if (berikutnya === kataKunciFilter) return;
+    const timer = window.setTimeout(() => {
+      setKataKunciFilter(berikutnya);
+      setHalaman(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [kataKunci, kataKunciFilter]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void muatData(), 0);
+    return () => {
+      window.clearTimeout(timer);
+      permintaanTabel.current?.abort();
+    };
+  }, [muatData, versiTabel]);
 
   // Reset form (emptTeks)
   const resetForm = useCallback(() => {
@@ -284,7 +312,8 @@ export default function HalamanDataPasien() {
       if (json.success) {
         const savedNumber = json.data?.no_rkm_medis || noRm;
         tampilkanToast(`Data pasien ${nmPasien} (${savedNumber}) berhasil disimpan!`, "sukses");
-        void muatData();
+        setHalaman(1);
+        setVersiTabel((versi) => versi + 1);
         if (!terpilih) resetForm();
       } else {
         tampilkanToast(json.error || "Gagal menyimpan data pasien", "error");
@@ -319,7 +348,7 @@ export default function HalamanDataPasien() {
       const json = await res.json();
       if (json.success) {
         tampilkanToast(`Data pasien ${nmPasien} (${noRm}) berhasil diperbarui!`, "sukses");
-        void muatData();
+        setVersiTabel((versi) => versi + 1);
         resetForm();
         setTabAktif("data");
       } else {
@@ -357,7 +386,7 @@ export default function HalamanDataPasien() {
           "sukses"
         );
         resetForm();
-        void muatData();
+        setVersiTabel((versi) => versi + 1);
         setDialogHapusBuka(false);
       } else {
         tampilkanToast(json.error || "Gagal menghapus data pasien", "error");
@@ -647,16 +676,29 @@ export default function HalamanDataPasien() {
         onCetak={tabAktif === "data" ? handleCetak : undefined}
         onSemua={tabAktif === "data" ? () => {
           setKataKunci("");
-          muatData();
+          setKataKunciFilter("");
+          setHalaman(1);
+          setVersiTabel((versi) => versi + 1);
         } : undefined}
         disabledHapus={!terpilih || sedangMenyimpan || sedangMenghapus}
         disabledGanti={!terpilih || sedangMenyimpan || sedangMenghapus}
         kataKunci={kataKunci}
         onGantiKataKunci={tabAktif === "data" ? setKataKunci : undefined}
-        onCari={tabAktif === "data" ? muatData : undefined}
+        onCari={tabAktif === "data" ? () => {
+          setKataKunciFilter(kataKunci.trim());
+          setHalaman(1);
+          setVersiTabel((versi) => versi + 1);
+        } : undefined}
         placeholderCari="Cari No.RM, Nama Pasien, NIK, No.Peserta..."
-        jumlahRecord={data.length}
-        memuat={sedangMenyimpan || sedangMenghapus}
+        pagination={tabAktif === "data" ? (
+          <>
+            <span>{data.length} dari {totalData} pasien · Halaman {halaman} / {Math.max(1, Math.ceil(totalData / 100))}</span>
+            <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman <= 1} onClick={() => { resetForm(); setHalaman((page) => page - 1); }} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman sebelumnya" title="Halaman sebelumnya"><FontAwesomeIcon icon={faChevronLeft} className="h-3 w-3" aria-hidden="true" /></button>
+            <button type="button" disabled={memuat || sedangMenyimpan || sedangMenghapus || halaman * 100 >= totalData} onClick={() => { resetForm(); setHalaman((page) => page + 1); }} className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 disabled:opacity-50" aria-label="Halaman berikutnya" title="Halaman berikutnya"><FontAwesomeIcon icon={faChevronRight} className="h-3 w-3" aria-hidden="true" /></button>
+          </>
+        ) : undefined}
+        tampilkanRecord={false}
+        memuat={memuat || sedangMenyimpan || sedangMenghapus}
       />
 
       {/* Konfirmasi hapus */}

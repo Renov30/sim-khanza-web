@@ -32,7 +32,12 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
   const [kataCari, setKataCari] = useState(pencarianAwal);
   const [daftar, setDaftar] = useState<PasienOption[]>([]);
   const [sedangMemuat, setSedangMemuat] = useState(false);
+  const [sedangMemuatBerikutnya, setSedangMemuatBerikutnya] = useState(false);
+  const [adaBerikutnya, setAdaBerikutnya] = useState(false);
+  const [offset, setOffset] = useState(0);
   const permintaan = useRef<AbortController | null>(null);
+  const permintaanBerikutnya = useRef<AbortController | null>(null);
+  const kunciMemuatBerikutnya = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onErrorRef = useRef(onError);
 
@@ -43,21 +48,30 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
   const cari = useCallback((query: string) => {
     setKataCari(query);
     permintaan.current?.abort();
+    permintaanBerikutnya.current?.abort();
+    kunciMemuatBerikutnya.current = false;
     if (timer.current) clearTimeout(timer.current);
     const controller = new AbortController();
     permintaan.current = controller;
     setSedangMemuat(true);
+    setSedangMemuatBerikutnya(false);
+    setAdaBerikutnya(false);
+    setOffset(0);
     setDaftar([]);
     timer.current = setTimeout(async () => {
       try {
         const url = new URL(endpoint, window.location.origin);
         url.searchParams.set('jenis', 'pasien');
         url.searchParams.set('cari', query);
+        url.searchParams.set('offset', '0');
         const res = await fetch(url.toString(), { signal: controller.signal, cache: 'no-store' });
-        const json = await res.json();
+        const json: { success?: boolean; data?: PasienOption[] | { pasien?: PasienOption[] }; error?: string; meta?: { hasMore?: boolean } } = await res.json();
         if (controller.signal.aborted) return;
         if (!res.ok || !json.success) throw new Error(json.error || 'Gagal mencari pasien');
-        setDaftar(Array.isArray(json.data) ? json.data : json.data?.pasien || []);
+        const data = Array.isArray(json.data) ? json.data : json.data?.pasien || [];
+        setDaftar(data);
+        setOffset(data.length);
+        setAdaBerikutnya(Boolean(json.meta?.hasMore));
       } catch (error) {
         if (!controller.signal.aborted) {
           setDaftar([]);
@@ -70,12 +84,51 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
     }, query ? 200 : 0);
   }, [endpoint]);
 
+  const muatBerikutnya = async () => {
+    if (!adaBerikutnya || sedangMemuat || kunciMemuatBerikutnya.current) return;
+    kunciMemuatBerikutnya.current = true;
+    setSedangMemuatBerikutnya(true);
+    const controller = new AbortController();
+    permintaanBerikutnya.current = controller;
+    try {
+      const url = new URL(endpoint, window.location.origin);
+      url.searchParams.set('jenis', 'pasien');
+      url.searchParams.set('cari', kataCari);
+      url.searchParams.set('offset', String(offset));
+      const res = await fetch(url.toString(), { signal: controller.signal, cache: 'no-store' });
+      const json: { success?: boolean; data?: PasienOption[] | { pasien?: PasienOption[] }; error?: string; meta?: { hasMore?: boolean } } = await res.json();
+      if (controller.signal.aborted) return;
+      if (!res.ok || !json.success) throw new Error(json.error || 'Gagal memuat pasien berikutnya');
+      const data = Array.isArray(json.data) ? json.data : json.data?.pasien || [];
+      setDaftar((lama) => {
+        const gabungan = new Map(lama.map((pasien) => [pasien.no_rkm_medis, pasien]));
+        for (const pasien of data) gabungan.set(pasien.no_rkm_medis, pasien);
+        return [...gabungan.values()];
+      });
+      setOffset((lama) => lama + data.length);
+      setAdaBerikutnya(Boolean(json.meta?.hasMore));
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        const pesan = error instanceof Error ? error.message : 'Gagal memuat pasien berikutnya';
+        onErrorRef.current?.(pesan);
+      }
+    } finally {
+      if (!controller.signal.aborted) setSedangMemuatBerikutnya(false);
+      if (permintaanBerikutnya.current === controller) {
+        permintaanBerikutnya.current = null;
+        kunciMemuatBerikutnya.current = false;
+      }
+    }
+  };
+
   useEffect(() => {
     if (!terbuka) return;
     const timerBuka = setTimeout(() => cari(pencarianAwal), 0);
     return () => {
       clearTimeout(timerBuka);
       permintaan.current?.abort();
+      permintaanBerikutnya.current?.abort();
+      kunciMemuatBerikutnya.current = false;
       if (timer.current) clearTimeout(timer.current);
     };
   }, [terbuka, pencarianAwal, cari]);
@@ -145,7 +198,14 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
           </div>
           {sedangMemuat && <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin text-primary-600" />}
         </div>
-        <div className="flex-1 overflow-auto p-2">
+        <div
+          className="flex-1 overflow-auto p-2"
+          aria-busy={sedangMemuat || sedangMemuatBerikutnya}
+          onScroll={(event) => {
+            const target = event.currentTarget;
+            if (target.scrollTop + target.clientHeight >= target.scrollHeight - 96) void muatBerikutnya();
+          }}
+        >
           <table className="w-full text-left text-xs">
             <caption className="sr-only">Daftar hasil pencarian pasien</caption>
             <thead className="sticky top-0 z-10 border-b bg-slate-50 font-bold text-slate-600 shadow-2xs">
@@ -174,7 +234,7 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
                   <tr
                     key={pasien.no_rkm_medis}
                     onClick={() => onPilih(pasien)}
-                    className="cursor-pointer hover:bg-primary-50/70"
+                    className="cursor-pointer hover:bg-slate-100 focus-within:bg-slate-100"
                   >
                     <td className="p-2 font-mono font-normal text-slate-700">{pasien.no_rkm_medis}</td>
                     <td className="p-2 font-semibold text-slate-800">{pasien.nm_pasien}</td>
@@ -196,11 +256,19 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
                   </tr>
                 ))
               )}
+              {daftar.length > 0 && sedangMemuatBerikutnya && (
+                <tr>
+                  <td colSpan={6} className="p-3 text-center text-slate-500">
+                    <FontAwesomeIcon icon={faSpinner} className="mr-2 h-3 w-3 animate-spin text-primary-600" />
+                    Memuat pasien berikutnya...
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
-          <span>Menampilkan {daftar.length} pasien</span>
+          <span>Menampilkan {daftar.length} pasien{adaBerikutnya ? '' : ''}</span>
           <span>Klik baris untuk langsung memilih pasien</span>
         </div>
       </div>
