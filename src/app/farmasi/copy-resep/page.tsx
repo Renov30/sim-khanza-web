@@ -264,7 +264,7 @@ export default function HalamanCopyResep() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
         <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
-          <table className="w-full min-w-[78rem] border-collapse text-left text-[11px] text-slate-700">
+          <table className="w-full min-w-[78rem] border-collapse text-left text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
             <caption className="sr-only">Daftar resep dokter pada kunjungan pasien sebelumnya</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
               <tr>
@@ -359,8 +359,8 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
 }) {
   return (
     <>
-      <tr onClick={onPilih} onDoubleClick={onCopy} aria-selected={dipilih} className={`cursor-pointer ${dipilih ? "bg-primary-100" : "even:bg-slate-50/70 hover:bg-slate-50"}`}>
-        <td className={`border-b border-r px-2 py-1.5 text-center ${dipilih ? "border-primary-200 bg-primary-200/70" : "border-slate-100"}`}>
+      <tr onClick={onPilih} onDoubleClick={onCopy} aria-selected={dipilih} className={`cursor-pointer ${dipilih ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
+        <td className={`border-b border-slate-100 px-2 py-1.5 text-center ${dipilih ? "bg-primary-100" : "bg-transparent"}`}>
           <input
             type="checkbox"
             checked={dipilih}
@@ -379,8 +379,8 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
         <td className="border-b border-r border-slate-100 px-2 py-1.5">{resep.nm_dokter}</td>
         <td className="border-b border-slate-100 px-2 py-1.5 text-center">{resep.status_pelayanan}</td>
       </tr>
-      <tr className={dipilih ? "bg-primary-200/60" : "bg-slate-100/70"}>
-        <td className={`border-b border-r ${dipilih ? "border-primary-200" : "border-slate-100"}`} />
+      <tr className={dipilih ? "bg-primary-100" : "bg-slate-100/70"}>
+        <td className={`border-b border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} />
         <td className="border-b border-r border-slate-100" />
         <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Jumlah</th>
         <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Satuan</th>
@@ -390,10 +390,10 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
         <td className="border-b border-slate-100 px-2 py-1 text-center text-slate-500">{resep.status_asal}</td>
       </tr>
       {resep.items.length === 0 ? (
-        <tr className={dipilih ? "bg-primary-50" : "bg-white"}><td className="border-b border-r border-slate-100" /><td className="border-b border-r border-slate-100" /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
+        <tr className={dipilih ? "bg-primary-100" : "bg-white"}><td className={`border-b border-r border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} /><td className="border-b border-r border-slate-100" /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
       ) : resep.items.map((item, index) => (
-        <tr key={`${resep.no_resep}-${item.jenis}-${item.no_racik}-${item.kode_item}-${index}`} className={dipilih ? "bg-primary-50" : "bg-white"}>
-          <td className="border-b border-r border-slate-100" />
+        <tr key={`${resep.no_resep}-${item.jenis}-${item.no_racik}-${item.kode_item}-${index}`} className={dipilih ? "bg-primary-100" : "bg-white"}>
+          <td className={`border-b border-r border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} />
           <td className="border-b border-r border-slate-100" />
           <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums`}>{item.jumlah}</td>
           <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center">{item.satuan}</td>

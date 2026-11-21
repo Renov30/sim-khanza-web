@@ -51,6 +51,10 @@ function warnaStatusPeriksa(status: string) {
   return "border border-slate-200 bg-slate-100 text-slate-700";
 }
 
+function kunciBarisRawatJalan(item: RawatJalanRow) {
+  return `${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`;
+}
+
 export default function HalamanRawatJalan() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -58,6 +62,7 @@ export default function HalamanRawatJalan() {
 
   const [tabTabel, setTabTabel] = useState<"awal" | "rujukan_internal">("awal");
   const [data, setData] = useState<RawatJalanRow[]>([]);
+  const [terpilih, setTerpilih] = useState<RawatJalanRow | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
 
@@ -164,6 +169,11 @@ export default function HalamanRawatJalan() {
   const gantiTab = (tab: "awal" | "rujukan_internal") => {
     setTabTabel(tab);
     setHalaman(1);
+    setTerpilih(null);
+  };
+
+  const handlePilihData = (item: RawatJalanRow) => {
+    setTerpilih(item);
   };
 
   const resetFilter = () => {
@@ -177,6 +187,7 @@ export default function HalamanRawatJalan() {
     setStatusPeriksa("Semua");
     setStatusBayar("Semua");
     setHalaman(1);
+    setTerpilih(null);
     setVersiTabel((versi) => versi + 1);
   };
 
@@ -215,13 +226,14 @@ export default function HalamanRawatJalan() {
             role="tabpanel"
             aria-labelledby={`tab-rawat-jalan-${tabTabel}`}
             tabIndex={0}
-            className="flex-1 overflow-auto"
+            className="min-h-0 flex-1 overflow-auto"
+            aria-busy={memuat}
           >
-            <table className="w-full border-collapse text-left text-xs">
+            <table className="min-w-[96rem] w-full border-collapse text-left text-[11px]">
               <caption className="sr-only">
-                Daftar registrasi rawat jalan.
+                Daftar registrasi rawat jalan. Pilih baris untuk menandai data.
               </caption>
-              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/90 text-slate-700 shadow-2xs">
+              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
                 <tr>
                   <th scope="col" className="w-16 px-2.5 py-2 text-center">No. Reg</th>
                   <th scope="col" className="whitespace-nowrap px-2.5 py-2">No. Rawat</th>
@@ -238,25 +250,41 @@ export default function HalamanRawatJalan() {
                   <th scope="col" className="whitespace-nowrap px-2.5 py-2">No. Telp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+              <tbody className="divide-y divide-slate-100 bg-white font-mono text-[11px]">
                 {memuat ? (
-                  <tr><td colSpan={13} className="py-10 text-center font-sans text-slate-500">Memuat data rawat jalan...</td></tr>
+                  <tr><td colSpan={13} className="h-36 !border-0 text-center font-sans text-slate-500">Memuat data rawat jalan...</td></tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="py-10 text-center font-sans text-slate-400">
+                    <td colSpan={13} className="h-44 !border-0 text-center font-sans text-slate-400">
                       <FontAwesomeIcon icon={faReceipt} className="mb-2 h-7 w-7 text-slate-300" aria-hidden="true" />
                       <p>Tidak ada registrasi rawat jalan yang sesuai</p>
                     </td>
                   </tr>
                 ) : data.map((item) => (
                   <tr
-                    key={`${item.no_rawat}-${item.kd_dokter}-${item.kd_poli}`}
-                    className="text-slate-700 hover:bg-slate-50/80"
+                    key={kunciBarisRawatJalan(item)}
+                    onClick={() => handlePilihData(item)}
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return;
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      handlePilihData(item);
+                    }}
+                    tabIndex={0}
+                    aria-current={terpilih && kunciBarisRawatJalan(terpilih) === kunciBarisRawatJalan(item) ? "true" : undefined}
+                    className={`cursor-pointer text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-700 ${
+                      terpilih && kunciBarisRawatJalan(terpilih) === kunciBarisRawatJalan(item)
+                        ? "bg-primary-100"
+                        : "bg-white hover:bg-slate-50/80"
+                    }`}
                   >
                     <td className="px-2.5 py-2 text-center">
                       <button
                         type="button"
-                        onClick={() => router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`);
+                        }}
                         className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
                         aria-label={`Input tindakan untuk registrasi ${item.no_rawat}, pasien ${item.nm_pasien}`}
                       >
@@ -266,7 +294,10 @@ export default function HalamanRawatJalan() {
                     <td className="whitespace-nowrap px-2.5 py-2 font-medium text-slate-800">
                       <button
                         type="button"
-                        onClick={() => router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          router.push(`/tindakan-rawat-jalan?no_rawat=${encodeURIComponent(item.no_rawat)}`);
+                        }}
                         className="font-mono text-slate-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-700"
                         aria-label={`Input tindakan untuk nomor rawat ${item.no_rawat}, pasien ${item.nm_pasien}`}
                       >

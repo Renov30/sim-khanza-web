@@ -384,7 +384,7 @@ function KontenResumePasien() {
         className={tabAktif === "data" ? "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm" : "hidden"}
       >
         <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
-          <table className="w-full min-w-[4600px] border-collapse text-left text-[11px] text-slate-700">
+          <table className="w-full min-w-[4600px] border-collapse text-left text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
             <caption className="sr-only">Daftar resume pasien rawat jalan</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
               <tr>
@@ -395,7 +395,7 @@ function KontenResumePasien() {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 bg-white">
               {memuat ? (
                 <tr><td colSpan={KOLOM_TABEL.length} className="h-36 text-center text-slate-500">Memuat resume pasien...</td></tr>
               ) : !data ? (
@@ -407,7 +407,7 @@ function KontenResumePasien() {
                   key={baris.no_rawat}
                   aria-current={barisTerpilih === baris.no_rawat ? "true" : undefined}
                   onClick={() => pilihBaris(baris)}
-                  className={`cursor-pointer ${barisTerpilih === baris.no_rawat ? "bg-primary-100" : "even:bg-slate-50/70 hover:bg-slate-50"}`}
+                  className={`cursor-pointer ${barisTerpilih === baris.no_rawat ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}
                 >
                   {KOLOM_TABEL.map((kolom) => (
                     <td key={kolom.kunci} className={`max-w-[22rem] truncate whitespace-nowrap border-b border-r border-slate-100 px-2 py-1.5 ${KOLOM_MONO.has(kolom.kunci) ? "text-center font-mono tabular-nums" : ""}`}>

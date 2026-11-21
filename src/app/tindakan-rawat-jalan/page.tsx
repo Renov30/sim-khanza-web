@@ -536,17 +536,17 @@ export default function HalamanTindakanRawatJalan() {
             <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right font-medium">Cari tindakan :</span>
               <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
             </label>
-            <div className="max-h-60 overflow-auto rounded-md border border-slate-200 bg-white">
-              <table className="w-full border-collapse text-left text-[11px]">
+            <div className="max-h-60 overflow-auto rounded-md border border-slate-200 bg-white" aria-busy={memuatTarif}>
+              <table className="min-w-[42rem] w-full border-collapse text-left text-[11px]">
                 <caption className="sr-only">Daftar tarif tindakan yang dapat dipilih</caption>
-                <thead className="sticky top-0 bg-slate-100 text-slate-700">
+                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
                   <tr><th scope="col" className="w-9 px-2 py-1.5">P</th><th scope="col" className="px-2 py-1.5">Tindakan</th><th scope="col" className="min-w-36 px-2 py-1.5">Kategori Perawatan</th><th scope="col" className="w-40 px-2 py-1.5 text-left">Tarif</th></tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {!pasien ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
-                    : memuatTarif ? <tr><td colSpan={4} className="p-6 text-center text-slate-500">Memuat tarif...</td></tr>
-                      : tarif.length === 0 ? <tr><td colSpan={4} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
-                        : tarif.map((item) => <tr key={item.kd_jenis_prw} onClick={() => ubahPilihanTindakan(item.kd_jenis_prw)} className={`cursor-pointer text-slate-700 hover:bg-slate-50 ${kodeTerpilih.has(item.kd_jenis_prw) ? "bg-primary-50/90" : ""}`}>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {!pasien ? <tr><td colSpan={4} className="h-44 !border-0 text-center text-slate-400">Pilih kunjungan untuk memuat tarif.</td></tr>
+                    : memuatTarif ? <tr><td colSpan={4} className="h-36 !border-0 text-center text-slate-500">Memuat tarif...</td></tr>
+                      : tarif.length === 0 ? <tr><td colSpan={4} className="h-44 !border-0 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
+                        : tarif.map((item) => <tr key={item.kd_jenis_prw} onClick={() => ubahPilihanTindakan(item.kd_jenis_prw)} className={`cursor-pointer text-slate-700 ${kodeTerpilih.has(item.kd_jenis_prw) ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
                           <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onClick={(event) => event.stopPropagation()} onChange={() => ubahPilihanTindakan(item.kd_jenis_prw)} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
                           <td className="px-2 py-1.5">{item.nm_perawatan}</td>
                           <td className="px-2 py-1.5 text-slate-600">{item.nm_kategori || "-"}</td>
@@ -560,20 +560,21 @@ export default function HalamanTindakanRawatJalan() {
         </GridFormulirModul>
       </section>
 
-      <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200/80 bg-white shadow-sm">
-        <table className="w-full border-collapse text-left text-xs">
+      <section id="panel-tindakan-ralan" role="tabpanel" aria-labelledby={`tab-tindakan-${tabAktif}`} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
+        <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuatRiwayat}>
+        <table className="min-w-[76rem] w-full border-collapse text-left text-[11px]">
           <caption className="sr-only">Tindakan rawat jalan yang sudah dilakukan</caption>
-          <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
+          <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-slate-700">
             <tr>
               <th scope="col" className="whitespace-nowrap px-2.5 py-2">No. Rawat</th><th scope="col" className="px-2.5 py-2">Pasien</th>
               <th scope="col" className="min-w-56 px-2.5 py-2">Perawatan / Tindakan</th><th scope="col" className="min-w-40 px-2.5 py-2">Pelaksana</th>
               <th scope="col" className="whitespace-nowrap px-2.5 py-2">Tgl. &amp; Jam</th><th scope="col" className="whitespace-nowrap px-2.5 py-2 text-right">Biaya</th><th scope="col" className="px-2.5 py-2 text-center">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-[11px] text-slate-700">
-            {memuatRiwayat ? <tr><td colSpan={7} className="py-10 text-center text-slate-500">Memuat tindakan...</td></tr>
-              : riwayat.length === 0 ? <tr><td colSpan={7} className="py-10 text-center text-slate-400"><FontAwesomeIcon icon={faStethoscope} className="mb-2 h-7 w-7 text-slate-300" /><p>Belum ada tindakan pada periode ini.</p></td></tr>
-                : riwayat.map((item) => <tr key={`${item.no_rawat}-${item.kd_jenis_prw}-${item.tgl_perawatan}-${item.jam_rawat}-${item.kd_dokter || ""}-${item.nip || ""}`} className="hover:bg-slate-50">
+          <tbody className="divide-y divide-slate-100 bg-white text-[11px] text-slate-700">
+            {memuatRiwayat ? <tr><td colSpan={7} className="h-36 !border-0 text-center text-slate-500">Memuat tindakan...</td></tr>
+              : riwayat.length === 0 ? <tr><td colSpan={7} className="h-44 !border-0 text-center text-slate-400"><FontAwesomeIcon icon={faStethoscope} className="mb-2 h-7 w-7 text-slate-300" /><p>Belum ada tindakan pada periode ini.</p></td></tr>
+                : riwayat.map((item) => <tr key={`${item.no_rawat}-${item.kd_jenis_prw}-${item.tgl_perawatan}-${item.jam_rawat}-${item.kd_dokter || ""}-${item.nip || ""}`} className="bg-white hover:bg-slate-50/80">
                   <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.no_rawat}</td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.no_rkm_medis}</span><span className="block text-slate-800">{item.nm_pasien}</span></td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}</td>
@@ -584,6 +585,7 @@ export default function HalamanTindakanRawatJalan() {
                 </tr>)}
           </tbody>
         </table>
+        </div>
       </section>
 
       </> : tabAktif === "pemeriksaan" && pasien ? (

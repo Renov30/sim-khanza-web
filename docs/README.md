@@ -167,6 +167,11 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Pintasan `Hasil Periksa Lab` pada tab Pemeriksaan Tindakan Rawat Jalan membuka halaman tersebut dengan `no_rawat` kunjungan aktif; pilihan `Periksa Lab PK` di navbar tetap menuju halaman yang sama.
 - Endpoint memvalidasi periode, status, kata kunci, dan No. Rawat; seluruh filter memakai parameter query. Verifikasi dengan `node --test tests/periksa-lab-pk-api.test.mjs`.
 
+### 21 November 2026 — seleksi baris rawat jalan
+
+- Tabel `/rawat-jalan` kini menyorot baris yang diklik dengan `bg-primary-100`, mengikuti pola seleksi pada tabel registrasi; pilihan dihapus saat tab diganti atau filter `Semua` ditekan.
+- Baris dapat dipilih lewat Enter/Space saat fokus, sementara tombol `No. Reg` dan `No. Rawat` tetap membuka Tindakan Rawat Jalan seperti sebelumnya.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.
