@@ -13,7 +13,7 @@ Tentukan pola halaman yang paling dekat, lalu inspeksi kode aktualnya sebelum me
 
 - Halaman transaksi padat: `src/app/farmasi/resep-obat/page.tsx`.
 - Pola tab Input/Data: `src/app/pasien/page.tsx`.
-- Pola tabel daftar: `src/app/farmasi/copy-resep/page.tsx`.
+- Pola tabel daftar: `src/app/farmasi/copy-resep/page.tsx`; untuk state kosong tanpa garis sel, lihat `src/app/resume-pasien/page.tsx`.
 - Halaman klinis bertab dan panel aksi bersama: `src/app/tindakan-rawat-jalan/page.tsx` beserta komponen tabnya.
 - Panel aksi, filter, pagination, dan tombol kembali: `src/components/modul/PanelBawah.tsx`.
 - Form desktop: `src/components/modul/GridFormulirModul.tsx`.
@@ -52,9 +52,10 @@ Ikuti pola tabel pada halaman Copy Resep:
 - Panel tabel memakai `flex min-h-0 flex-1 flex-col overflow-hidden`; pembungkus scroll di dalamnya memakai `min-h-0 flex-1 overflow-auto` dan `aria-busy` saat memuat.
 - Tabel memakai `border-collapse`, `text-[11px]`, dan lebar minimum yang mencegah kolom kritis terjepit.
 - Header sticky memakai `sticky top-0 z-10 bg-slate-100 text-slate-700`.
-- Header: `border-b border-r border-slate-200 px-2 py-2 text-center` dan `scope="col"`.
-- Sel: `border-b border-r border-slate-100 px-2 py-1.5`.
-- Baris biasa memakai `even:bg-slate-50/70 hover:bg-slate-50`; pilihan memakai `bg-primary-100` tanpa mengubah font atau ukuran kolom.
+- Header: `border-b border-slate-200 px-2 py-2 text-center` dan `scope="col"`.
+- Jangan gunakan border vertikal maupun grid border pada tabel modul. Gunakan pola minimal seperti `src/app/rawat-inap/page.tsx`: header cukup memiliki `border-b border-slate-200`; pisahkan baris data dengan `divide-y divide-slate-100`, dan gunakan padding `px-2 py-1.5` pada sel.
+- Baris data biasa berlatar putih dan memakai `hover:bg-slate-50/80`; jangan gunakan zebra striping. Pilihan memakai `bg-primary-100` tanpa mengubah font atau ukuran kolom. Bila satu entri terdiri dari beberapa baris atau sel turunan, terapkan `bg-primary-100` yang sama pada seluruh bagian entri; jangan beri sel tertentu warna pilihan yang lebih gelap atau lebih terang.
+- Sel loading dan kosong memakai `colSpan`, `h-36` atau `h-44`, rata tengah, dan tidak memiliki border (`border-0`) agar garis tidak muncul di tengah area kosong.
 - Teks data tetap netral. Gunakan monospace/tabular hanya untuk kode, nomor, tanggal, jam, jumlah, dan nilai uang.
 - Sediakan `caption` yang aksesibel. Empty/loading state berada dalam tabel dengan `colSpan` yang benar, rata tengah, dan tinggi konsisten (`h-44` untuk empty, `h-36` saat memuat).
 - Jangan membuat variasi warna tabel khusus per halaman kecuali menunjukkan status yang nyata.
