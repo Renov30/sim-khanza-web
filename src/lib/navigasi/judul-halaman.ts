@@ -9,6 +9,7 @@ const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/jadwal-dokter": "Jadwal Praktek Dokter",
   "/tarif-ralan": "Tarif Rawat Jalan",
   "/tarif-ranap": "Tarif Rawat Inap",
+  "/tarif-lab": "Tarif Lab",
   "/igd": "IGD / UGD",
   "/rawat-jalan": "Rawat Jalan",
   "/tindakan-rawat-jalan": "Tindakan Ralan",

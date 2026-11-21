@@ -96,6 +96,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       return;
     }
     if (
+      title === "Tarif Lab"
+      || title === "Master Tarif Lab"
+      || title === "Master Tarif Laboratorium"
+      || title === "Tarif Laboratorium"
+      || title === "Tarif Pemeriksaan Laboratorium"
+    ) {
+      router.push("/tarif-lab");
+      return;
+    }
+    if (
       title === "Data Pasien"
       || title === "Cari Data Pasien"
       || title === "Cari Data Pasien (Rekam Medis)"

@@ -1470,6 +1470,15 @@ export const MENU_ITEMS: MenuItem[] = [
     permissionKey: "tarif_ranap",
   },
   {
+    id: "tarif-lab",
+    title: "Master Tarif Laboratorium",
+    categoryCode: "K",
+    categoryName: "Keuangan",
+    iconName: "TestTubes",
+    description: "Pengaturan tarif pemeriksaan laboratorium, jasa medis, BHP, kelas, dan kategori",
+    permissionKey: "tarif_lab",
+  },
+  {
     id: "jurnal-keuangan",
     title: "Jurnal & Buku Besar",
     categoryCode: "K",

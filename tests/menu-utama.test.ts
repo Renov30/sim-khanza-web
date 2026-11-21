@@ -57,8 +57,12 @@ test("menu representatif dari frmUtama tersedia dengan izinnya", () => {
   assert.equal(menu.get("btn-tindakan-ralan")?.permissionKey, "tarif_ralan");
   assert.equal(menu.get("btn-tindakan-ranap")?.title, "Tarif Ranap");
   assert.equal(menu.get("btn-tindakan-ranap")?.permissionKey, "tarif_ranap");
+  assert.equal(menu.get("btn-tarif-lab")?.title, "Tarif Lab");
+  assert.equal(menu.get("btn-tarif-lab")?.permissionKey, "tarif_lab");
   assert.equal(menu.get("tarif-ralan")?.title, "Master Tarif Ralan");
   assert.equal(menu.get("tarif-ranap")?.permissionKey, "tarif_ranap");
+  assert.equal(menu.get("tarif-lab")?.title, "Master Tarif Laboratorium");
+  assert.equal(menu.get("tarif-lab")?.permissionKey, "tarif_lab");
   assert.equal(menu.get("btn-analisa-kamar")?.categoryCode, "A");
   assert.equal(menu.get("btn-barcode-ralan")?.permissionKey, "barcoderalan");
   assert.equal(menu.get("btn-jenis-parkir")?.categoryCode, "H");

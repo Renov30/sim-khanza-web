@@ -24,6 +24,7 @@
     "test:poliklinik": "node --test tests/poliklinik-api.test.mjs",
     "test:jadwal-dokter": "node --test tests/jadwal-dokter-api.test.mjs",
     "test:tarif-perawatan": "node --test tests/tarif-perawatan-api.test.mjs",
+    "test:tarif-lab": "node --test tests/tarif-lab-api.test.mjs tests/tarif-lab-template-api.test.mjs",
     "test:riwayat-pasien": "node --test tests/riwayat-pasien-api.test.mjs",
     "test:resume-pasien": "node --test tests/resume-pasien-api.test.mjs",
     "test:menu-konteks": "tsc --target ES2022 --module commonjs --esModuleInterop --strict --skipLibCheck --outDir .next/menu-tests tests/menu-konteks.test.ts && node --test .next/menu-tests/tests/menu-konteks.test.js",

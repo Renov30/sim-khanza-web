@@ -78,6 +78,7 @@ Referensi desktop berada di `../simitra-keluarga-merauke/` dan hanya digunakan u
 | Jadwal praktek dokter | `/api/jadwal-dokter`, `/api/jadwal-dokter/options` | Admin atau izin `jadwal_praktek`. |
 | Tarif rawat jalan | `/api/tarif-ralan`, `/api/tarif-ralan/options`, `/api/tarif-ralan/kode` | Admin atau izin `tarif_ralan`. |
 | Tarif rawat inap | `/api/tarif-ranap`, `/api/tarif-ranap/options`, `/api/tarif-ranap/kode` | Admin atau izin `tarif_ranap`. |
+| Tarif laboratorium | `/api/tarif-lab`, `/api/tarif-lab/options`, `/api/tarif-lab/kode`, `/api/tarif-lab/template` | Admin atau izin `tarif_lab`. |
 | Copy resep | `/api/farmasi/copy-resep` | Admin atau izin resep obat. |
 | Input resep dan daftar resep dokter | `/api/farmasi/resep-obat`, `/api/farmasi/daftar-resep-dokter` | Admin atau izin resep obat. |
 
@@ -211,6 +212,21 @@ Halaman `/pasien` memakai entri menu `btn-data-pasien` (`Data Pasien`) sebagai p
 - Duplikat kode menghasilkan 409 dan gagalnya relasi foreign key diterjemahkan menjadi 400. Seluruh mutasi memakai transaksi, rollback, query berparameter, dan otorisasi server.
 - Tab `Data Sampah` memaksa `status=0` pada daftar dan filter status disembunyikan. Klik baris pada tab ini hanya memilih baris, tidak mengisi formulir; aksi Simpan, Baru, Ganti, dan Nonaktifkan disembunyikan. Tombol `Pulihkan` mengirim `PATCH status='1'` untuk baris tercentang, lalu daftar dimuat ulang.
 - Hard delete dari dialog `Data Sampah` Java tidak dipindahkan. Perubahan ini mengurangi risiko kehilangan data tarif yang masih dipakai transaksi.
+
+## Aturan bisnis tarif laboratorium
+
+- Halaman `/tarif-lab` memakai `HalamanTarifLab` dengan panel input accordion, tabel padat bertab `Data Tarif`/`Data Sampah`, dan `PanelBawah`. Menu `btn-tarif-lab` (`Tarif Lab`), entri kurasi `tarif-lab`, dan pintasan akun `Tarif Pemeriksaan Laboratorium` diarahkan ke rute ini dengan izin `tarif_lab`.
+- Tabel utama adalah `jns_perawatan_lab` dengan kunci primer `kd_jenis_prw` dan satu FK `kd_pj` ke `penjab`. Tidak ada relasi ke `kategori_perawatan`, `poliklinik`, atau `bangsal`; `kategori` (`PK`/`PA`/`MB`) dan `kelas` (delapan nilai termasuk `Rawat Jalan`) adalah enum pada tabel itu sendiri.
+- Kode otomatis berformat `J` + 6 digit dan dibuat server di bawah named lock `simrs-khanza-kode-tarif-lab`. Urutan diambil dari `RIGHT(kd_jenis_prw, 6)` hanya untuk kode yang cocok dengan `^J[0-9]{6}$`; ini mencegah loop pada batas 5 digit mentah di `autoNomer3` Java.
+- Field yang dikelola: `nm_perawatan` (80), `kd_pj` (3), `kelas`, `kategori`, dan tujuh komponen tarif (`bagian_rs`, `bhp`, `tarif_perujuk`, `tarif_tindakan_dokter`, `tarif_tindakan_petugas`, `kso`, `menejemen`). `total_byr` dihitung ulang di server dari ketujuh komponen dengan pembulatan ke bilangan bulat, mengikuti `isjml()` dan `DecimalFormat("####")` di Java.
+- `GET /api/tarif-lab` menggabungkan `penjab` dan menerima `cari`, `status`, `kelas`, `kategori`, `page`, dan `limit`, dengan batas 200 baris per halaman. Pencarian mencakup kode, nama pemeriksaan, jenis bayar, kelas, dan kategori. Status default `1`; `semua` menampilkan aktif dan nonaktif.
+- `GET /api/tarif-lab/options` menyediakan kategori, penjab berstatus `1`, delapan kelas, dan status aktif/nonaktif. `GET /api/tarif-lab/kode` hanya memberi saran kode dan tidak menjamin kode belum dipakai.
+- `POST` menulis status `1`. `PUT` menerima `kd_jenis_prw_lama` sebagai klausul `WHERE`, sehingga kode dapat diubah. `DELETE` menerima `{ items: [{ kd_jenis_prw }] }` dan melakukan soft delete multi-baris dalam satu transaksi. `PATCH` dengan `status: "1"` memulihkan tarif nonaktif dalam satu transaksi.
+- Duplikat kode menghasilkan 409 dan gagalnya relasi `kd_pj` diterjemahkan menjadi 400. Seluruh mutasi memakai transaksi, rollback, query berparameter, validasi sebelum database, dan otorisasi server.
+- Hard delete dari `DlgRestoreTarifLab.java` dan cetak `rptTarifLab.jrxml` tidak dipindahkan. Tab `Data Sampah` hanya menampilkan status `0`, menyembunyikan aksi mutasi aktif, dan menyediakan tombol `Pulihkan`.
+- `Template Laboratorium` di `DlgJnsPerawatanLab.java` diadaptasi menjadi sidebar kanan pada `HalamanTarifLab`. Tombol `Item Pemeriksaan` di `PanelBawah` hanya aktif untuk tarif tersimpan berkategori `PK` atau `MB`; kategori `PA` ditolak dengan pesan yang sama seperti Java.
+- Sidebar menampilkan `id_template` sebagai field baca-saji dan kolom tabel karena kolom tersebut adalah `AUTO_INCREMENT` pada `template_laboratorium`. Field yang dikelola pengguna hanya `Pemeriksaan` (200) dan empat `nilai_rujukan_*` (30). Sesuai keputusan web, biaya per item tidak dikelola: server menulis `satuan = ''` dan `biaya_item = 0`, serta tidak menampilkan keduanya di sidebar. Kolom `method` tidak dipakai karena tidak ada pada tabel runtime, meskipun dump lama menyebutkannya.
+- Endpoint `/api/tarif-lab/template?kd_jenis_prw=...` mengembalikan item yang diurutkan server berdasarkan `urut, id_template`, tanpa data biaya item. `POST`/`PUT`/`DELETE` memakai izin `tarif_lab`, validasi sebelum database, query berparameter, named lock `simrs-khanza-template-lab-<kode>`, transaksi, rollback, dan penomoran `urut` ulang setelah mutasi. `DELETE` bersifat hard delete seperti Java; kegagalan foreign key diterjemahkan menjadi 409 dan risikonya disampaikan lewat `KonfirmasiDialog`.
 
 ## Aturan bisnis riwayat pasien
 

@@ -16,6 +16,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Jadwal praktek dokter | Aktif | Master `jadwal` dari `DlgJadwal.java`, panel input accordion dan tabel, dropdown dokter/poliklinik/hari/jam, kunci komposit empat kolom untuk ubah dan tiga kolom untuk hapus, izin `jadwal_praktek`. |
 | Tarif rawat jalan | Aktif | Master `jns_perawatan` dari `DlgJnsPerawatanRalan.java`, panel input accordion dan tabel 15 kolom, kode otomatis `RJ` + 5 digit dengan named lock, komponen tarif, soft delete, dan izin `tarif_ralan`. |
 | Tarif rawat inap | Aktif | Master `jns_perawatan_inap` dari `DlgJnsPerawatanRanap.java`, panel input accordion dan tabel 16 kolom, kode otomatis `RI` + 5 digit dengan named lock, bangsal dan kelas, soft delete, dan izin `tarif_ranap`. |
+| Tarif laboratorium | Aktif | Master `jns_perawatan_lab` dari `DlgJnsPerawatanLab.java`, panel input accordion dan tabel 14 kolom, kode otomatis `J` + 6 digit dengan named lock, komponen jasa/perujuk, kelas dan kategori enum, sidebar item pemeriksaan dengan `id_template`, soft delete, dan izin `tarif_lab`. |
 | Registrasi | Aktif | Filter, pagination, tambah, koreksi, hapus terbatas, penomoran, tarif, dan rujukan. |
 | IGD | Aktif | Panel input accordion, penomoran, tarif, rujukan, ubah/hapus terbatas, filter, dan menu kontekstual. |
 | Rawat jalan, rawat inap | Eksperimental | Halaman dan query baca awal; belum workflow lengkap. |
@@ -31,6 +32,18 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
 
 ## Riwayat pengembangan
+
+### 21 November 2026 — tarif laboratorium
+
+- Perubahan perilaku yang disengaja: menu `Tarif Lab` (`btn-tarif-lab`), entri kurasi `tarif-lab`, dan pintasan akun `Tarif Pemeriksaan Laboratorium` kini membuka `/tarif-lab` dengan izin `tarif_lab`, sehingga katalog menjadi 1.169 menu. Judul navbar memakai `Tarif Lab`.
+- Halaman `HalamanTarifLab` mengikuti pola tarif ralan/ranap: `PanelInputData`, `GridFormulirModul`, tabel padat bertab `Data Tarif`/`Data Sampah`, `PanelBawah`, `CustomSelect`, `Toast`, dan `KonfirmasiDialog`. Field, urutan tabel, dan label mengikuti `DlgJnsPerawatanLab.java`, tanpa membawa gaya visual Swing.
+- Berbeda dari ralan/ranap, tabel `jns_perawatan_lab` tidak memiliki `kd_kategori`, poliklinik, bangsal, atau tiga total terpisah. Kategori memakai enum dalam tabel `PK`/`PA`/`MB`; kelas memakai delapan nilai enum schema termasuk `Rawat Jalan`; satu `total_byr` dihitung server dari tujuh komponen (`bagian_rs`, `bhp`, `tarif_perujuk`, tindakan dokter, tindakan petugas, `kso`, `menejemen`) dengan pembulatan bulat seperti `DecimalFormat("####")`.
+- Kode otomatis memakai `J` + 6 digit di bawah named lock `simrs-khanza-kode-tarif-lab`. Ini mengikuti hasil `autoNomer3` Java, tetapi pembacaan urutan memakai `RIGHT(kd_jenis_prw, 6)` dan hanya kode berprefiks `J`; perbaikan teknis ini mencegah `J000099` kembali ke `J000001` setelah melewati batas 5 digit mentah pada query Java.
+- `GET /api/tarif-lab` menggabungkan `penjab`, menerima `cari`, `status`, `kelas`, `kategori`, `page`, dan `limit` dengan batas 200. `GET /options` hanya menawarkan penjab aktif. `GET /kode` memberi saran kode. `POST`, `PUT`, `DELETE`, dan `PATCH` memakai validasi sebelum database, query berparameter, transaksi, rollback, serta penanganan duplikat dan FK.
+- Hapus tetap soft delete `status='0'` dan tab `Data Sampah` menyediakan `Pulihkan`. Hard delete dari dialog restore Java tidak dipindahkan agar tarif yang masih dipakai transaksi tidak hilang. Cetak `rptTarifLab.jrxml` belum menjadi bagian halaman ini.
+- Popup `Template Laboratorium` diadaptasi sebagai sidebar kanan yang dibuka dari `PanelBawah`. Tombol hanya aktif untuk tarif kategori `PK`/`MB` dengan baris tersimpan, mengikuti pemeriksaan `ppTemplateActionPerformed` di `DlgJnsPerawatanLab.java`. Sidebar menyederhanakan input menjadi nama item dan empat nilai rujukan; `id_template` AUTO_INCREMENT tetap tampil sebagai field baca-saji dan kolom tabel, serta mendukung tambah, ubah, dan hapus item dengan konfirmasi.
+- Endpoint `/api/tarif-lab/template` menyediakan `GET`/`POST`/`PUT`/`DELETE` dengan izin `tarif_lab`, validasi panjang teks, named lock per kode tarif, transaksi, penomoran `urut` ulang, dan penghapusan hard delete dengan penanganan FK. Biaya per item tidak dikelola: `satuan` dan `biaya_item` masing-masing ditulis `''` dan `0` oleh server. Kolom `method` tidak dipakai karena tidak ada pada tabel runtime `template_laboratorium`.
+- Verifikasi dengan `npm run test:tarif-lab` (termasuk 10 tes template), `npm run test:tarif-perawatan`, `npm run test:menu-utama`, ESLint terarah, build, `tsc`, dan `git diff --check`.
 
 ### 21 November 2026 — tarif rawat jalan dan rawat inap
 
@@ -322,6 +335,8 @@ npm run test:resep-obat
 npm run test:copy-resep
 npm run test:riwayat-pasien
 npm run test:resume-pasien
+npm run test:tarif-perawatan
+npm run test:tarif-lab
 npm run test:menu-konteks
 npm run lint
 npm run build
