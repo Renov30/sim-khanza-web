@@ -60,6 +60,13 @@ Ikuti pola tabel pada halaman Copy Resep:
 - Sediakan `caption` yang aksesibel. Empty/loading state berada dalam tabel dengan `colSpan` yang benar, rata tengah, dan tinggi konsisten (`h-44` untuk empty, `h-36` saat memuat).
 - Jangan membuat variasi warna tabel khusus per halaman kecuali menunjukkan status yang nyata.
 
+Perilaku pilihan baris:
+
+- Jika tabel memiliki pilihan baris, klik baris yang sedang terpilih harus membatalkan pilihan tersebut. Reset juga harus mengembalikan formulir ke kondisi input baru sesuai aturan tombol Baru.
+- Pilihan baris harus dibatalkan ketika pengguna mengeklik di luar area tabel. Gunakan `ref` pada container tabel dan listener klik yang dibersihkan saat unmount; jangan mengandalkan perubahan warna saja.
+- Klik baris lain memilih baris baru seperti biasa. Jangan mengubah ukuran font, bobot font, atau lebar kolom pada state terpilih.
+- Pastikan pembatalan pilihan tidak mengganggu aksi kontrol yang memang harus tetap memakai data terpilih; bila diperlukan, letakkan kontrol tersebut dalam area pengecualian yang terdokumentasi.
+
 ## Tab, form, dan panel bawah
 
 - Tab Input/Data mengikuti `src/app/pasien/page.tsx`: pembungkus `flex shrink-0 border-b border-slate-200`, tombol `px-4 py-2 text-xs font-semibold border-b-2`, tab aktif `bg-white border-primary-700 text-slate-900`, dan tab tidak aktif `border-transparent text-slate-500 hover:bg-slate-100`.
