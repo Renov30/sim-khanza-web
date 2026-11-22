@@ -149,7 +149,7 @@ export default function HalamanTindakanRawatJalan() {
       tampilkanToast("Pilih kunjungan pasien terlebih dahulu.", "info");
       return;
     }
-    router.push(`/farmasi/copy-resep?no_rawat=${encodeURIComponent(pasien.no_rawat)}`);
+    router.push(`/rawat-jalan/copy-resep?no_rawat=${encodeURIComponent(pasien.no_rawat)}`);
   }, [pasien, router, tampilkanToast]);
 
   const bukaResumePasien = useCallback(() => {
@@ -316,6 +316,34 @@ export default function HalamanTindakanRawatJalan() {
     setHasilPasien([]);
     setDokter(mode !== "petugas" ? item.kd_dokter : "");
     setKodeTerpilih(new Set());
+  };
+
+  const pilihRiwayat = async (item: Riwayat) => {
+    const kunci = kunciRiwayat(item);
+    if (riwayatTerpilih === kunci) return;
+
+    setRiwayatTerpilih(kunci);
+    setTanggal(item.tgl_perawatan);
+    setJam(item.jam_rawat);
+    setDokter(item.kd_dokter || "");
+    setPetugas(item.nip || "");
+    setKodeTerpilih(new Set([item.kd_jenis_prw]));
+
+    setMemuatPasien(true);
+    try {
+      const response = await fetch(`/api/tindakan-rawat-jalan?resource=registrasi&mode=${mode}&cari=${encodeURIComponent(item.no_rawat)}`, { cache: "no-store" });
+      const json = await response.json();
+      if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat kunjungan");
+      const kunjungan = (json.data || []).find((data: RegistrasiPilihan) => data.no_rawat === item.no_rawat);
+      if (!kunjungan) throw new Error("Kunjungan rawat jalan tidak ditemukan.");
+      setPasien(kunjungan);
+      setCariPasien(`${kunjungan.no_rawat} · ${kunjungan.nm_pasien}`);
+      setHasilPasien([]);
+    } catch (error) {
+      tampilkanToast(error instanceof Error ? error.message : "Gagal memuat kunjungan", "error");
+    } finally {
+      setMemuatPasien(false);
+    }
   };
 
   const gantiTab = (berikutnya: TabRawatJalan) => {
@@ -579,7 +607,7 @@ export default function HalamanTindakanRawatJalan() {
           <tbody className="divide-y divide-slate-100 bg-white text-[11px] text-slate-700">
             {memuatRiwayat ? <tr><td colSpan={7} className="h-36 !border-0 text-center text-slate-500">Memuat tindakan...</td></tr>
               : riwayat.length === 0 ? <tr><td colSpan={7} className="h-44 !border-0 text-center text-slate-400"><FontAwesomeIcon icon={faStethoscope} className="mb-2 h-7 w-7 text-slate-300" /><p>Belum ada tindakan pada periode ini.</p></td></tr>
-                : riwayat.map((item) => <tr key={kunciRiwayat(item)} onClick={() => setRiwayatTerpilih((lama) => lama === kunciRiwayat(item) ? null : kunciRiwayat(item))} className={`cursor-pointer ${riwayatTerpilih === kunciRiwayat(item) ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
+                : riwayat.map((item) => <tr key={kunciRiwayat(item)} onClick={() => void pilihRiwayat(item)} className={`cursor-pointer ${riwayatTerpilih === kunciRiwayat(item) ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
                   <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.no_rawat}</td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.no_rkm_medis}</span><span className="block text-slate-800">{item.nm_pasien}</span></td>
                   <td className="px-2.5 py-2"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}</td>

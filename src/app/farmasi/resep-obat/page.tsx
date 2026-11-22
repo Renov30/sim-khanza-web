@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faPenToSquare, faTrashCan, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -196,7 +196,10 @@ function pesanDari(error: unknown, fallback: string) {
 
 export default function HalamanInputResep() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
+  const jalurRawatJalan = pathname.startsWith("/rawat-jalan/");
+  const jalurInputResep = jalurRawatJalan ? "/rawat-jalan/input-resep" : "/farmasi/resep-obat";
   const [kunjungan, setKunjungan] = useState<Kunjungan | null>(null);
   const [cariKunjungan, setCariKunjungan] = useState("");
   const [hasilKunjungan, setHasilKunjungan] = useState<Kunjungan[]>([]);
@@ -584,7 +587,7 @@ export default function HalamanInputResep() {
     setSumberDraft(null);
     setDraftDimuat(false);
     setKonfirmasi(false);
-    router.replace("/farmasi/resep-obat");
+    router.replace(jalurInputResep);
   };
 
   const editRacikan = (item: Racikan) => {
@@ -638,7 +641,7 @@ export default function HalamanInputResep() {
       katalogDraftRef.current = [];
       setSumberDraft(null);
       setDraftDimuat(false);
-      router.replace(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}`);
+      router.replace(`${jalurInputResep}?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}`);
       tampilkanToast(json.message || "Resep berhasil disimpan.", "sukses");
     } catch (error) {
       tampilkanToast(pesanDari(error, "Resep gagal disimpan"), "error");

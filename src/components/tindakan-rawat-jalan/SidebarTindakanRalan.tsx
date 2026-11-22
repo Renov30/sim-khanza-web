@@ -18,6 +18,7 @@ export function SidebarTindakanRalan({ noRawat, onBelumTersedia, onRiwayatPasien
       onRiwayatPasien={onRiwayatPasien}
       onCopyResep={onCopyResep}
       onResumePasien={onResumePasien}
+      hrefInputResep="/rawat-jalan/input-resep"
       ariaLabel="Menu tindakan rawat jalan"
     />
   );
