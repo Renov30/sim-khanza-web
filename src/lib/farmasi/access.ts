@@ -22,3 +22,14 @@ export async function masterObatAccess() {
   }
   return null;
 }
+
+export async function validasiObatAccess() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: "Silakan login kembali." }, { status: 401 });
+  }
+  if (!session.isAdmin && !session.permissions.beri_obat) {
+    return NextResponse.json({ success: false, error: "Akses validasi obat tidak diizinkan." }, { status: 403 });
+  }
+  return null;
+}

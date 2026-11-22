@@ -19,7 +19,7 @@
     "test:rawat-inap": "node --test tests/rawat-inap-api.test.mjs",
     "test:rawat-inap-mutasi": "node --test tests/rawat-inap-mutasi-api.test.mjs",
     "test:igd": "node --test tests/igd-api.test.mjs",
-    "test:resep-obat": "node --test tests/resep-obat-api.test.mjs tests/daftar-resep-dokter-api.test.mjs",
+    "test:resep-obat": "node --test tests/resep-obat-api.test.mjs tests/daftar-resep-dokter-api.test.mjs tests/validasi-obat-api.test.mjs tests/no-resep-api.test.mjs",
     "test:copy-resep": "node --test tests/copy-resep-api.test.mjs",
     "test:master-obat": "node --test tests/master-obat-api.test.mjs",
     "test:pegawai": "node --test tests/pegawai-api.test.mjs",

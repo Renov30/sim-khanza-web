@@ -26,7 +26,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 | Tindakan, tab Pemeriksaan | Alur pemeriksaan tersedia | Tanda vital, SOAPIE, obstetri, dan ginekologi mendukung tambah, koreksi, hapus, filter, serta cetak. |
 | Input Resep | Alur resep rawat jalan tersedia | Katalog dan stok per depo, resep umum, racikan, aturan pakai, dan penyimpanan. |
 | Copy Resep | Alur salin dan koreksi tersedia | Riwayat pasien/dokter, copy ke kunjungan aktif, ubah, dan hapus resep belum tervalidasi. |
-| Daftar Resep Dokter | Daftar dan detail tersedia | Rawat jalan dan inap. Petugas dapat melihat riwayat validasi dan penyerahan. Aksi validasi dan penyerahan dari web masih tertunda. |
+| Daftar Resep Dokter | Daftar, detail, dan validasi obat tersedia | Rawat jalan dan inap. Petugas berizin `beri_obat` dapat membuka halaman Validasi Obat, memeriksa stok, lalu menyimpan pemberian obat secara atomik; penyerahan obat tetap terpisah. |
 | Rawat inap, laboratorium, radiologi, modul farmasi lainnya | Eksperimental | Cakupan dan pengujian bervariasi per modul. |
 | Database baru | Rancangan | DDL tersedia, tetapi belum digunakan aplikasi. |
 | Migrasi data Khanza | Uji staging | Skema dan importir pasien, kunjungan, pemeriksaan dan resep tersedia. Aplikasi tetap memakai Khanza. |
@@ -75,6 +75,12 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - `POST /api/radiologi/permintaan` memeriksa izin `permintaan_radiologi`, validasi input, status kunjungan, dan guard billing yang setara `Sequel.cariRegistrasi` (`billing` atau `reg_periksa.stts='Batal'`). Nomor `PR` + `yyyyMMdd` + 3 digit dibuat di dalam named lock dan transaksi; bentrok 3 digit dicoba ulang dengan 4 digit seperti Java. Permintaan dari UI disimpan sebagai header tanpa `permintaan_pemeriksaan_radiologi` karena detail pemeriksaan ditangani di `/radiologi/periksa`; array `item` masih diterima untuk kompatibilitas dan tetap divalidasi bila dikirim.
 - Karena konfigurasi Java `AKTIFKANBILLINGPARSIAL` tidak tersedia di runtime web, pengecualian billing parsial sengaja tidak diterapkan; kunjungan dengan billing terverifikasi atau status Batal ditolak. Tidak ada data pasien yang dicetak selama verifikasi database.
 - Verifikasi dengan `npm run test:permintaan-radiologi`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, dan `git diff --check`.
+### 22 November 2026 — halaman validasi obat
+
+- Tombol `Validasi` pada Daftar Resep Dokter mengikuti prasyarat `DlgDaftarPermintaanResep`: hanya tersedia pada tab ringkasan, membutuhkan resep terpilih yang belum terlayani, dan memakai izin Khanza `beri_obat` pada UI maupun endpoint. Form validasi dibuka sebagai modal agar daftar resep tetap menjadi konteks kerja.
+- Halaman `/farmasi/validasi-obat` mengadaptasi tampilan `DlgCariObat` (`Data Obat, Alkes & BHP Medis`) menjadi halaman penuh. Halaman memuat identitas resep/pasien, dokter, depo ralan/ranap, harga sesuai jenis pelayanan/kelas, stok, obat nonracikan, racikan, bahan racikan, aturan pakai, dan indikator kecukupan stok.
+- Tombol konfirmasi pada halaman menyimpan `detail_pemberian_obat`, `obat_racikan`, `detail_obat_racikan`, dan `aturan_pakai`, mengurangi stok `gudangbarang`/`data_batch`, lalu menandai `resep_obat.tgl_perawatan` dan `jam` dalam satu transaksi. Server mengunci header resep dan baris stok, menolak billing yang sudah terkunci, resep tervalidasi, kunjungan batal, barang nonaktif, dan stok tidak cukup.
+- Endpoint `GET`/`POST /api/farmasi/validasi-obat` memakai query berparameter, validasi nomor resep, pemetaan depo sesuai jenis perawatan, izin server `beri_obat`, dan rollback transaksi. Verifikasi dengan `npm run test:resep-obat`, ESLint terarah, TypeScript, dan `git diff --check`.
 
 ### 21 November 2026 — pagination Data Pasien dan Rawat Inap
 
@@ -229,6 +235,12 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Ringkasan menampilkan status pelayanan, unit atau ruang aktif, jenis bayar, waktu validasi, dan penyerahan rawat jalan. Detail memuat obat nonracikan, racikan, serta bahan racikan.
 - Filter periode, status, dokter, unit, dan kata kunci dijalankan di server. Data dipaginasi maksimal 100 resep per halaman dan jumlah record dihitung terpisah agar tabel tetap ringan.
 - Endpoint dilindungi izin `resep_obat`, memakai validasi filter dan query berparameter, serta menangani relasi `ranap_gabung` untuk ruang rawat inap aktif.
+
+### 22 November 2026 — validasi obat resep
+
+- Tombol `Validasi` pada daftar resep dokter membuka modal data obat, alkes, dan BHP dengan header identitas pasien, tab Umum/Racikan, serta jumlah dan aturan pakai yang dapat dikoreksi sebelum validasi.
+- Perubahan jumlah/aturan pakai dikirim ke endpoint validasi dan disimpan bersama pengurangan stok dalam satu transaksi yang dilindungi izin `beri_obat`.
+- Setelah validasi berhasil, alur membuka halaman `/farmasi/no-resep` yang mengadaptasi `DlgResepObat`: identitas resep, dokter peresep, obat nonracikan, racikan, bahan racikan, aturan pakai, rincian biaya, total, dan aksi cetak ditampilkan dari data pelayanan yang baru disimpan.
 
 ### 19 November 2026 — tema terang dan gelap
 

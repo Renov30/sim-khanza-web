@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { ValidasiObatDialog } from "@/components/farmasi/ValidasiObatDialog";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { registrationDate } from "@/lib/registrasi/date";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
+  faClipboardCheck,
   faFilePrescription,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -49,6 +52,11 @@ interface ResepDetail extends ResepRingkasan {
 
 type BarisResep = ResepRingkasan | ResepDetail;
 
+interface ResepDenganDetail {
+  ringkasan: ResepDetail;
+  items: ResepDetail[];
+}
+
 const BATAS_DATA = 100;
 const JENIS_PERAWATAN: JenisPerawatan[] = ["ralan", "ranap"];
 const TAMPILAN_DATA: TampilanData[] = ["ringkasan", "detail"];
@@ -65,8 +73,25 @@ function labelTampilan(tampilan: TampilanData, jenis: JenisPerawatan) {
   return `${tampilan === "ringkasan" ? "Resep" : "Detail"} ${labelJenis(jenis)}`;
 }
 
+function kelompokkanDetail(data: BarisResep[]): ResepDenganDetail[] {
+  const kelompok = new Map<string, ResepDenganDetail>();
+
+  for (const item of data) {
+    if (!adalahDetail(item)) continue;
+    const resep = kelompok.get(item.no_resep);
+    if (resep) {
+      resep.items.push(item);
+    } else {
+      kelompok.set(item.no_resep, { ringkasan: item, items: [item] });
+    }
+  }
+
+  return Array.from(kelompok.values());
+}
+
 export default function HalamanDaftarResepDokter() {
-  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { hasPermission, isAuthenticated } = useAuth();
   const hariIni = registrationDate();
   const permintaanAktif = useRef<AbortController | null>(null);
 
@@ -78,6 +103,7 @@ export default function HalamanDaftarResepDokter() {
   const [halaman, setHalaman] = useState(1);
   const [versiData, setVersiData] = useState(0);
   const [noResepTerpilih, setNoResepTerpilih] = useState<string | null>(null);
+  const [noResepValidasi, setNoResepValidasi] = useState<string | null>(null);
   const [toast, setToast] = useState<{ pesan: string; tipe: ToastTipe } | null>(null);
 
   const [tanggalMulai, setTanggalMulai] = useState(hariIni);
@@ -89,6 +115,10 @@ export default function HalamanDaftarResepDokter() {
   const [filterTeks, setFilterTeks] = useState({ dokter: "", unit: "", kataKunci: "" });
 
   const jumlahHalaman = Math.max(1, Math.ceil(totalData / BATAS_DATA));
+  const detailDikelompokkan = kelompokkanDetail(data);
+  const resepTerpilih = noResepTerpilih
+    ? data.find((item) => item.no_resep === noResepTerpilih) || null
+    : null;
 
   const tampilkanToast = useCallback((pesan: string, tipe: ToastTipe = "info") => {
     setToast({ pesan, tipe });
@@ -189,6 +219,30 @@ export default function HalamanDaftarResepDokter() {
     setNoResepTerpilih(null);
   };
 
+  const pilihResep = (noResep: string) => {
+    setNoResepTerpilih((aktif) => aktif === noResep ? null : noResep);
+  };
+
+  const bukaValidasi = () => {
+    if (!hasPermission("beri_obat")) {
+      tampilkanToast("Akses validasi obat tidak diizinkan.", "error");
+      return;
+    }
+    if (tampilan !== "ringkasan") {
+      tampilkanToast("Buka tab daftar resep untuk melakukan validasi.", "info");
+      return;
+    }
+    if (!resepTerpilih) {
+      tampilkanToast("Pilih resep dokter yang akan divalidasi.", "info");
+      return;
+    }
+    if (resepTerpilih.status_pelayanan === "Sudah Terlayani") {
+      tampilkanToast(`Resep ${resepTerpilih.no_resep} sudah tervalidasi.`, "info");
+      return;
+    }
+    setNoResepValidasi(resepTerpilih.no_resep);
+  };
+
   const navigasiTab = <T extends string>(
     event: React.KeyboardEvent<HTMLButtonElement>,
     daftar: T[],
@@ -209,14 +263,16 @@ export default function HalamanDaftarResepDokter() {
   };
 
   const kelasBaris = (item: BarisResep, indeks: number) => {
-    if (noResepTerpilih === item.no_resep) return "bg-primary-50";
+    if (noResepTerpilih === item.no_resep) return "bg-primary-100";
     if (adalahDetail(item) && item.jenis_item === "Bahan Racikan") return "bg-slate-50 text-slate-600";
     return indeks % 2 === 1 ? "bg-slate-50/60" : "bg-white";
   };
 
   const pagination = (
     <>
-      <span>Halaman {halaman} dari {jumlahHalaman}</span>
+      <span>
+        {tampilan === "detail" ? detailDikelompokkan.length : data.length} dari {totalData} resep · Halaman {halaman} / {jumlahHalaman}
+      </span>
       <button
         type="button"
         onClick={() => setHalaman((nilai) => Math.max(1, nilai - 1))}
@@ -327,10 +383,10 @@ export default function HalamanDaftarResepDokter() {
                   </tr>
                 ) : data.map((item, indeks) => (
                   <tr
-                    key={item.no_resep}
-                    onClick={() => setNoResepTerpilih(item.no_resep)}
+                    key={`${item.no_resep}-${item.no_rawat}-${item.kd_dokter}-${indeks}`}
+                    onClick={() => pilihResep(item.no_resep)}
                     aria-selected={noResepTerpilih === item.no_resep}
-                    className={`${kelasBaris(item, indeks)} cursor-pointer border-b border-slate-100 hover:bg-slate-100`}
+                    className={`${kelasBaris(item, indeks)} cursor-pointer border-b border-slate-100 ${noResepTerpilih === item.no_resep ? "" : "hover:bg-slate-100"}`}
                   >
                     <td className="whitespace-nowrap px-2.5 py-2 text-center font-mono tabular-nums text-slate-800">{item.no_resep}</td>
                     <td className="whitespace-nowrap px-2.5 py-2 text-center tabular-nums">{item.tgl_peresepan}</td>
@@ -355,58 +411,39 @@ export default function HalamanDaftarResepDokter() {
               </tbody>
             </table>
           ) : (
-            <table className="min-w-[104rem] w-full border-collapse text-left text-xs text-slate-700">
+            <table className="w-full min-w-[78rem] border-collapse text-left text-[11px] text-slate-700">
               <caption className="sr-only">Rincian obat resep dokter {labelJenis(jenis).toLowerCase()}.</caption>
-              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-slate-700 shadow-2xs">
+              <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
-                  <th scope="col" className="w-28 whitespace-nowrap px-2.5 py-2 text-center">No. Resep</th>
-                  <th scope="col" className="w-40 whitespace-nowrap px-2.5 py-2 text-center">Tgl. &amp; Jam Resep</th>
-                  <th scope="col" className="min-w-40 px-2.5 py-2">{jenis === "ralan" ? "Poli/Unit" : "Ruang/Kamar"}</th>
-                  <th scope="col" className="w-32 whitespace-nowrap px-2.5 py-2 text-center">Status</th>
-                  <th scope="col" className="min-w-52 px-2.5 py-2">Pasien</th>
-                  <th scope="col" className="min-w-48 px-2.5 py-2">Dokter Peresep</th>
-                  <th scope="col" className="w-28 whitespace-nowrap px-2.5 py-2 text-center">Jenis</th>
-                  <th scope="col" className="w-24 whitespace-nowrap px-2.5 py-2 text-center">Jumlah</th>
-                  <th scope="col" className="w-32 whitespace-nowrap px-2.5 py-2 text-center">Kode Item</th>
-                  <th scope="col" className="min-w-56 px-2.5 py-2">Obat / Racikan</th>
-                  <th scope="col" className="min-w-44 px-2.5 py-2">Aturan Pakai</th>
-                  <th scope="col" className="min-w-40 px-2.5 py-2">Keterangan</th>
+                  <th scope="col" className="w-28 border-b border-slate-200 px-2 py-2 text-center">No. Resep</th>
+                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2 text-center">Tgl. Resep</th>
+                  <th scope="col" className="w-20 border-b border-slate-200 px-2 py-2 text-center">Jam Resep</th>
+                  <th scope="col" className="w-36 border-b border-slate-200 px-2 py-2 text-center">No. Rawat</th>
+                  <th scope="col" className="w-24 border-b border-slate-200 px-2 py-2 text-center">No. RM</th>
+                  <th scope="col" className="min-w-56 border-b border-slate-200 px-2 py-2 text-center">Pasien</th>
+                  <th scope="col" className="min-w-52 border-b border-slate-200 px-2 py-2 text-center">Dokter Peresep</th>
+                  <th scope="col" className="min-w-40 border-b border-slate-200 px-2 py-2 text-center">{jenis === "ralan" ? "Poli/Unit" : "Ruang/Kamar"}</th>
+                  <th scope="col" className="w-32 border-b border-slate-200 px-2 py-2 text-center">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {memuat ? (
-                  <tr><td colSpan={12} className="h-36 px-3 text-center text-slate-500">Memuat rincian resep dokter...</td></tr>
-                ) : data.length === 0 ? (
+                  <tr><td colSpan={9} className="h-36 border-0 px-3 text-center text-slate-500">Memuat rincian resep dokter...</td></tr>
+                ) : detailDikelompokkan.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="h-44 px-3 text-center text-slate-500">
+                    <td colSpan={9} className="h-44 border-0 px-3 text-center text-slate-500">
                       <FontAwesomeIcon icon={faFilePrescription} className="mb-2 h-7 w-7 text-slate-300" />
                       <p>Tidak ada rincian resep pada filter yang dipilih.</p>
                     </td>
                   </tr>
-                ) : data.map((item, indeks) => {
-                  if (!adalahDetail(item)) return null;
-                  return (
-                    <tr
-                      key={`${item.no_resep}-${item.jenis_item}-${item.no_racik}-${item.kode_item}-${indeks}`}
-                      onClick={() => setNoResepTerpilih(item.no_resep)}
-                      aria-selected={noResepTerpilih === item.no_resep}
-                      className={`${kelasBaris(item, indeks)} cursor-pointer border-b border-slate-100 hover:bg-slate-100`}
-                    >
-                      <td className="whitespace-nowrap px-2.5 py-2 text-center font-mono tabular-nums text-slate-800">{item.no_resep}</td>
-                      <td className="whitespace-nowrap px-2.5 py-2 text-center font-mono tabular-nums">{item.tgl_peresepan} {item.jam_peresepan}</td>
-                      <td className="max-w-52 truncate px-2.5 py-2" title={item.nm_unit}>{item.nm_unit}</td>
-                      <td className="whitespace-nowrap px-2.5 py-2 text-center">{item.status_pelayanan}</td>
-                      <td className="max-w-64 truncate px-2.5 py-2 text-slate-800" title={`${item.no_rawat} · ${item.no_rkm_medis} · ${item.nm_pasien}`}>{item.nm_pasien}</td>
-                      <td className="max-w-64 truncate px-2.5 py-2" title={item.nm_dokter}>{item.nm_dokter}</td>
-                      <td className="whitespace-nowrap px-2.5 py-2 text-center">{item.jenis_item}</td>
-                      <td className="whitespace-nowrap px-2.5 py-2 text-center font-mono tabular-nums">{item.jumlah ? `${item.jumlah} ${item.satuan}` : "-"}</td>
-                      <td className={`${item.jenis_item === "Bahan Racikan" ? "pl-5" : ""} whitespace-nowrap px-2.5 py-2 text-center font-mono`}>{item.kode_item || "-"}</td>
-                      <td className={`${item.jenis_item === "Bahan Racikan" ? "pl-5" : ""} max-w-72 truncate px-2.5 py-2 text-slate-800`} title={item.nama_item}>{item.nama_item}</td>
-                      <td className="max-w-56 whitespace-normal px-2.5 py-2" title={item.aturan_pakai}>{item.aturan_pakai || "-"}</td>
-                      <td className="max-w-52 whitespace-normal px-2.5 py-2" title={item.keterangan}>{item.keterangan || "-"}</td>
-                    </tr>
-                  );
-                })}
+                ) : detailDikelompokkan.map((resep) => (
+                  <FragmentDetailResep
+                    key={resep.ringkasan.no_resep}
+                    resep={resep}
+                    dipilih={noResepTerpilih === resep.ringkasan.no_resep}
+                    onPilih={() => pilihResep(resep.ringkasan.no_resep)}
+                  />
+                ))}
               </tbody>
             </table>
           )}
@@ -466,8 +503,19 @@ export default function HalamanDaftarResepDokter() {
             </div>
           )}
           onCetak={() => window.print()}
+          tombolTambahan={[
+            {
+              label: "Validasi",
+              ikon: faClipboardCheck,
+              onClick: bukaValidasi,
+              disabled: !hasPermission("beri_obat") || tampilan !== "ringkasan" || !resepTerpilih || resepTerpilih.status_pelayanan === "Sudah Terlayani",
+              varian: "primer",
+              tooltip: "Buka halaman validasi obat",
+            },
+          ]}
           onSemua={resetFilter}
           jumlahRecord={totalData}
+          tampilkanRecord={false}
           pagination={pagination}
           memuat={memuat}
         />
@@ -476,7 +524,81 @@ export default function HalamanDaftarResepDokter() {
       <span className="sr-only" aria-live="polite">
         {memuat ? "Memuat data resep" : `${totalData} resep ditemukan`}
       </span>
+      {noResepValidasi && (
+        <ValidasiObatDialog
+          noResep={noResepValidasi}
+          onValidated={() => {
+            const resepSelesai = noResepValidasi;
+            setNoResepValidasi(null);
+            setNoResepTerpilih(null);
+            setVersiData((nilai) => nilai + 1);
+            router.push(`/farmasi/no-resep?no_resep=${encodeURIComponent(resepSelesai)}`);
+          }}
+          onClose={() => {
+            setNoResepValidasi(null);
+          }}
+        />
+      )}
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
+  );
+}
+
+function FragmentDetailResep({ resep, dipilih, onPilih }: {
+  resep: ResepDenganDetail;
+  dipilih: boolean;
+  onPilih: () => void;
+}) {
+  const ringkasan = resep.ringkasan;
+  const kelasPilihan = dipilih ? "bg-primary-100" : "bg-white";
+
+  return (
+    <>
+      <tr
+        onClick={onPilih}
+        aria-selected={dipilih}
+        className={`cursor-pointer ${dipilih ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}
+      >
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums text-slate-800">{ringkasan.no_resep}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center tabular-nums">{ringkasan.tgl_peresepan}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{ringkasan.jam_peresepan}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{ringkasan.no_rawat}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{ringkasan.no_rkm_medis}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-slate-800">{ringkasan.nm_pasien}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5">{ringkasan.nm_dokter}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5">{ringkasan.nm_unit}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center">{ringkasan.status_pelayanan}</td>
+      </tr>
+      <tr className={dipilih ? "bg-primary-100" : "bg-slate-100/70"}>
+        <td className="border-b border-slate-100" />
+        <td className="border-b border-slate-100" />
+        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Jumlah</th>
+        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Satuan</th>
+        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-left font-semibold">Aturan Pakai</th>
+        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Kode / No.</th>
+        <th scope="col" colSpan={2} className="border-b border-slate-100 px-2 py-1 text-left font-semibold">Nama Obat / Racikan</th>
+        <th scope="col" className="border-b border-slate-100 px-2 py-1 text-center font-semibold">Jenis</th>
+      </tr>
+      {resep.items.map((item, indeks) => (
+        <tr
+          key={`${item.no_resep}-${item.jenis_item}-${item.no_racik}-${item.kode_item}-${indeks}`}
+          onClick={onPilih}
+          aria-selected={dipilih}
+          className={`cursor-pointer ${kelasPilihan} ${dipilih ? "" : "hover:bg-slate-50/80"}`}
+        >
+          <td className="border-b border-slate-100" />
+          <td className="border-b border-slate-100" />
+          <td className={`${item.jenis_item === "Bahan Racikan" ? "pl-6" : ""} border-b border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums`}>{item.jumlah || "-"}</td>
+          <td className="border-b border-slate-100 px-2 py-1.5 text-center">{item.satuan || "-"}</td>
+          <td className="border-b border-slate-100 px-2 py-1.5">{item.aturan_pakai || "-"}</td>
+          <td className={`${item.jenis_item === "Bahan Racikan" ? "pl-6" : ""} border-b border-slate-100 px-2 py-1.5 text-center font-mono`}>{item.kode_item || "-"}</td>
+          <td colSpan={2} className="border-b border-slate-100 px-2 py-1.5 text-slate-800">
+            {item.nama_item}
+            {item.keterangan && <span className="block text-slate-500">{item.keterangan}</span>}
+          </td>
+          <td className="border-b border-slate-100 px-2 py-1.5 text-center text-slate-500">{item.jenis_item}</td>
+        </tr>
+      ))}
+    </>
   );
 }

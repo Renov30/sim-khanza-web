@@ -100,6 +100,7 @@ interface SidebarMenuPasienProps {
   judul?: string;
   ariaLabel?: string;
   navLabel?: string;
+  hrefInputResep?: string;
 }
 
 export function SidebarMenuPasien({
@@ -111,6 +112,7 @@ export function SidebarMenuPasien({
   judul = "Menu Pasien",
   ariaLabel = "Menu pintasan pasien",
   navLabel = "Pintasan data pasien",
+  hrefInputResep = "/farmasi/resep-obat",
 }: SidebarMenuPasienProps) {
   const [pencarian, setPencarian] = useState("");
   const menuTersaring = useMemo(() => {
@@ -167,7 +169,7 @@ export function SidebarMenuPasien({
             <span>{item.label}</span>
           </button>
         ) : item.href ? (
-          <Link key={item.label} href={hrefDenganPasien(item.href)} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
+          <Link key={item.label} href={hrefDenganPasien(item.label === "Input Resep" ? hrefInputResep : item.href)} className="flex min-h-7 w-full items-center gap-1.5 border-b border-slate-100 px-1.5 py-1 text-left text-[11px] leading-4 text-slate-700 hover:bg-primary-50 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
             <FontAwesomeIcon icon={faCircle} className="h-1.5 w-1.5 shrink-0 text-primary-600" />
             <span>{item.label}</span>
           </Link>

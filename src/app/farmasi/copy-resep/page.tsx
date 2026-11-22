@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faCopy, faFilePrescription, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -56,7 +56,10 @@ function pesanDari(error: unknown, fallback: string) {
 
 export default function HalamanCopyResep() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
+  const jalurRawatJalan = pathname.startsWith("/rawat-jalan/");
+  const jalurInputResep = jalurRawatJalan ? "/rawat-jalan/input-resep" : "/farmasi/resep-obat";
   const hariIni = registrationDate();
   const [kunjungan, setKunjungan] = useState<Kunjungan | null>(null);
   const [cariKunjungan, setCariKunjungan] = useState("");
@@ -165,14 +168,14 @@ export default function HalamanCopyResep() {
     if (!kunjungan) return tampilkanToast("Pilih kunjungan tujuan terlebih dahulu.", "error");
     if (!resep) return tampilkanToast("Pilih nomor resep yang akan disalin.", "error");
     if (Number(kunjungan.pasien_ranap)) return tampilkanToast("Pasien sudah masuk kamar inap; gunakan resep rawat inap.", "error");
-    router.push(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&dari_no_resep=${encodeURIComponent(resep.no_resep)}`);
-  }, [kunjungan, router, tampilkanToast, terpilih]);
+    router.push(`${jalurInputResep}?no_rawat=${encodeURIComponent(kunjungan.no_rawat)}&dari_no_resep=${encodeURIComponent(resep.no_resep)}`);
+  }, [jalurInputResep, kunjungan, router, tampilkanToast, terpilih]);
 
   const bukaUbah = () => {
     if (!terpilih) return tampilkanToast("Pilih nomor resep yang akan diubah.", "error");
     if (terpilih.status !== "ralan") return tampilkanToast("Resep rawat inap harus diubah dari modul rawat inap.", "error");
     if (terpilih.status_pelayanan === "Sudah Terlayani") return tampilkanToast("Resep sudah tervalidasi dan tidak dapat diubah.", "error");
-    router.push(`/farmasi/resep-obat?no_rawat=${encodeURIComponent(terpilih.no_rawat)}&edit_resep=${encodeURIComponent(terpilih.no_resep)}`);
+    router.push(`${jalurInputResep}?no_rawat=${encodeURIComponent(terpilih.no_rawat)}&edit_resep=${encodeURIComponent(terpilih.no_resep)}`);
   };
 
   const mintaHapus = () => {
