@@ -10,23 +10,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function LocationWidget() {
-  const [timeStr, setTimeStr] = useState<string>("");
-  const [secondsStr, setSecondsStr] = useState<string>("");
+  const [waktu, setWaktu] = useState({ jam: "", detik: "" });
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setTimeStr(
-        now.toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-      setSecondsStr(
-        now.toLocaleTimeString("id-ID", {
-          second: "2-digit",
-        })
-      );
+      const jam = now.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const detik = now.toLocaleTimeString("id-ID", {
+        second: "2-digit",
+      });
+      setWaktu({ jam, detik });
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -79,10 +75,10 @@ export default function LocationWidget() {
         <div className="flex items-center gap-1.5 text-gray-700">
           <FontAwesomeIcon icon={faClock} className="text-[10px] text-gray-400" />
           <span className="font-bold tracking-tight text-gray-800 text-[13px]">
-            {timeStr || "--:--"}
+            {waktu.jam || "--:--"}
           </span>
           <span className="text-[9px] text-gray-400 -ml-0.5">
-            :{secondsStr || "00"}
+            :{waktu.detik || "00"}
           </span>
         </div>
         <span className="inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded-full bg-secondary-500/10 text-secondary-600 font-medium border border-secondary-500/20">

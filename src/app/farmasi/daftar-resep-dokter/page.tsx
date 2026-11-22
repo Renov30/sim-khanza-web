@@ -532,7 +532,7 @@ export default function HalamanDaftarResepDokter() {
             setNoResepValidasi(null);
             setNoResepTerpilih(null);
             setVersiData((nilai) => nilai + 1);
-            router.push(`/farmasi/no-resep?no_resep=${encodeURIComponent(resepSelesai)}`);
+            router.push(`/farmasi/daftar-obat-telah-tervalidasi?no_resep=${encodeURIComponent(resepSelesai)}`);
           }}
           onClose={() => {
             setNoResepValidasi(null);
@@ -567,7 +567,11 @@ function FragmentDetailResep({ resep, dipilih, onPilih }: {
         <td className="border-b border-slate-100 px-2 py-1.5 text-slate-800">{ringkasan.nm_pasien}</td>
         <td className="border-b border-slate-100 px-2 py-1.5">{ringkasan.nm_dokter}</td>
         <td className="border-b border-slate-100 px-2 py-1.5">{ringkasan.nm_unit}</td>
-        <td className="border-b border-slate-100 px-2 py-1.5 text-center">{ringkasan.status_pelayanan}</td>
+        <td className="border-b border-slate-100 px-2 py-1.5 text-center">
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] ${ringkasan.status_pelayanan === "Sudah Terlayani" ? "bg-secondary-100 text-secondary-800" : "bg-slate-100 text-slate-700"}`}>
+            {ringkasan.status_pelayanan}
+          </span>
+        </td>
       </tr>
       <tr className={dipilih ? "bg-primary-100" : "bg-slate-100/70"}>
         <td className="border-b border-slate-100" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { UserSession } from "@/lib/types/auth";
 
 const BROADCAST_AUTH_CHANNEL = "khanza_auth_sync_channel";
@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const lastActivitySync = useRef(0);
 
   const refreshSession = useCallback(async () => {
     try {
@@ -110,7 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Tab Visibility & Focus: memastikan tab yang kembali aktif selalu tersinkronisasi
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      const sekarang = Date.now();
+      if (document.visibilityState === "visible" && sekarang - lastActivitySync.current >= 5000) {
+        lastActivitySync.current = sekarang;
         refreshSession();
       }
     };

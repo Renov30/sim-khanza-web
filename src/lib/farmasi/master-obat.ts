@@ -165,7 +165,7 @@ export async function updateMasterObatStatus(connection: DbConnection, kode_brng
   return result.affectedRows;
 }
 
-export async function loadHargaSetting(connection: DbConnection): Promise<HargaSetting> {
+export async function loadHargaSetting(connection: DbConnection, kodeBrng?: string): Promise<HargaSetting> {
   const [modeRows] = await connection.execute<(RowDataPacket & { setharga: HargaSetting["mode"] })[]>(
     "SELECT setharga FROM set_harga_obat LIMIT 1",
   );
@@ -175,9 +175,12 @@ export async function loadHargaSetting(connection: DbConnection): Promise<HargaS
   const [jenisRows] = await connection.execute<(RowDataPacket & AturanHarga & { kdjns: string })[]>(
     "SELECT kdjns, ralan, kelas1, kelas2, kelas3, utama, vip, vvip, beliluar, jualbebas, karyawan FROM setpenjualan ORDER BY kdjns",
   );
-  const [barangRows] = await connection.execute<(RowDataPacket & AturanHarga & { kode_brng: string })[]>(
-    "SELECT kode_brng, ralan, kelas1, kelas2, kelas3, utama, vip, vvip, beliluar, jualbebas, karyawan FROM setpenjualanperbarang ORDER BY kode_brng",
-  );
+  const [barangRows] = kodeBrng
+    ? await connection.execute<(RowDataPacket & AturanHarga & { kode_brng: string })[]>(
+      "SELECT kode_brng, ralan, kelas1, kelas2, kelas3, utama, vip, vvip, beliluar, jualbebas, karyawan FROM setpenjualanperbarang WHERE kode_brng = ? LIMIT 1",
+      [kodeBrng],
+    )
+    : [[] as (RowDataPacket & AturanHarga & { kode_brng: string })[]];
   return {
     mode: modeRows[0]?.setharga ?? "Umum",
     umum: umumRows[0] ? { ...umumRows[0] } : null,

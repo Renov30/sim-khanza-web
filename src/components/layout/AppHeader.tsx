@@ -421,10 +421,10 @@ export function AppHeader({
                   <span>Daftar Resep Dokter</span>
                 </Link>
                 <Link
-                  href="/farmasi/resep-obat"
+                  href="/farmasi/no-resep"
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
-                    pathname === "/farmasi/resep-obat"
+                    pathname === "/farmasi/no-resep"
                       ? "bg-primary-50 text-primary-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}

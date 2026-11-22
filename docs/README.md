@@ -198,7 +198,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 - Tombol `Validasi` pada daftar resep dokter membuka modal data obat, alkes, dan BHP dengan header identitas pasien, tab Umum/Racikan, serta jumlah dan aturan pakai yang dapat dikoreksi sebelum validasi.
 - Perubahan jumlah/aturan pakai dikirim ke endpoint validasi dan disimpan bersama pengurangan stok dalam satu transaksi yang dilindungi izin `beri_obat`.
-- Setelah validasi berhasil, alur membuka halaman `/farmasi/no-resep` yang mengadaptasi `DlgResepObat`: identitas resep, dokter peresep, obat nonracikan, racikan, bahan racikan, aturan pakai, rincian biaya, total, dan aksi cetak ditampilkan dari data pelayanan yang baru disimpan.
+- Setelah validasi berhasil, alur membuka halaman `/farmasi/daftar-obat-telah-tervalidasi` yang mengadaptasi `DlgResepObat`: identitas resep, dokter peresep, obat nonracikan, racikan, bahan racikan, aturan pakai, rincian biaya, total, dan aksi cetak ditampilkan dari data pelayanan yang baru disimpan.
 
 ### 19 November 2026 — tema terang dan gelap
 

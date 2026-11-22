@@ -66,7 +66,7 @@ export default function HalamanNoResep() {
     }
     setMemuat(true);
     try {
-      const response = await fetch(`/api/farmasi/no-resep?no_resep=${encodeURIComponent(noResep)}`, { cache: "no-store", signal });
+      const response = await fetch(`/api/farmasi/daftar-obat-telah-tervalidasi?no_resep=${encodeURIComponent(noResep)}`, { cache: "no-store", signal });
       const json: { success?: boolean; data?: DataNoResep; error?: string } = await response.json();
       if (!response.ok || !json.success || !json.data) throw new Error(json.error || "Gagal memuat data nomor resep.");
       setData(json.data);
@@ -109,27 +109,35 @@ export default function HalamanNoResep() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
         <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
-          <table className="w-full min-w-[70rem] border-collapse text-left text-[11px] text-slate-700">
-            <caption className="sr-only">Rincian pemberian obat untuk nomor resep {noResep}</caption>
+          <table className="w-full min-w-[52rem] border-collapse text-left text-[11px] text-slate-700">
+            <caption className="sr-only">Daftar resep dan rincian obat untuk nomor resep {noResep}</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
-              <tr>{["No.", "Jenis", "Kode Barang", "Nama Obat / Racikan", "Jumlah", "Satuan", "Harga", "Embalase", "Tuslah", "Total", "Aturan Pakai"].map((label) => <th key={label} scope="col" className="border-b border-slate-200 px-2 py-2 text-center">{label}</th>)}</tr>
+              <tr>{["No. Resep", "Tanggal / Jam", "No. Rawat / No. RM / Pasien", "Dokter", "Rincian Obat", "Jumlah × Harga + Embalase + Tuslah = Total", "Aturan Pakai"].map((label) => <th key={label} scope="col" className="border-b border-slate-200 px-2 py-2 text-center">{label}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {memuat ? <tr><td colSpan={11} className="h-36 border-0 text-center text-slate-500">Memuat data nomor resep...</td></tr>
-                : !data || data.detail.length === 0 ? <tr><td colSpan={11} className="h-44 border-0 text-center text-slate-400">Rincian pemberian obat belum tersedia.</td></tr>
-                  : data.detail.map((item, indeks) => <tr key={`${item.jenis_item}-${item.no_racik}-${item.kode_item}-${indeks}`} className={item.jenis_item === "Racikan" ? "bg-slate-100/70" : "bg-white hover:bg-slate-50/80"}>
-                    <td className="px-2 py-1.5 text-center font-mono">{indeks + 1}</td>
-                    <td className="px-2 py-1.5 text-center">{item.jenis_item}</td>
-                    <td className="px-2 py-1.5 text-center font-mono">{item.kode_item}</td>
-                    <td className={`px-2 py-1.5 text-slate-800 ${item.jenis_item === "Bahan Racikan" ? "pl-6" : ""}`}>{item.nama_item}{item.keterangan && <span className="block text-slate-500">{item.keterangan}</span>}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{item.jumlah}</td>
-                    <td className="px-2 py-1.5 text-center">{item.satuan || "-"}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{item.jenis_item === "Racikan" ? "-" : rupiah(item.harga)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{item.jenis_item === "Racikan" ? "-" : rupiah(item.embalase)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{item.jenis_item === "Racikan" ? "-" : rupiah(item.tuslah)}</td>
-                    <td className="px-2 py-1.5 text-right font-mono">{rupiah(item.total)}</td>
-                    <td className="px-2 py-1.5">{item.aturan_pakai || "-"}</td>
-                  </tr>)}
+              {memuat ? <tr><td colSpan={7} className="h-36 border-0 text-center text-slate-500">Memuat data nomor resep...</td></tr>
+                : !data || data.detail.length === 0 ? <tr><td colSpan={7} className="h-44 border-0 text-center text-slate-400">Rincian pemberian obat belum tersedia.</td></tr>
+                  : <>
+                    <tr className="bg-slate-50 font-medium text-slate-800">
+                      <td className="px-2 py-2 font-mono">{data.header.no_resep}</td>
+                      <td className="px-2 py-2 font-mono">{tanggalIndonesia(data.header.tgl_resep)} {data.header.jam_resep}</td>
+                      <td className="px-2 py-2">{data.header.no_rawat}<span className="block font-mono">{data.header.no_rkm_medis} · {data.header.nm_pasien}</span></td>
+                      <td className="px-2 py-2">{data.header.nm_dokter}</td>
+                      <td className="px-2 py-2 text-slate-500">Rincian obat</td><td /><td />
+                    </tr>
+                    <tr className="bg-slate-50 text-slate-600">
+                      <td colSpan={4} className="px-2 py-1.5" />
+                      <th scope="col" className="px-2 py-1.5 text-left font-medium">Nama Obat</th>
+                      <th scope="col" className="px-2 py-1.5 text-left font-medium">Jumlah × Harga + Embalase + Tuslah = Total</th>
+                      <th scope="col" className="px-2 py-1.5 text-left font-medium">Aturan Pakai</th>
+                    </tr>
+                    {data.detail.map((item, indeks) => <tr key={`${item.jenis_item}-${item.no_racik}-${item.kode_item}-${indeks}`} className={item.jenis_item === "Racikan" ? "bg-slate-100/70" : "bg-white hover:bg-slate-50/80"}>
+                      <td colSpan={4} className="px-2 py-1.5" />
+                      <td className={`px-2 py-1.5 text-slate-800 ${item.jenis_item === "Bahan Racikan" ? "pl-6" : ""}`}>{item.jenis_item === "Bahan Racikan" ? "↳ " : ""}{item.nama_item}{item.keterangan && <span className="block text-slate-500">{item.keterangan}</span>}</td>
+                      <td className="px-2 py-1.5 font-mono">{item.jenis_item === "Racikan" ? `${item.jumlah} ${item.satuan}` : `${item.jumlah} × ${rupiah(item.harga)} + ${rupiah(item.embalase)} + ${rupiah(item.tuslah)} = ${rupiah(item.total)}`}</td>
+                      <td className="px-2 py-1.5">{item.aturan_pakai || "-"}</td>
+                    </tr>)}
+                  </>}
             </tbody>
           </table>
         </div>

@@ -570,14 +570,6 @@ export default function HalamanRegistrasi() {
     });
   }, [data, urutanTabel]);
 
-  const dataTampilRujukan = useMemo(() => {
-    if (!urutanTabel) return dataRujukan;
-    return [...dataRujukan].sort((a, b) => {
-      const hasil = nilaiSort(a, urutanTabel.kunci).localeCompare(nilaiSort(b, urutanTabel.kunci), "id", { numeric: true, sensitivity: "base" });
-      return urutanTabel.arah === "asc" ? hasil : -hasil;
-    });
-  }, [dataRujukan, urutanTabel]);
-
   const inputClass =
  "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600";
   const input = (label:string,value:string,change?: (value:string)=>void,readOnly=false,placeholder='') => (
