@@ -30,7 +30,7 @@ const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/farmasi/input-penjualan": "Input Penjualan",
   "/farmasi/penjualan-obat": "Data Penjualan",
   "/farmasi/penyerahan-darah": "Penyerahan Darah",
-  "/farmasi/daftar-resep-dokter": "Resep Dokter",
+  "/farmasi/daftar-resep-dokter": "Daftar Resep Dokter",
   "/farmasi/validasi-obat": "Validasi Obat",
   "/farmasi/no-resep": "No. Resep",
   "/farmasi/daftar-obat-telah-tervalidasi": "Daftar Obat Telah Tervalidasi",

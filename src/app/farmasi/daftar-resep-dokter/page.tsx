@@ -243,6 +243,15 @@ export default function HalamanDaftarResepDokter() {
     setNoResepValidasi(resepTerpilih.no_resep);
   };
 
+  const selesaikanValidasi = () => {
+    if (!noResepValidasi) return;
+    const resepSelesai = noResepValidasi;
+    setNoResepValidasi(null);
+    setNoResepTerpilih(null);
+    setVersiData((nilai) => nilai + 1);
+    router.push(`/farmasi/daftar-obat-telah-tervalidasi?no_resep=${encodeURIComponent(resepSelesai)}`);
+  };
+
   const navigasiTab = <T extends string>(
     event: React.KeyboardEvent<HTMLButtonElement>,
     daftar: T[],
@@ -262,10 +271,10 @@ export default function HalamanDaftarResepDokter() {
     document.getElementById(`${prefixId}-${tujuan}`)?.focus();
   };
 
-  const kelasBaris = (item: BarisResep, indeks: number) => {
+  const kelasBaris = (item: BarisResep) => {
     if (noResepTerpilih === item.no_resep) return "bg-primary-100";
-    if (adalahDetail(item) && item.jenis_item === "Bahan Racikan") return "bg-slate-50 text-slate-600";
-    return indeks % 2 === 1 ? "bg-slate-50/60" : "bg-white";
+    if (adalahDetail(item) && item.jenis_item === "Bahan Racikan") return "bg-white text-slate-600";
+    return "bg-white";
   };
 
   const pagination = (
@@ -295,6 +304,17 @@ export default function HalamanDaftarResepDokter() {
       </button>
     </>
   );
+
+  if (noResepValidasi) {
+    return (
+      <ValidasiObatDialog
+        noResep={noResepValidasi}
+        tampilan="halaman"
+        onValidated={selesaikanValidasi}
+        onClose={() => setNoResepValidasi(null)}
+      />
+    );
+  }
 
   return (
     <div className="module-page flex h-full w-full flex-col space-y-2.5 overflow-hidden bg-slate-50 p-2 sm:p-3">
@@ -351,7 +371,7 @@ export default function HalamanDaftarResepDokter() {
           aria-busy={memuat}
         >
           {tampilan === "ringkasan" ? (
-            <table className="min-w-[118rem] w-full border-collapse text-left text-xs text-slate-700">
+            <table className="min-w-[118rem] w-full border-collapse text-left text-[11px] text-slate-700">
               <caption className="sr-only">Daftar resep dokter {labelJenis(jenis).toLowerCase()}.</caption>
               <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-slate-700 shadow-2xs">
                 <tr>
@@ -386,7 +406,7 @@ export default function HalamanDaftarResepDokter() {
                     key={`${item.no_resep}-${item.no_rawat}-${item.kd_dokter}-${indeks}`}
                     onClick={() => pilihResep(item.no_resep)}
                     aria-selected={noResepTerpilih === item.no_resep}
-                    className={`${kelasBaris(item, indeks)} cursor-pointer border-b border-slate-100 ${noResepTerpilih === item.no_resep ? "" : "hover:bg-slate-100"}`}
+                    className={`${kelasBaris(item)} cursor-pointer border-b border-slate-100 ${noResepTerpilih === item.no_resep ? "" : "hover:bg-slate-100"}`}
                   >
                     <td className="whitespace-nowrap px-2.5 py-2 text-center font-mono tabular-nums text-slate-800">{item.no_resep}</td>
                     <td className="whitespace-nowrap px-2.5 py-2 text-center tabular-nums">{item.tgl_peresepan}</td>
@@ -448,97 +468,82 @@ export default function HalamanDaftarResepDokter() {
             </table>
           )}
         </div>
-
-        <PanelBawah
-          tampilan="web"
-          filterUtama={(
-            <div className="grid gap-2 sm:grid-cols-2">
-              <label className="flex min-w-0 items-center gap-2">
-                <span className="w-24 shrink-0 text-right text-xs text-slate-700">Dokter :</span>
-                <input
-                  type="search"
-                  value={dokter}
-                  onChange={(event) => setDokter(event.target.value)}
-                  onKeyDown={(event) => { if (event.key === "Enter") terapkanPencarian(); }}
-                  placeholder="Nama dokter peresep"
-                  className="h-7 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-600 focus:outline-none"
-                />
-              </label>
-              <label className="flex min-w-0 items-center gap-2">
-                <span className="w-24 shrink-0 text-right text-xs text-slate-700">{jenis === "ralan" ? "Poli/Unit :" : "Ruang/Kamar :"}</span>
-                <input
-                  type="search"
-                  value={unit}
-                  onChange={(event) => setUnit(event.target.value)}
-                  onKeyDown={(event) => { if (event.key === "Enter") terapkanPencarian(); }}
-                  placeholder={jenis === "ralan" ? "Nama poliklinik atau unit" : "Nama ruang atau kamar"}
-                  className="h-7 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-600 focus:outline-none"
-                />
-              </label>
-            </div>
-          )}
-          tanggalMulai={tanggalMulai}
-          tanggalSelesai={tanggalSelesai}
-          onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }}
-          onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }}
-          kataKunci={kataKunci}
-          onGantiKataKunci={setKataKunci}
-          onCari={terapkanPencarian}
-          placeholderCari="No. resep, no. rawat, RM, pasien, dokter..."
-          filterTambahan={(
-            <div className="flex items-center gap-1.5">
-              <span className="whitespace-nowrap text-xs text-slate-700">Status :</span>
-              <CustomSelect
-                value={status}
-                onChange={(event) => { setStatus(event.target.value); setHalaman(1); }}
-                containerClassName="relative w-40"
-                className="h-7 rounded-md py-0"
-                aria-label="Status pelayanan resep"
-                options={[
-                  { value: "Semua", label: "Semua" },
-                  { value: "Belum Terlayani", label: "Belum Terlayani" },
-                  { value: "Sudah Terlayani", label: "Sudah Terlayani" },
-                ]}
-              />
-            </div>
-          )}
-          onCetak={() => window.print()}
-          tombolTambahan={[
-            {
-              label: "Validasi",
-              ikon: faClipboardCheck,
-              onClick: bukaValidasi,
-              disabled: !hasPermission("beri_obat") || tampilan !== "ringkasan" || !resepTerpilih || resepTerpilih.status_pelayanan === "Sudah Terlayani",
-              varian: "primer",
-              tooltip: "Buka halaman validasi obat",
-            },
-          ]}
-          onSemua={resetFilter}
-          jumlahRecord={totalData}
-          tampilkanRecord={false}
-          pagination={pagination}
-          memuat={memuat}
-        />
       </section>
+
+      <PanelBawah
+        tampilan="web"
+        filterUtama={(
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="flex min-w-0 items-center gap-2">
+              <span className="w-24 shrink-0 text-right text-xs text-slate-700">Dokter :</span>
+              <input
+                type="search"
+                value={dokter}
+                onChange={(event) => setDokter(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter") terapkanPencarian(); }}
+                placeholder="Nama dokter peresep"
+                className="h-7 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-600 focus:outline-none"
+              />
+            </label>
+            <label className="flex min-w-0 items-center gap-2">
+              <span className="w-24 shrink-0 text-right text-xs text-slate-700">{jenis === "ralan" ? "Poli/Unit :" : "Ruang/Kamar :"}</span>
+              <input
+                type="search"
+                value={unit}
+                onChange={(event) => setUnit(event.target.value)}
+                onKeyDown={(event) => { if (event.key === "Enter") terapkanPencarian(); }}
+                placeholder={jenis === "ralan" ? "Nama poliklinik atau unit" : "Nama ruang atau kamar"}
+                className="h-7 min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary-600 focus:outline-none"
+              />
+            </label>
+          </div>
+        )}
+        tanggalMulai={tanggalMulai}
+        tanggalSelesai={tanggalSelesai}
+        onGantiTanggalMulai={(nilai) => { setTanggalMulai(nilai); setHalaman(1); }}
+        onGantiTanggalSelesai={(nilai) => { setTanggalSelesai(nilai); setHalaman(1); }}
+        kataKunci={kataKunci}
+        onGantiKataKunci={setKataKunci}
+        onCari={terapkanPencarian}
+        placeholderCari="No. resep, no. rawat, RM, pasien, dokter..."
+        filterTambahan={(
+          <div className="flex items-center gap-1.5">
+            <span className="whitespace-nowrap text-xs text-slate-700">Status :</span>
+            <CustomSelect
+              value={status}
+              onChange={(event) => { setStatus(event.target.value); setHalaman(1); }}
+              containerClassName="relative w-40"
+              className="h-7 rounded-md py-0"
+              aria-label="Status pelayanan resep"
+              options={[
+                { value: "Semua", label: "Semua" },
+                { value: "Belum Terlayani", label: "Belum Terlayani" },
+                { value: "Sudah Terlayani", label: "Sudah Terlayani" },
+              ]}
+            />
+          </div>
+        )}
+        onCetak={() => window.print()}
+        tombolTambahan={[
+          {
+            label: "Validasi",
+            ikon: faClipboardCheck,
+            onClick: bukaValidasi,
+            disabled: !hasPermission("beri_obat") || tampilan !== "ringkasan" || !resepTerpilih || resepTerpilih.status_pelayanan === "Sudah Terlayani",
+            varian: "primer",
+            tooltip: "Buka halaman validasi obat",
+          },
+        ]}
+        onSemua={resetFilter}
+        jumlahRecord={totalData}
+        tampilkanRecord={false}
+        pagination={pagination}
+        memuat={memuat}
+      />
 
       <span className="sr-only" aria-live="polite">
         {memuat ? "Memuat data resep" : `${totalData} resep ditemukan`}
       </span>
-      {noResepValidasi && (
-        <ValidasiObatDialog
-          noResep={noResepValidasi}
-          onValidated={() => {
-            const resepSelesai = noResepValidasi;
-            setNoResepValidasi(null);
-            setNoResepTerpilih(null);
-            setVersiData((nilai) => nilai + 1);
-            router.push(`/farmasi/daftar-obat-telah-tervalidasi?no_resep=${encodeURIComponent(resepSelesai)}`);
-          }}
-          onClose={() => {
-            setNoResepValidasi(null);
-          }}
-        />
-      )}
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>
   );

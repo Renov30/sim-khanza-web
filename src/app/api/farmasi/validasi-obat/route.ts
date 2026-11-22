@@ -47,6 +47,13 @@ interface BarangResep {
   utama: number | string;
   vip: number | string;
   vvip: number | string;
+  jenis_obat: string;
+  industri: string;
+  kategori: string;
+  golongan: string;
+  no_batch: string;
+  no_faktur: string;
+  kedaluwarsa: string;
 }
 
 interface RacikanResep {
@@ -144,6 +151,13 @@ function detailBarang(
     stok_cukup: stok >= kebutuhanStok,
     harga_beli: Number(barang.h_beli) || 0,
     harga: hargaPelayanan(barang, header),
+    jenis_obat: barang.jenis_obat || "-",
+    industri: barang.industri || "-",
+    kategori: barang.kategori || "-",
+    golongan: barang.golongan || "-",
+    no_batch: barang.no_batch || "",
+    no_faktur: barang.no_faktur || "",
+    kedaluwarsa: barang.kedaluwarsa || "",
     keterangan: "",
   };
 }
@@ -383,15 +397,30 @@ export async function GET(req: NextRequest) {
 
     const kolomBarang = `db.h_beli, db.ralan, db.kelas1, db.kelas2, db.kelas3,
       db.utama, db.vip, db.vvip, COALESCE(db.kapasitas, 1) AS kapasitas,
-      COALESCE(SUM(gb.stok), 0) AS stok`;
+      COALESCE(SUM(gb.stok), 0) AS stok, COALESCE(j.nama, '-') AS jenis_obat,
+      COALESCE(inf.nama_industri, '-') AS industri,
+      COALESCE(kb.nama, '-') AS kategori, COALESCE(gl.nama, '-') AS golongan,
+      COALESCE(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN gb.stok > 0 THEN gb.no_batch END
+        ORDER BY CASE WHEN gb.no_batch = '' THEN 1 ELSE 0 END, gb.no_batch, gb.no_faktur), ',', 1), '') AS no_batch,
+      COALESCE(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN gb.stok > 0 THEN gb.no_faktur END
+        ORDER BY CASE WHEN gb.no_batch = '' THEN 1 ELSE 0 END, gb.no_batch, gb.no_faktur), ',', 1), '') AS no_faktur,
+      CASE WHEN db.expire IS NULL OR CAST(db.expire AS CHAR) = '0000-00-00'
+        THEN '' ELSE DATE_FORMAT(db.expire, '%Y-%m-%d') END AS kedaluwarsa`;
     const groupHarga = `db.h_beli, db.ralan, db.kelas1, db.kelas2, db.kelas3,
-      db.utama, db.vip, db.vvip, db.kapasitas`;
+      db.utama, db.vip, db.vvip, db.kapasitas, j.nama, inf.nama_industri,
+      kb.nama, gl.nama, db.expire`;
+    const joinMasterBarang = `
+      LEFT JOIN jenis j ON j.kdjns = db.kdjns
+      LEFT JOIN industrifarmasi inf ON inf.kode_industri = db.kode_industri
+      LEFT JOIN kategori_barang kb ON kb.kode = db.kode_kategori
+      LEFT JOIN golongan_barang gl ON gl.kode = db.kode_golongan`;
     const [obat, racikan, bahan] = await Promise.all([
       executeQuery<BarangResep>(`
         SELECT rd.kode_brng AS kode_item, db.nama_brng AS nama_item, rd.jml AS jumlah,
                db.kode_sat AS satuan, rd.aturan_pakai, ${kolomBarang}
         FROM resep_dokter rd
         INNER JOIN databarang db ON db.kode_brng = rd.kode_brng
+        ${joinMasterBarang}
         LEFT JOIN gudangbarang gb ON gb.kode_brng = db.kode_brng AND gb.kd_bangsal = ?
         WHERE rd.no_resep = ?
         GROUP BY rd.kode_brng, db.nama_brng, rd.jml, db.kode_sat, rd.aturan_pakai, ${groupHarga}
@@ -411,6 +440,7 @@ export async function GET(req: NextRequest) {
                '' AS aturan_pakai, ${kolomBarang}
         FROM resep_dokter_racikan_detail rrd
         INNER JOIN databarang db ON db.kode_brng = rrd.kode_brng
+        ${joinMasterBarang}
         LEFT JOIN gudangbarang gb ON gb.kode_brng = db.kode_brng AND gb.kd_bangsal = ?
         WHERE rrd.no_resep = ?
         GROUP BY rrd.no_racik, rrd.kode_brng, db.nama_brng, rrd.jml, db.kode_sat, ${groupHarga}
@@ -436,6 +466,13 @@ export async function GET(req: NextRequest) {
             .every((item) => Number(item.stok) >= Number(item.jumlah)),
           harga_beli: 0,
           harga: 0,
+          jenis_obat: "Racikan",
+          industri: "-",
+          kategori: "-",
+          golongan: "-",
+          no_batch: "",
+          no_faktur: "",
+          kedaluwarsa: "",
           keterangan: racik.keterangan,
         },
         ...bahan
