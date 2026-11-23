@@ -106,10 +106,10 @@ export function AppHeader({
           : "text-sm";
 
   return (
-    <header className="shrink-0 select-none bg-primary-800 px-4 py-2 text-white">
+    <header className="shrink-0 select-none border-b border-primary-600 bg-tertiary-900 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
         <div
-          className="flex h-8 w-52 shrink-0 items-center border-r border-primary-700/60 pr-3"
+          className="flex h-8 w-52 shrink-0 items-center border-r border-primary-600/70 pr-3"
           title={judulHalaman}
         >
           <h1 className={`line-clamp-2 w-full font-bold leading-[1.05] tracking-tight text-white ${ukuranJudul}`}>
@@ -124,8 +124,8 @@ export function AppHeader({
             onClick={onToggleMenu}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isMenuOpen
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             }`}
             title="Buka / Tutup Daftar Menu (Alt+M)"
           >
@@ -134,7 +134,7 @@ export function AppHeader({
           </button>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 2. Registrasi */}
           <button
@@ -142,8 +142,8 @@ export function AppHeader({
             disabled={autentikasiAktif && !hasPermission("registrasi")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pendaftaran Pasien (Alt+R)"
           >
@@ -157,8 +157,8 @@ export function AppHeader({
             disabled={autentikasiAktif && !hasPermission("igd")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pelayanan IGD (Alt+D)"
           >
@@ -167,7 +167,7 @@ export function AppHeader({
           </button>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 4. Laborat Dropdown */}
           <div className="relative shrink-0" ref={labRef}>
@@ -179,8 +179,8 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isLaboratActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Laboratorium (Alt+O)"
             >
@@ -288,8 +288,8 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isRadiologiActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Radiologi (Alt+A)"
             >
@@ -343,8 +343,8 @@ export function AppHeader({
               }}
               className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isFarmasiActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Farmasi (Alt+J)"
             >
@@ -437,7 +437,7 @@ export function AppHeader({
           </div>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 7. Rawat Inap */}
           <button
@@ -445,8 +445,8 @@ export function AppHeader({
             disabled={autentikasiAktif && !hasPermission("kamar_inap")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Inap (Alt+K)"
           >
@@ -460,8 +460,8 @@ export function AppHeader({
             disabled={autentikasiAktif && !hasPermission("tindakan_ralan")}
             className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Jalan (Alt+S)"
           >
