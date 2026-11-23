@@ -266,7 +266,7 @@ export const DiagnosaRalanTab = forwardRef<AksiPanelPemeriksaan, {
     memuatAwal: boolean,
     memuatBerikutnya: boolean,
   ) => (
-    <fieldset className="min-w-0 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
+    <fieldset className="min-w-0 p-1">
       <legend className="px-1 text-[11px] font-semibold text-slate-700">{judul}</legend>
       <input value={cariNilai} onChange={(event) => setCari(event.target.value)} placeholder="Cari kode atau nama" className="mb-1.5 h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none" />
       <div onScroll={(event) => {
