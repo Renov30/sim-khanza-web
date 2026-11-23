@@ -106,10 +106,10 @@ export function AppHeader({
           : "text-sm";
 
   return (
-    <header className="shrink-0 select-none border-b border-primary-600 bg-tertiary-900 px-4 py-2 text-white">
+    <header className="app-header shrink-0 select-none border-b border-primary-600 bg-tertiary-900 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
         <div
-          className="flex h-8 w-52 shrink-0 items-center border-r border-primary-600/70 pr-3"
+          className="app-header-title flex h-8 w-52 shrink-0 items-center border-r border-primary-600/70 pr-3"
           title={judulHalaman}
         >
           <h1 className={`line-clamp-2 w-full font-bold leading-[1.05] tracking-tight text-white ${ukuranJudul}`}>
@@ -122,10 +122,10 @@ export function AppHeader({
           {/* 1. Menu */}
           <button
             onClick={onToggleMenu}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isMenuOpen
-                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             }`}
             title="Buka / Tutup Daftar Menu (Alt+M)"
           >
@@ -140,10 +140,10 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
             disabled={autentikasiAktif && !hasPermission("registrasi")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
-                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pendaftaran Pasien (Alt+R)"
           >
@@ -155,10 +155,10 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
             disabled={autentikasiAktif && !hasPermission("igd")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
-                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pelayanan IGD (Alt+D)"
           >
@@ -177,10 +177,10 @@ export function AppHeader({
                 setMenuFarmasiTerbuka(false);
                 setMenuLabTerbuka(!menuLabTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isLaboratActive
-                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Laboratorium (Alt+O)"
             >
@@ -286,10 +286,10 @@ export function AppHeader({
                 setMenuFarmasiTerbuka(false);
                 setMenuRadTerbuka(!menuRadTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isRadiologiActive
-                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Radiologi (Alt+A)"
             >
@@ -341,10 +341,10 @@ export function AppHeader({
                 setMenuRadTerbuka(false);
                 setMenuFarmasiTerbuka(!menuFarmasiTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isFarmasiActive
-                  ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                  : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Farmasi (Alt+J)"
             >
@@ -443,10 +443,10 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
             disabled={autentikasiAktif && !hasPermission("kamar_inap")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
-                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Inap (Alt+K)"
           >
@@ -458,10 +458,10 @@ export function AppHeader({
           <button
             onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
             disabled={autentikasiAktif && !hasPermission("tindakan_ralan")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
-                ? "bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
-                : "text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Jalan (Alt+S)"
           >
