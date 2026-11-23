@@ -628,10 +628,10 @@ export default function HalamanIGD() {
                       <td className="border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{item.jk}</td>
                       <td className="border-r border-slate-100 px-2 py-1.5 text-slate-600">{item.umurdaftar} {item.sttsumur}</td>
                       <td className="border-r border-slate-100 px-2 py-1.5 font-sans text-slate-700">{item.nm_dokter}</td>
-                      <td className="border-r border-slate-100 px-2 py-1.5 font-sans text-[10px] text-slate-600">{item.p_jawab || "-"}</td>
+                      <td className="border-r border-slate-100 px-2 py-1.5 font-sans text-[11px] text-slate-600">{item.p_jawab || "-"}</td>
                       <td className="border-r border-slate-100 px-2 py-1.5 text-center text-slate-700">{item.status_lanjut || "-"}</td>
                       <td className="px-2 py-1.5 text-center">
-                        <span className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold ${warnaStatus(item.stts)}`}>{item.stts}</span>
+                        <span className={`inline-block rounded px-2 py-0.5 text-[11px] font-semibold ${warnaStatus(item.stts)}`}>{item.stts}</span>
                       </td>
                     </tr>
                   );

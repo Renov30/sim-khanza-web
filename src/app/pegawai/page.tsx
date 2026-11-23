@@ -221,7 +221,7 @@ function TabelPegawai({ data, memuat, terpilih, onPilih, onBukaForm }: TabelPega
                 <td className="whitespace-nowrap px-2 py-1.5">{item.nama_stts_kerja || item.stts_kerja || "-"}</td>
                 <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">{item.mulai_kerja || "-"}</td>
                 <td className="whitespace-nowrap px-2 py-1.5">
-                  <span className={`rounded px-1.5 py-0.5 text-[10px] ${item.stts_aktif === "AKTIF" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
+                  <span className={`rounded px-1.5 py-0.5 text-[11px] ${item.stts_aktif === "AKTIF" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
                     {item.stts_aktif}
                   </span>
                 </td>

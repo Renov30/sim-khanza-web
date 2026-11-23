@@ -155,12 +155,12 @@ export default function HalamanPenjualanObat() {
                     <td className="py-2 px-2.5 text-right font-bold text-primary-700">
                       {Number(item.total_biaya || 0).toLocaleString("id-ID")}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.nama_bayar || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                           item.status === "Sudah Bayar"
                             ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
                             : "bg-slate-100 text-slate-600 border border-slate-200"

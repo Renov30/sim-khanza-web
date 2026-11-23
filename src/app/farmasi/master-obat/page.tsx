@@ -257,7 +257,7 @@ function TabelMasterObat({ data, memuat, sedangMenyimpan, terpilih, onPilih, onB
                 <td className="whitespace-nowrap px-2 py-2">{item.nama_golongan || item.kode_golongan}</td>
                 <td className="whitespace-nowrap px-2 py-2 tabular-nums">{item.expire && item.expire !== "0000-00-00" ? item.expire : "-"}</td>
                 <td className="whitespace-nowrap px-2 py-2">
-                  <span className={`rounded px-1.5 py-0.5 text-[10px] ${item.status === "1" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
+                  <span className={`rounded px-1.5 py-0.5 text-[11px] ${item.status === "1" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
                     {item.status === "1" ? "Aktif" : "Nonaktif"}
                   </span>
                 </td>

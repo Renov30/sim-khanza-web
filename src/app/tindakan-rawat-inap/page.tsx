@@ -437,7 +437,7 @@ export default function HalamanTindakanRawatInap() {
                           : tarif.length === 0 ? <tr><td colSpan={3} className="p-6 text-center text-slate-400">Tarif tindakan tidak ditemukan.</td></tr>
                             : tarif.map((item) => <tr key={item.kd_jenis_prw} className="text-slate-700 hover:bg-slate-50">
                               <td className="px-2 py-1.5"><input type="checkbox" checked={kodeTerpilih.has(item.kd_jenis_prw)} onChange={() => setKodeTerpilih((lama) => { const baru = new Set(lama); if (baru.has(item.kd_jenis_prw)) baru.delete(item.kd_jenis_prw); else baru.add(item.kd_jenis_prw); return baru; })} aria-label={`Pilih ${item.nm_perawatan}`} /></td>
-                              <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}<span className="block text-[10px] text-slate-500">{item.nm_kategori}</span></td>
+                              <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{item.kd_jenis_prw}</span> · {item.nm_perawatan}<span className="block text-[11px] text-slate-500">{item.nm_kategori}</span></td>
                               <td className="whitespace-nowrap px-2 py-1.5 text-right font-mono">{rupiah(item.total)}</td>
                             </tr>)}
                     </tbody>
@@ -468,7 +468,7 @@ export default function HalamanTindakanRawatInap() {
                       <td className="px-2.5 py-2">{[item.nm_dokter, item.nm_petugas].filter(Boolean).join(" · ") || "-"}</td>
                       <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.tgl_perawatan} {item.jam_rawat}</td>
                       <td className="whitespace-nowrap px-2.5 py-2 text-right font-mono">{rupiah(item.biaya_rawat)}</td>
-                      <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px]">{item.status_bayar || "Belum"}</span></td>
+                      <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px]">{item.status_bayar || "Belum"}</span></td>
                     </tr>)}
               </tbody>
             </table>

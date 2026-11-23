@@ -151,7 +151,7 @@ export default function HalamanInputPenjualan() {
                     <td className="py-2 px-2.5 text-center font-sans">
                       <button
                         onClick={() => alert(`Pilih item: ${item.nama_brng} (Fitur form entri transaksi siap digunakan)`)}
-                        className="px-2.5 py-1 rounded bg-primary-50 hover:bg-primary-600 text-primary-700 hover:text-white text-[10px] font-bold border border-primary-200"
+                        className="px-2.5 py-1 rounded bg-primary-50 hover:bg-primary-600 text-primary-700 hover:text-white text-[11px] font-bold border border-primary-200"
                       >
                         Pilih Obat
                       </button>

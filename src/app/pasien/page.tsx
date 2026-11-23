@@ -627,7 +627,7 @@ export default function HalamanDataPasien() {
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
                           item.jk === "L"
                             ? "bg-primary-50 text-primary-700"
                             : "bg-tertiary-50 text-tertiary-700"
@@ -636,7 +636,7 @@ export default function HalamanDataPasien() {
                         {item.jk}
                       </span>
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.tmp_lahir ? `${item.tmp_lahir}, ` : ""}{item.tgl_lahir}
                     </td>
                     <td className="py-2 px-2.5 font-sans text-slate-600">
@@ -657,7 +657,7 @@ export default function HalamanDataPasien() {
                     <td className="py-2 px-2.5 font-sans text-slate-700 font-medium">
                       {item.png_jawab || item.kd_pj}
                     </td>
-                    <td className="py-2 px-2.5 text-slate-600 font-mono text-[10px]">
+                    <td className="py-2 px-2.5 text-slate-600 font-mono text-[11px]">
                       {item.no_peserta || "-"}
                     </td>
                   </tr>

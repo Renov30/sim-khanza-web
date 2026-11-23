@@ -135,16 +135,16 @@ export default function HalamanPeriksaLabPA() {
                     <td className="py-2 px-2.5 font-sans text-slate-700">
                       {item.nm_perawatan || item.kd_jenis_prw}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.diagnosa_klinik || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.makroskopik || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.mikroskopik || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-700 font-medium text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-700 font-medium text-[11px]">
                       {item.kesimpulan || item.kesan || "-"}
                     </td>
                   </tr>

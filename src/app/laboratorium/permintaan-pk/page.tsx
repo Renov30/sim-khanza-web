@@ -152,7 +152,7 @@ export default function HalamanPermintaanLabPK() {
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
                           item.jk === "L"
                             ? "bg-primary-50 text-primary-700"
                             : "bg-tertiary-50 text-tertiary-700"
@@ -164,14 +164,14 @@ export default function HalamanPermintaanLabPK() {
                     <td className="py-2 px-2.5 font-sans text-slate-700">
                       {item.nm_dokter_perujuk || item.dokter_perujuk || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.diagnosa_klinis || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-500 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-500 text-[11px]">
                       {item.informasi_tambahan || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
                         {item.status || "ralan"}
                       </span>
                     </td>

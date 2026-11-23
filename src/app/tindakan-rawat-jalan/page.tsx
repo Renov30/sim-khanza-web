@@ -614,7 +614,7 @@ export default function HalamanTindakanRawatJalan() {
                   <td className="px-2.5 py-2">{[item.nm_dokter, item.nm_petugas].filter(Boolean).join(" · ") || "-"}</td>
                   <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.tgl_perawatan} {item.jam_rawat}</td>
                   <td className="whitespace-nowrap px-2.5 py-2 text-right font-mono">{rupiah(item.biaya_rawat)}</td>
-                  <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px]">{item.stts_bayar || "Belum"}</span></td>
+                  <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px]">{item.stts_bayar || "Belum"}</span></td>
                 </tr>)}
           </tbody>
         </table>
