@@ -50,13 +50,13 @@ export default function HalamanInputPenjualan() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const response = await fetch("/api/farmasi/input-penjualan", { cache: "no-store" });
+      const response = await fetch(`/api/farmasi/input-penjualan?kd_bangsal=${encodeURIComponent(lokasi)}`, { cache: "no-store" });
       const json: { success?: boolean; data?: { barang?: BarisApi[]; gudang?: BarisApi[] }; error?: string } = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat katalog barang farmasi");
       setBarang(json.data?.barang ?? []); setGudang(json.data?.gudang ?? []);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Terjadi kesalahan jaringan"); }
     finally { setLoading(false); }
-  }, []);
+  }, [lokasi]);
   useEffect(() => {
     const timer = window.setTimeout(() => { void load(); }, 0);
     return () => window.clearTimeout(timer);
