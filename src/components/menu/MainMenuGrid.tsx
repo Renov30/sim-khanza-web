@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MENU_CATEGORIES, MENU_ITEMS } from "@/lib/constants/menus";
 import type { MenuItem } from "@/lib/types/menu";
+import { modulDiaktifkan, tentukanModulDariMenu, type KonfigurasiModul } from "@/lib/modul/peta";
 import { MenuCard } from "./MenuCard";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,6 +17,7 @@ import {
 
 interface MainMenuGridProps {
   onModuleClick: (item: MenuItem) => void;
+  konfigurasiModul: KonfigurasiModul;
 }
 
 type KelompokMenu = "registrasi" | "igd" | "laboratorium" | "radiologi" | "farmasi" | "rawat-inap" | "rawat-jalan" | "sdm" | "keuangan" | "manajemen";
@@ -72,7 +74,7 @@ function buatUrlDaftarMenu(kategori: string, kelompok: KelompokMenu | "ALL", car
   return `/?${params.toString()}`;
 }
 
-export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
+export function MainMenuGrid({ onModuleClick, konfigurasiModul }: MainMenuGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedCategory = searchParams.get("kategori") ?? "ALL";
@@ -93,8 +95,23 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
     return () => window.clearTimeout(timer);
   }, [queryFromUrl, router, searchQuery, selectedCategory, selectedGroup]);
 
+  const menuAktif = useMemo(
+    () => MENU_ITEMS.filter((item) => modulDiaktifkan(konfigurasiModul, tentukanModulDariMenu(item))),
+    [konfigurasiModul],
+  );
+
+  const kategoriTersedia = useMemo(
+    () => new Set(menuAktif.map((item) => item.categoryCode)),
+    [menuAktif],
+  );
+
+  const kelompokTersedia = useMemo(
+    () => new Set(KELOMPOK_MENU.filter((kelompok) => menuAktif.some((item) => termasukKelompok(item, kelompok.id))).map((kelompok) => kelompok.id)),
+    [menuAktif],
+  );
+
   const filteredItems = useMemo(() => {
-    return MENU_ITEMS.filter((item) => {
+    return menuAktif.filter((item) => {
       const matchCategory =
         selectedCategory === "ALL" || item.categoryCode === selectedCategory;
       const matchGroup =
@@ -107,7 +124,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
         (item.description && item.description.toLowerCase().includes(query));
       return matchCategory && matchGroup && matchSearch;
     });
-  }, [selectedCategory, selectedGroup, searchQuery]);
+  }, [menuAktif, selectedCategory, selectedGroup, searchQuery]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
@@ -130,7 +147,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
               <option value="ALL">
                 [Semua] Seluruh Modul & Menu SIMRS Khanza
               </option>
-              {MENU_CATEGORIES.map((cat) => (
+              {MENU_CATEGORIES.filter((cat) => kategoriTersedia.has(cat.code)).map((cat) => (
                 <option key={cat.code} value={cat.code}>
                   {cat.title}
                 </option>
@@ -175,7 +192,7 @@ export function MainMenuGrid({ onModuleClick }: MainMenuGridProps) {
           >
             Semua Modul
           </button>
-          {KELOMPOK_MENU.map((kelompok) => (
+          {KELOMPOK_MENU.filter((kelompok) => kelompokTersedia.has(kelompok.id)).map((kelompok) => (
             <button
               key={kelompok.id}
               onClick={() => {

@@ -330,6 +330,12 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 - Tabel `/rawat-jalan` kini menyorot baris yang diklik dengan `bg-primary-100`, mengikuti pola seleksi pada tabel registrasi; pilihan dihapus saat tab diganti atau filter `Semua` ditekan.
 - Baris dapat dipilih lewat Enter/Space saat fokus, sementara tombol `No. Reg` dan `No. Rawat` tetap membuka Tindakan Rawat Jalan seperti sebelumnya.
 
+### 24 November 2026 — aktivasi modul per instalasi
+
+- Instalasi dapat membatasi modul web tanpa database melalui `KHANZA_ENABLED_MODULES` di environment.
+- Allowlist yang terisi menyaring navbar dan daftar menu, serta mengembalikan 404 untuk halaman maupun API modul yang tidak aktif.
+- Bila variabel tidak diisi, seluruh perilaku/menu instalasi lama tetap aktif. Daftar ID modul dan contoh konfigurasi tersedia di `.env.example`.
+
 ## Prioritas pengembangan berikutnya
 
 1. Menambahkan pemeriksaan sesi dan permission pada seluruh endpoint eksperimental.

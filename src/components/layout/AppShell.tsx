@@ -10,6 +10,7 @@ import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import type { HospitalSetting } from "@/lib/types/auth";
 import type { MenuItem } from "@/lib/types/menu";
+import type { KonfigurasiModul } from "@/lib/modul/peta";
 
 interface NavigationContextType {
   isMenuOpen: boolean;
@@ -27,7 +28,13 @@ export function useNavigation() {
   return useContext(NavigationContext);
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  konfigurasiModul,
+}: {
+  children: ReactNode;
+  konfigurasiModul: KonfigurasiModul;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -214,6 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {/* Header Global Selalu Tampil di Semua Halaman */}
           <AppHeader
+            konfigurasiModul={konfigurasiModul}
             isMenuOpen={isMenuOpen && pathname === "/"}
             onToggleMenu={handleToggleMenu}
             onModuleClick={handleModuleClick}
@@ -224,7 +232,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex-1 overflow-hidden relative flex flex-col">
             {isMenuOpen && pathname === "/" ? (
               <main className="flex-1 overflow-hidden relative flex flex-col bg-white">
-                <MainMenuGrid onModuleClick={handleModuleClick} />
+                <MainMenuGrid konfigurasiModul={konfigurasiModul} onModuleClick={handleModuleClick} />
               </main>
             ) : (
               <main className="flex-1 overflow-hidden relative flex flex-col">

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthContext";
 import { UserAccountMenu } from "./UserAccountMenu";
 import { dapatkanJudulHalaman } from "@/lib/navigasi/judul-halaman";
+import { modulDiaktifkan, type KonfigurasiModul } from "@/lib/modul/peta";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -29,6 +30,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 interface AppHeaderProps {
+  konfigurasiModul: KonfigurasiModul;
   isMenuOpen: boolean;
   onToggleMenu: () => void;
   onModuleClick: (title: string) => void;
@@ -40,6 +42,7 @@ const snapshotKlien = () => true;
 const snapshotServer = () => false;
 
 export function AppHeader({
+  konfigurasiModul,
   isMenuOpen,
   onToggleMenu,
   onModuleClick,
@@ -53,6 +56,9 @@ export function AppHeader({
   const [menuLabTerbuka, setMenuLabTerbuka] = useState(false);
   const [menuRadTerbuka, setMenuRadTerbuka] = useState(false);
   const [menuFarmasiTerbuka, setMenuFarmasiTerbuka] = useState(false);
+  const modulAktif = (modul: Parameters<typeof modulDiaktifkan>[1]) => (
+    modulDiaktifkan(konfigurasiModul, modul)
+  );
 
   const labRef = useRef<HTMLDivElement>(null);
   const radRef = useRef<HTMLDivElement>(null);
@@ -137,7 +143,7 @@ export function AppHeader({
           <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 2. Registrasi */}
-          <button
+          {modulAktif("registrasi") && <button
             onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
             disabled={autentikasiAktif && !hasPermission("registrasi")}
             className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
@@ -149,10 +155,10 @@ export function AppHeader({
           >
             <FontAwesomeIcon icon={faUserPlus} className="w-3.5 h-3.5 text-primary-300" />
             <span>Registrasi</span>
-          </button>
+          </button>}
 
           {/* 3. IGD/UGD */}
-          <button
+          {modulAktif("igd") && <button
             onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
             disabled={autentikasiAktif && !hasPermission("igd")}
             className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
@@ -164,13 +170,13 @@ export function AppHeader({
           >
             <FontAwesomeIcon icon={faHeartPulse} className="w-3.5 h-3.5 text-red-300" />
             <span>IGD/UGD</span>
-          </button>
+          </button>}
 
           {/* Separator */}
           <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 4. Laborat Dropdown */}
-          <div className="relative shrink-0" ref={labRef}>
+          {modulAktif("laboratorium") && <div className="relative shrink-0" ref={labRef}>
             <button
               onClick={() => {
                 setMenuRadTerbuka(false);
@@ -276,10 +282,10 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* 5. Radiologi Dropdown */}
-          <div className="relative shrink-0" ref={radRef}>
+          {modulAktif("radiologi") && <div className="relative shrink-0" ref={radRef}>
             <button
               onClick={() => {
                 setMenuLabTerbuka(false);
@@ -331,10 +337,10 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* 6. Farmasi Dropdown */}
-          <div className="relative shrink-0" ref={farmasiRef}>
+          {modulAktif("farmasi") && <div className="relative shrink-0" ref={farmasiRef}>
             <button
               onClick={() => {
                 setMenuLabTerbuka(false);
@@ -434,13 +440,13 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Separator */}
           <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 7. Rawat Inap */}
-          <button
+          {modulAktif("rawat-inap") && <button
             onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
             disabled={autentikasiAktif && !hasPermission("kamar_inap")}
             className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
@@ -452,10 +458,10 @@ export function AppHeader({
           >
             <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Inap</span>
-          </button>
+          </button>}
 
           {/* 8. Rawat Jalan */}
-          <button
+          {modulAktif("rawat-jalan") && <button
             onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
             disabled={autentikasiAktif && !hasPermission("tindakan_ralan")}
             className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
@@ -467,7 +473,7 @@ export function AppHeader({
           >
             <FontAwesomeIcon icon={faStethoscope} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Jalan</span>
-          </button>
+          </button>}
         </div>
 
         {/* Sisi Kanan: Informasi Akun / Tombol Log In */}
