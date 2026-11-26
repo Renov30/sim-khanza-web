@@ -1,53 +1,191 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Fragment, useCallback, useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFlaskVial } from "@fortawesome/free-solid-svg-icons";
-import { PanelBawah } from "@/components/modul/PanelBawah";
-import { CustomSelect } from "@/components/ui/CustomSelect";
+import {
+  faFileCircleCheck,
+  faFlaskVial,
+  faList,
+  faPenToSquare,
+  faReceipt,
+} from "@fortawesome/free-solid-svg-icons";
+import { PanelBawah, type TombolAksiCustom } from "@/components/modul/PanelBawah";
+import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { registrationDate } from "@/lib/registrasi/date";
 
-interface HasilLab {
-  no_rawat: string; tgl_periksa: string; jam: string; status: string;
-  no_rkm_medis: string; nm_pasien: string; png_jawab: string | null;
-  kd_jenis_prw: string; nm_perawatan: string; pemeriksaan: string;
-  nilai: string | null; satuan: string | null; nilai_rujukan: string | null; keterangan: string | null;
-  ruang: string | null; nm_petugas: string | null; dokter_perujuk: string | null; penanggung_jawab: string | null;
+type TabPeriksa = "data" | "item" | "detail";
+type TipeToast = "info" | "sukses" | "error";
+
+type ItemPeriksa = {
+  id_template: string;
+  kd_jenis_prw: string;
+  nm_perawatan: string;
+  pemeriksaan: string;
+  method: string;
+  nilai: string;
+  satuan: string;
+  nilai_rujukan: string;
+  keterangan: string;
+  biaya: string;
+  biaya_item: string;
+};
+
+type KunjunganPeriksa = {
+  kunci: string;
+  no_rawat: string;
+  tgl_periksa: string;
+  jam: string;
+  status: string;
+  no_rkm_medis: string;
+  nm_pasien: string;
+  jk: string;
+  umur: string;
+  sttsumur: string;
+  png_jawab: string;
+  jenis_ruang: string;
+  ruang: string;
+  nip: string;
+  nm_petugas: string;
+  dokter_perujuk: string;
+  penanggung_jawab: string;
+  noorder: string;
+  biaya: string;
+  biaya_kunjungan: number;
+  saran: string;
+  kesan: string;
+  item: ItemPeriksa[];
+};
+
+type DetailPasien = {
+  no_rkm_medis: string;
+  nm_pasien: string;
+  jk: string;
+  umur: string;
+  sttsumur: string;
+  png_jawab: string;
+  kunjungan: KunjunganPeriksa[];
+};
+
+type RingkasanDetail = {
+  jumlah_pasien: number;
+  jumlah_kunjungan: number;
+  jumlah_pemeriksaan: number;
+  jumlah_sub_pemeriksaan: number;
+};
+
+type PilihanPeriksa = {
+  kunci: string;
+  no_rawat: string;
+  tgl_periksa: string;
+  jam: string;
+};
+
+type BarisItem = Record<string, unknown>;
+
+const TAB: readonly TabPeriksa[] = ["data", "item", "detail"];
+const LABEL_TAB: Record<TabPeriksa, string> = {
+  data: "Data Pemeriksaan",
+  item: "Item Pemeriksaan",
+  detail: "Detail Kunjungan",
+};
+
+const KOLOM_ITEM: { label: string; isi: (baris: BarisItem) => ReactNode; kelas?: string }[] = [
+  { label: "No.Rawat", isi: (baris) => teks(baris.no_rawat), kelas: "font-mono text-slate-800" },
+  { label: "Pasien", isi: (baris) => <><span className="font-mono text-slate-500">{teks(baris.no_rkm_medis)}</span> {teks(baris.nm_pasien)} <span className="text-slate-500">({teks(baris.png_jawab) || "-"})</span></>, kelas: "min-w-[12rem]" },
+  { label: "Tgl.Periksa", isi: (baris) => teks(baris.tgl_periksa), kelas: "font-mono" },
+  { label: "Jam", isi: (baris) => teks(baris.jam), kelas: "font-mono" },
+  { label: "Pemeriksaan", isi: (baris) => teks(baris.nm_perawatan) },
+  { label: "Item Pemeriksaan", isi: (baris) => teks(baris.pemeriksaan) },
+  { label: "Hasil", isi: (baris) => teks(baris.nilai) || "-", kelas: "font-mono text-slate-800" },
+  { label: "Satuan", isi: (baris) => teks(baris.satuan) || "-" },
+  { label: "Nilai Rujukan", isi: (baris) => teks(baris.nilai_rujukan) || "-" },
+  { label: "Keterangan", isi: (baris) => teks(baris.keterangan) || "-" },
+  { label: "Ruang", isi: (baris) => teks(baris.ruang) || "-" },
+  { label: "Petugas", isi: (baris) => teks(baris.nm_petugas) || "-" },
+  { label: "Dokter Perujuk", isi: (baris) => teks(baris.dokter_perujuk) || "-" },
+  { label: "Penanggung Jawab", isi: (baris) => teks(baris.penanggung_jawab) || "-" },
+  { label: "Metode", isi: (baris) => teks(baris.method) || "-" },
+];
+
+function teks(nilai: unknown): string {
+  return nilai === null || nilai === undefined ? "" : String(nilai);
+}
+
+function formatAngka(nilai: unknown): string {
+  const angka = Number(nilai);
+  return Number.isFinite(angka) ? angka.toLocaleString("id-ID") : "0";
+}
+
+function kunciTab(
+  event: KeyboardEvent<HTMLButtonElement>,
+  aktif: TabPeriksa,
+  atur: (nilai: TabPeriksa) => void,
+) {
+  const indeks = TAB.indexOf(aktif);
+  let berikut = indeks;
+  if (event.key === "ArrowRight") berikut = (indeks + 1) % TAB.length;
+  else if (event.key === "ArrowLeft") berikut = (indeks - 1 + TAB.length) % TAB.length;
+  else if (event.key === "Home") berikut = 0;
+  else if (event.key === "End") berikut = TAB.length - 1;
+  else return;
+  event.preventDefault();
+  atur(TAB[berikut]);
+  window.requestAnimationFrame(() => {
+    document.getElementById(`tab-periksa-${TAB[berikut]}`)?.focus();
+  });
 }
 
 export default function HalamanPeriksaLabPK() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const noRawat = searchParams.get("no_rawat")?.trim() || "";
-  const [data, setData] = useState<HasilLab[]>([]);
+  const noRawatAwal = searchParams.get("no_rawat")?.trim() || "";
+  const [tab, setTab] = useState<TabPeriksa>("data");
+  const [dataKunjungan, setDataKunjungan] = useState<KunjunganPeriksa[]>([]);
+  const [dataItem, setDataItem] = useState<BarisItem[]>([]);
+  const [dataDetail, setDataDetail] = useState<{ pasien: DetailPasien[]; ringkasan: RingkasanDetail }>({
+    pasien: [],
+    ringkasan: { jumlah_pasien: 0, jumlah_kunjungan: 0, jumlah_pemeriksaan: 0, jumlah_sub_pemeriksaan: 0 },
+  });
   const [memuat, setMemuat] = useState(true);
-  const [tanggalMulai, setTanggalMulai] = useState(() => noRawat ? "" : registrationDate());
-  const [tanggalSelesai, setTanggalSelesai] = useState(() => noRawat ? "" : registrationDate());
+  const [noRawat, setNoRawat] = useState(noRawatAwal);
+  const [tanggalMulai, setTanggalMulai] = useState(noRawatAwal ? "" : registrationDate());
+  const [tanggalSelesai, setTanggalSelesai] = useState(noRawatAwal ? "" : registrationDate());
+  const [noRm, setNoRm] = useState("");
+  const [nip, setNip] = useState("");
   const [kataKunci, setKataKunci] = useState("");
-  const [status, setStatus] = useState("");
   const [versiPencarian, setVersiPencarian] = useState(0);
-  const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error" } | null>(null);
+  const [pilihan, setPilihan] = useState<PilihanPeriksa | null>(null);
+  const [toast, setToast] = useState<{ pesan: string; tipe: TipeToast } | null>(null);
+  const [dialogHapus, setDialogHapus] = useState(false);
 
   const muatData = useCallback(async (signal?: AbortSignal) => {
     setMemuat(true);
     try {
-      const params = new URLSearchParams({ limit: "500" });
+      const params = new URLSearchParams({ mode: tab, limit: "500" });
       if (tanggalMulai) params.set("tanggal_mulai", tanggalMulai);
       if (tanggalSelesai) params.set("tanggal_selesai", tanggalSelesai);
-      if (kataKunci.trim()) params.set("cari", kataKunci.trim());
-      if (status) params.set("status", status);
       if (noRawat) params.set("no_rawat", noRawat);
+      if (noRm) params.set("no_rm", noRm);
+      if (nip) params.set("nip", nip);
+      if (kataKunci.trim()) params.set("cari", kataKunci.trim());
+
       const response = await fetch(`/api/laboratorium/periksa-pk?${params}`, { signal, cache: "no-store" });
       const json = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Gagal memuat hasil periksa laboratorium.");
-      setData(json.data || []);
+      if (tab === "data") setDataKunjungan(json.data || []);
+      else if (tab === "item") setDataItem(json.data || []);
+      else setDataDetail(json.data || {
+        pasien: [],
+        ringkasan: { jumlah_pasien: 0, jumlah_kunjungan: 0, jumlah_pemeriksaan: 0, jumlah_sub_pemeriksaan: 0 },
+      });
     } catch (error) {
       if (!signal?.aborted) setToast({ pesan: error instanceof Error ? error.message : "Gagal memuat hasil periksa laboratorium.", tipe: "error" });
     } finally {
       if (!signal?.aborted) setMemuat(false);
     }
-  }, [kataKunci, noRawat, status, tanggalMulai, tanggalSelesai]);
+  }, [kataKunci, nip, noRawat, noRm, tab, tanggalMulai, tanggalSelesai]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,10 +197,11 @@ export default function HalamanPeriksaLabPK() {
   }, [muatData, versiPencarian]);
 
   const tampilkanSemua = () => {
-    setTanggalMulai(noRawat ? "" : registrationDate());
-    setTanggalSelesai(noRawat ? "" : registrationDate());
     setKataKunci("");
-    setStatus("");
+    setNoRawat("");
+    setNoRm("");
+    setNip("");
+    setPilihan(null);
     setVersiPencarian((versi) => versi + 1);
   };
 

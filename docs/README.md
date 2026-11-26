@@ -33,6 +33,48 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 
 ## Riwayat pengembangan
 
+### 22 November 2026 — pencarian permintaan laboratorium PK, PA, dan MB
+
+- Halaman `/laboratorium/permintaan-pk` mengadaptasi `DlgCariPermintaanLab.java`: sidebar kiri Aksi LIS, filter periode dan kata kunci di atas, tab Rawat Jalan/Rawat Inap, sub-tab Data/Item Permintaan, tabel bertingkat dengan rincian rujukan pemeriksaan, filter dokter/unit/ruang/status di bawah tabel, dan `PanelBawah` untuk aksi bawah.
+- Sidebar Aksi LIS memuat Cetak/Barcode serta pasangan Kirim Permintaan/Ambil Hasil untuk LICA, Sysmex, ELIMS, TERAS, MEDQLAB, SMARTLAB, SOFTMEDIX, VANSLAB, dan SLIMS sesuai menu Java. Aksi memerlukan baris permintaan terpilih; `Ambil Hasil` memaksa sub-tab Data Permintaan. Integrasi LIS eksternal belum tersedia, sehingga aksi memberi Toast informatif kecuali Cetak yang memakai `window.print()`.
+- Halaman `/laboratorium/permintaan-pa` dan `/laboratorium/permintaan-mb` memakai komponen bersama `LembarPermintaanLabSederhana` dan sidebar kiri yang sama. Menu keduanya mengikuti `DlgCariPermintaanLabPA.java` dan `DlgCariPermintaanLabMB.java`: Cetak Permintaan Lab serta dua barcode; tidak ada menu Kirim/Ambil LIS pada kedua dialog Java tersebut. Dummy/error ditampilkan sebagai Toast, dan baris dipilih dengan klik atau Enter/Space sebelum aksi dijalankan.
+- Data Permintaan menampilkan satu baris induk per `noorder` dengan baris turunan per `kd_jenis_prw` dan `id_template`; Item Permintaan menampilkan satu baris per detail pemeriksaan. Kolom tersembunyi di Java tidak dibawa ke web.
+- `GET /api/laboratorium/permintaan-pk` kini menerima `tanggal_mulai`, `tanggal_selesai`, `cari`, `status`, `dokter`, `poli`, `ruang`, `status_ranap`, `mode`, dan `limit` dengan allowlist serta batas 500. Endpoint baru `/api/laboratorium/permintaan-pk/options` menyediakan dokter, poli, dan bangsal. Keduanya memeriksa sesi dan izin `permintaan_lab`.
+- Kolom `method` dari referensi Java tidak dipakai karena tidak ada pada tabel runtime `template_laboratorium`; rincian pemeriksaan memakai `satuan`, `Pemeriksaan`, dan empat nilai rujukan saja. Tanggal sampel/hasil `0000-00-00` dibaca lewat `CAST(... AS CHAR)` agar tidak memicu error DATE pada mode strict.
+- Aksi Hapus, Sampel, dan Hasil belum dimutasi seperti Java; tombol hanya memberi Toast informatif karena alur penulisan belum diadaptasi.
+- Verifikasi dengan `npm run test:permintaan-lab-pk`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, dan `git diff --check`.
+
+### 22 November 2026 — hasil periksa laboratorium PK
+
+- Halaman `/laboratorium/periksa-pk` mengadaptasi `DlgCariPeriksaLab.java`: filter No.Rawat, Tanggal, Pasien/No.RM, dan Petugas/NIP di atas; tiga tab `Data Pemeriksaan`, `Item Pemeriksaan`, dan `Detail Kunjungan`; `PanelBawah` berisi Key Word, Cari, Semua, Cetak, dan aksi turunan.
+- `Data Pemeriksaan` mengikuti struktur `tampil()` di Java: baris kunjungan, baris sub-header `Cara Bayar : ... / Pemeriksaan / Hasil / Metode / Satuan / Nilai Rujukan / Keterangan`, baris grup per `kd_jenis_prw` beserta biaya paket, baris sub-pemeriksaan beserta biaya item, baris `Biaya Periksa / Kesan / Saran` per kunjungan, dan baris `Total` di bawah tabel. Sel pasien memakai format `No.RM Nama (Kamar|Poli : ruang)` seperti Java. `Item Pemeriksaan` memakai 15 kolom dan urutan Java, termasuk `Metode`. `Detail Kunjungan` memakai enam kolom `No./No.RM/Nama Pasien/Umur/J.K./Kunjungan` dan meletakkan empat penghitung di bawah tabel.
+- `GET /api/laboratorium/periksa-pk` menerima `mode=data|item|detail`, `no_rm`, `nip`, dan filter lama. Respons mengikuti `{ success, data }`; `total` dihapus. Endpoint memeriksa sesi dan izin `periksa_lab`. Ruang mengikuti Java: kamar inap terakhir tanpa batasan `stts_pulang`, fallback ke poliklinik.
+- Biaya per kunjungan menjumlahkan `biaya` paket sekali per `kd_jenis_prw` ditambah seluruh `biaya_item`, mengikuti akumulator `item` di `tampil()`. Total di layar adalah jumlah `biaya_kunjungan` pada data yang dimuat. `Jumlah Pemeriksaan` di tab Detail dihitung per paket per kunjungan, bukan jumlah `kd_jenis_prw` unik secara global.
+- `method` tetap ditampilkan bila kolom tersedia dan diisi `"-"` bila tidak ada, karena `template_laboratorium.method` tidak ada pada database runtime meski ada di `sik.sql` dan referensi Java. Query mengecek `INFORMATION_SCHEMA.COLUMNS` sebelum memilih kolom tersebut.
+- Perilaku sengaja sama dengan Java: tombol Semua tidak mereset tanggal; aksi baris hanya aktif pada tab Data Pemeriksaan dan kunci aksi adalah komposit No.Rawat + Tanggal + Jam. Status bukan lagi filter UI, tetapi parameter lama tetap diterima API.
+- Cetak memakai `window.print()`; Ubah Nilai, Kesan & Saran, Nota, PDF, dan Hapus belum tersedia dan hanya memberi Toast. Hapus tetap memakai `KonfirmasiDialog` yang menyebut data dan risiko jurnal pembalik.
+- Verifikasi dengan `npm run test:periksa-lab-pk`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, `git diff --check`, dan eksekusi SQL baca ke database runtime tanpa mencetak data pasien.
+
+### 22 November 2026 — hasil periksa laboratorium MB dan PA
+
+- Halaman `/laboratorium/periksa-mb` dan `/laboratorium/periksa-pa` memakai komponen bersama `LembarHasilLab` dengan filter No.Rawat, Tanggal, Pasien/No.RM, Petugas/NIP, Key Word/Cari, dan `PanelBawah`. Keduanya mengikuti dialog Java masing-masing, bukan menyalin gaya visual Swing.
+- MB mengadaptasi `DlgCariPeriksaLabMB.java`: tab `Data Pemeriksaan`, `Item Pemeriksaan`, dan `Detail Kunjungan`. Data memakai tujuh kolom Java, sub-header tanpa `Satuan`, baris grup per `kd_jenis_prw`, baris item, baris `Biaya Periksa / Kesan / Saran`, dan baris `Total`. Item memakai 15 kolom Java termasuk `Satuan` dan `Metode`. Detail memakai enam kolom dengan level empat tanpa `Satuan`.
+- PA mengadaptasi `DlgCariPeriksaLabPA.java`: hanya tab `Data Pemeriksaan` dan `Detail Kunjungan`. Data menampilkan 15 kolom visibel Java; `Kode Periksa` tersembunyi seperti dialog Java. Detail memakai enam kolom dengan level empat `Diagnosa / Makroskopik / Mikroskopik / Kesimpulan / Kesan`, informasi P.J.Lab/Perujuk/Petugas Lab, dan empat penghitung di bawah tabel.
+- `GET /api/laboratorium/periksa-mb` menerima `mode=data|item|detail`; `GET /api/laboratorium/periksa-pa` menerima `mode=data|detail`. Keduanya memakai izin `pemeriksaan_lab_mb`/`pemeriksaan_lab_pa`, filter berparameter, batas 500 baris, dan respons `{ success, data }` tanpa `total`.
+- Ruang MB mengikuti Java: kamar inap terakhir tanpa batasan `stts_pulang`, fallback ke poliklinik. Ruang PA memakai `poliklinik.nm_poli` saja. Biaya kunjungan MB menjumlahkan biaya paket sekali per `kd_jenis_prw` ditambah `biaya_item`; PA menghitung `Jumlah Pemeriksaan` dan `Jumlah Sub Pemeriksaan` dari jumlah baris `detail_periksa_labpa` seperti penghitung Java.
+- `template_laboratorium.method` tetap dicek lewat `INFORMATION_SCHEMA.COLUMNS` dan diisi `""` bila kolom tidak ada. Kolom `satuan` tetap diambil untuk Item MB karena header Java memakainya, meski Data MB tidak menampilkannya.
+- Perilaku sengaja sama dengan Java: tombol Semua tidak mereset tanggal, status bukan filter UI, dan aksi baris hanya aktif pada tab Data Pemeriksaan. Cetak memakai `window.print()`; Ubah Hasil, Kesan & Saran, Nota, PDF, dan Hapus belum tersedia dan hanya memberi Toast. Hapus tetap memakai `KonfirmasiDialog` yang menyebut data dan risiko jurnal pembalik.
+- Verifikasi dengan `npm run test:periksa-lab-mb-pa`, `npm run test:periksa-lab-pk`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, dan `git diff --check`.
+
+### 22 November 2026 — input permintaan radiologi
+
+- Halaman `/radiologi/permintaan` mengikuti pola Registrasi: `PanelInputData` bertipe accordion tertutup secara default, lalu data bertab `Data Permintaan`/`Item Pemeriksaan` dengan gaya tab Registrasi, lalu `PanelBawah`. Formulir mengadaptasi `DlgPermintaanRadiologi.java` dan dirapikan menjadi dua blok: `Identitas & Perujuk` serta `Kunjungan & Catatan`. Tabel pemilihan pemeriksaan sengaja dihapus karena pemeriksaan radiologi sudah dikelola di `/radiologi/periksa`. Field mencakup No.Permintaan otomatis, identitas kunjungan, tanggal/jam lokal realtime dengan toggle tanpa teks statis, dokter perujuk, informasi tambahan, dan diagnosa klinis. Tab Data dikelompokkan per `noorder`; tab Item menampilkan baris pemeriksaan rata dari `mode=item`. Keduanya memakai filter periode, kata kunci, dokter, poli, status, dan status ranap.
+- Simpan memakai `KonfirmasiDialog`; Baru mereset seluruh field, pilihan baris, dan mode waktu. Cetak memakai `window.print()` dan Keluar memakai riwayat browser melalui `PanelBawah`. Kesan visual Java tidak disalin; field, urutan, dan aturan bisnisnya yang diadaptasi.
+- `GET /api/radiologi/permintaan` menerima `mode=data|item`, filter berparameter, allowlist status, dan batas 500 tanpa `total`. Respons `data` dikelompokkan per `noorder` dengan turunan `kd_jenis_prw` untuk tab Data, sementara `mode=item` mengembalikan baris rata.
+- `GET /api/radiologi/permintaan/options` tetap menyediakan dokter, poli, bangsal, kunjungan, dan pemeriksaan untuk konsumen lain. Opsi pemeriksaan difilter server sesuai aturan `set_tarif.cara_bayar_radiologi`, `set_tarif.kelas_radiologi`, dan rekam kunjungan, meski tidak lagi dipakai halaman permintaan.
+- `POST /api/radiologi/permintaan` memeriksa izin `permintaan_radiologi`, validasi input, status kunjungan, dan guard billing yang setara `Sequel.cariRegistrasi` (`billing` atau `reg_periksa.stts='Batal'`). Nomor `PR` + `yyyyMMdd` + 3 digit dibuat di dalam named lock dan transaksi; bentrok 3 digit dicoba ulang dengan 4 digit seperti Java. Permintaan dari UI disimpan sebagai header tanpa `permintaan_pemeriksaan_radiologi` karena detail pemeriksaan ditangani di `/radiologi/periksa`; array `item` masih diterima untuk kompatibilitas dan tetap divalidasi bila dikirim.
+- Karena konfigurasi Java `AKTIFKANBILLINGPARSIAL` tidak tersedia di runtime web, pengecualian billing parsial sengaja tidak diterapkan; kunjungan dengan billing terverifikasi atau status Batal ditolak. Tidak ada data pasien yang dicetak selama verifikasi database.
+- Verifikasi dengan `npm run test:permintaan-radiologi`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, dan `git diff --check`.
 ### 22 November 2026 — halaman validasi obat
 
 - Tombol `Validasi` pada Daftar Resep Dokter mengikuti prasyarat `DlgDaftarPermintaanResep`: hanya tersedia pada tab ringkasan, membutuhkan resep terpilih yang belum terlayani, dan memakai izin Khanza `beri_obat` pada UI maupun endpoint. Form validasi dibuka sebagai modal agar daftar resep tetap menjadi konteks kerja.
@@ -363,6 +405,7 @@ Dokumen ini menjadi catatan perkembangan proyek dan panduan menentukan pekerjaan
 ```sh
 npm run test:pasien
 npm run test:registrasi
+npm run test:permintaan-lab-pk
 npm run test:rawat-jalan
 npm run test:tindakan-ranap
 npm run test:rawat-inap

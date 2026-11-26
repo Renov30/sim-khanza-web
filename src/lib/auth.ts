@@ -110,6 +110,7 @@ export async function authenticateKhanzaUser(
           tindakan_ranap: true,
           periksa_lab: true,
           periksa_radiologi: true,
+          permintaan_radiologi: true,
           resep_obat: true,
           penjualan_obat: true,
           kasir_ralan: true,

@@ -1,15 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import type { BarisApi } from "@/lib/types/api";
-import { PanelBawah } from "@/components/modul/PanelBawah";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMagnifyingGlass,
-  faXmark,
-  faCircleExclamation,
-  faFlaskVial,
-} from "@fortawesome/free-solid-svg-icons";
+import LembarHasilLab from "@/components/modul/LembarHasilLab";
 
 export default function HalamanPeriksaLabPA() {
   const [data, setData] = useState<BarisApi[]>([]);
@@ -160,4 +151,3 @@ export default function HalamanPeriksaLabPA() {
     </div>
   );
 }
-

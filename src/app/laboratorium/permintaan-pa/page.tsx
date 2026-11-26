@@ -1,52 +1,39 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import type { BarisApi } from "@/lib/types/api";
-import { PanelBawah } from "@/components/modul/PanelBawah";
-import { CustomSelect } from "@/components/ui/CustomSelect";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMagnifyingGlass,
-  faXmark,
-  faCircleExclamation,
-  faFileMedical,
-} from "@fortawesome/free-solid-svg-icons";
+import { LembarPermintaanLabSederhana, type KolomPermintaanLab } from "@/components/modul/LembarPermintaanLabSederhana";
+
+const teks = (nilai: string | number | null | undefined) =>
+  nilai === null || nilai === undefined || nilai === "" ? "-" : String(nilai);
+
+const KOLOM: KolomPermintaanLab[] = [
+  { label: "No. Order", kunci: "noorder", kelas: "font-semibold text-slate-800" },
+  { label: "No. Rawat", kunci: "no_rawat", kelas: "font-medium text-slate-800" },
+  {
+    label: "Tgl Permintaan",
+    tampil: (baris) => (
+      <>
+        {teks(baris.tgl_permintaan)} <span className="text-slate-400">{teks(baris.jam_permintaan)}</span>
+      </>
+    ),
+  },
+  { label: "No. RM", kunci: "no_rkm_medis", kelas: "font-semibold text-slate-800" },
+  { label: "Nama Pasien", kunci: "nm_pasien", kelas: "font-medium text-slate-800" },
+  { label: "Dokter Perujuk", tampil: (baris) => teks(baris.nm_dokter_perujuk || baris.dokter_perujuk), kelas: "text-slate-700" },
+  { label: "Lokasi Jaringan", kunci: "lokasi_jaringan", kelas: "text-slate-700" },
+  { label: "Diawetkan Dengan", kunci: "diawetkan_dengan", kelas: "text-[10px] text-slate-600" },
+  { label: "Diagnosa Klinis", kunci: "diagnosa_klinis", kelas: "text-[10px] text-slate-600" },
+  {
+    label: "Status",
+    kelas: "text-center",
+    tampil: (baris) => (
+      <span className="inline-block rounded-full border border-primary-200 bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-700">
+        {teks(baris.status || "ralan")}
+      </span>
+    ),
+  },
+];
 
 export default function HalamanPermintaanLabPA() {
-  const [data, setData] = useState<BarisApi[]>([]);
-  const [memuat, setMemuat] = useState(true);
-  const [kataKunci, setKataKunci] = useState("");
-  const [status, setStatus] = useState("Semua");
-  const [pesanError, setPesanError] = useState<string | null>(null);
-
-  const muatData = useCallback(async () => {
-    setMemuat(true);
-    setPesanError(null);
-    try {
-      const url = new URL("/api/laboratorium/permintaan-pa", window.location.origin);
-      if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
-      if (status !== "Semua") url.searchParams.set("status", status);
-      url.searchParams.set("limit", "100");
-
-      const res = await fetch(url.toString());
-      const json = await res.json();
-      if (json.success) {
-        setData(json.data || []);
-      } else {
-        setPesanError(json.error || "Gagal memuat data permintaan lab PA");
-      }
-    } catch (err: unknown) {
-      setPesanError(err instanceof Error ? err.message : "Terjadi kesalahan jaringan");
-    } finally {
-      setMemuat(false);
-    }
-  }, [kataKunci, status]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void muatData(), 0);
-    return () => window.clearTimeout(timer);
-  }, [muatData]);
-
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-slate-50 p-3 sm:p-4 space-y-3">
       {/* 1. Filter & Pencarian Cepat */}
@@ -180,4 +167,3 @@ export default function HalamanPermintaanLabPA() {
     </div>
   );
 }
-
