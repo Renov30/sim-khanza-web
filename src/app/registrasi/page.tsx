@@ -6,6 +6,7 @@ import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { MenuKonteksRegistrasi } from "@/components/modul/MenuKonteksRegistrasi";
+import { DialogAksiKonteks, jalankanAksiKonteksApi, type JenisAksiDialogKonteks } from "@/components/modul/DialogAksiKonteks";
 import {
   MENU_KONTEKS_REGISTRASI,
   MENU_KONTEKS_RUJUKAN_INTERNAL,
@@ -23,6 +24,7 @@ import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { useAuth } from "@/components/auth/AuthContext";
 import { registrationDate } from "@/lib/registrasi/date";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
+import { bukaTabCetakJasper, bukaTabCetakUrl } from "@/lib/cetak/jasper-web";
 import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -371,6 +373,8 @@ export default function HalamanRegistrasi() {
     setAsalRujukan(item.asal_rujukan || "-");
   };
 
+  const [aksiDialog, setAksiDialog] = useState<JenisAksiDialogKonteks | null>(null);
+
   const bukaMenuKonteks = useCallback((event: ReactMouseEvent<HTMLTableRowElement>, baris: BarisMenuKonteks) => {
     event.preventDefault();
     setMenuKonteks({ x: event.clientX, y: event.clientY, baris });
@@ -388,15 +392,51 @@ export default function HalamanRegistrasi() {
     setMenuKonteks(null);
     if (!konteks) return;
     const aksi: AksiMenuKonteks = tentukanAksiMenu(item, konteks.baris);
-    if (aksi.jenis === "rute") router.push(aksi.rute);
-    else if (aksi.jenis === "filter") {
+    if (aksi.jenis === "rute") {
+      if (aksi.rute.startsWith("/cetak/")) {
+        if (!bukaTabCetakUrl(aksi.rute)) {
+          tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+        }
+      } else {
+        router.push(aksi.rute);
+      }
+    } else if (aksi.jenis === "filter") {
       setStatusSep(aksi.nilai);
       setHalaman(1);
       tampilkanToast(`Filter SEP diubah menjadi ${aksi.nilai}.`, "info");
     } else if (aksi.jenis === "urut") {
       setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
-    } else {
-      tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+    } else if (aksi.jenis === "status_reg" || aksi.jenis === "status_poli" || aksi.jenis === "berkas") {
+      const aksiApi =
+        aksi.jenis === "status_reg"
+          ? "set_status_reg"
+          : aksi.jenis === "status_poli"
+            ? "set_status_poli"
+            : "set_berkas";
+      void jalankanAksiKonteksApi({
+        aksi: aksiApi,
+        no_rawat: konteks.baris.no_rawat,
+        nilai: aksi.nilai,
+      }).then((res) => {
+        tampilkanToast(res.pesan, res.ok ? "sukses" : "error");
+        if (res.ok) setVersiTabel((versi) => versi + 1);
+      });
+    } else if (aksi.jenis === "ganti") {
+      setAksiDialog({
+        tipe: "ganti",
+        aksiApi: aksi.aksiApi,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
+    } else if (aksi.jenis === "hapus") {
+      setAksiDialog({
+        tipe: "hapus",
+        target: aksi.target,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
     }
   }, [menuKonteks, router, tampilkanToast]);
 
@@ -538,13 +578,33 @@ export default function HalamanRegistrasi() {
     }
   };
 
-  // Cetak
+  // Cetak (gaya JasperViewer: buka tab baru & auto-print)
   const handleCetak = () => {
-    if (data.length === 0) {
+    const sumber = tabTabel === "awal" ? data : dataRujukan;
+    if (sumber.length === 0) {
       tampilkanToast("Tidak ada data registrasi untuk dicetak!", "info");
       return;
     }
-    window.print();
+    const ok = bukaTabCetakJasper({
+      mode: "tabel",
+      judul: tabTabel === "awal" ? "Laporan Registrasi Pasien" : "Laporan Rujukan Internal Poli",
+      subJudul: `Periode ${tanggalMulai} s/d ${tanggalSelesai}`,
+      kolom: ["No. Rawat", "Tgl & Jam", "No. RM", "Nama Pasien", "Poliklinik", "Dokter", "Jenis Bayar", "Status", "Status Bayar"],
+      baris: sumber.map((row) => [
+        row.no_rawat,
+        `${row.tgl_registrasi} ${row.jam_reg}`,
+        row.no_rkm_medis,
+        row.nm_pasien,
+        row.nm_poli || row.kd_poli,
+        row.nm_dokter || row.kd_dokter,
+        row.png_jawab || row.kd_pj || "-",
+        row.stts || "-",
+        row.status_bayar || "-",
+      ]),
+    });
+    if (!ok) {
+      tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+    }
   };
 
   const isiPasien = (p: PasienOption) => {
@@ -951,6 +1011,15 @@ export default function HalamanRegistrasi() {
         menu={tabTabel === "awal" ? MENU_KONTEKS_REGISTRASI : MENU_KONTEKS_RUJUKAN_INTERNAL}
         onPilih={pilihMenuKonteks}
         onTutup={() => setMenuKonteks(null)}
+      />
+
+      <DialogAksiKonteks
+        aksi={aksiDialog}
+        onTutup={() => setAksiDialog(null)}
+        onSelesai={(pesan, tipe) => {
+          tampilkanToast(pesan, tipe);
+          if (tipe === "sukses") setVersiTabel((versi) => versi + 1);
+        }}
       />
 
       {/* Notifikasi */}

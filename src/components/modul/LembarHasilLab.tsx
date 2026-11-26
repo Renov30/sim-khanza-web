@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import {
   faFileCircleCheck,
   faFlaskVial,
@@ -731,7 +732,9 @@ export default function LembarHasilLab({ jenis }: { jenis: JenisHasilLab }) {
             setToast({ pesan: `Pilih pemeriksaan pada tab Data Pemeriksaan terlebih dahulu.`, tipe: "error" });
             return;
           }
-          window.print();
+          if (!cetakTabelDomJasper(`Hasil Pemeriksaan Laboratorium ${jenis}`, `${pilihan.no_rawat} — ${pilihan.tgl_periksa} ${pilihan.jam}`)) {
+            setToast({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+          }
         }}
         onKembali={kembali}
         labelKembali="Keluar"

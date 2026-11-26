@@ -157,3 +157,21 @@ html.dark .module-page input[readonly]:not([data-lookup-field]) {
     min-width: 2.75rem;
   }
 }
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  html.dark,
+  html.dark body,
+  html.dark .bg-white {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+}

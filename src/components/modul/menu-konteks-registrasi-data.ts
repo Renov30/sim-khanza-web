@@ -1,3 +1,5 @@
+import { selesaikanAksiKonteksUmum, type AksiKonteksUmum } from "./peta-rute-konteks";
+
 export type ItemMenuKonteks = {
   id: string;
   label: string;
@@ -12,7 +14,7 @@ export interface BarisMenuKonteks {
 export type KunciSortRegistrasi = "no_rawat" | "tanggal" | "dokter" | "poli" | "penjab" | "status" | "no_reg" | "no_rm";
 
 export type AksiMenuKonteks =
-  | { jenis: "rute"; label: string; rute: string }
+  | AksiKonteksUmum
   | { jenis: "filter"; label: string; kunci: "sep"; nilai: "Belum" | "Sudah" }
   | { jenis: "urut"; label: string; kunci: KunciSortRegistrasi; arah: "asc" | "desc" }
   | { jenis: "belum"; label: string };
@@ -1698,5 +1700,7 @@ export function tentukanAksiMenu(item: ItemMenuKonteks, baris: BarisMenuKonteks)
   if (ruteTanpaNomor) return { jenis: "rute", label: item.label, rute: ruteTanpaNomor };
   const urutan = URUTAN[item.id];
   if (urutan) return { jenis: "urut", label: item.label, ...urutan };
+  const umum = selesaikanAksiKonteksUmum(item, baris.no_rawat, { konteksHalaman: "registrasi" });
+  if (umum) return umum;
   return { jenis: "belum", label: item.label };
 }

@@ -6,6 +6,7 @@ import { Toast } from "@/components/common/Toast";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import type { AksiPanelPemeriksaan, StatusPanelPemeriksaan } from "./kontrak-panel-pemeriksaan";
 import { registrationDate } from "@/lib/registrasi/date";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 
 interface PasienCatatan {
   no_rawat: string; no_rkm_medis: string; nm_pasien: string; nm_poli: string;
@@ -117,7 +118,7 @@ export const CatatanDokterTab = forwardRef<AksiPanelPemeriksaan, {
 
   const cari = () => { setKataKunciFilter(kataKunci.trim()); setVersi((nilai) => nilai + 1); };
   const semua = () => { setTanggalMulai(pasien.tgl_registrasi); setTanggalSelesai(registrationDate()); setKataKunci(""); setKataKunciFilter(""); setVersi((nilai) => nilai + 1); };
-  const cetak = () => data.length ? window.print() : setToast({ pesan: "Belum ada catatan dokter untuk dicetak.", tipe: "info" });
+  const cetak = () => data.length ? cetakTabelDomJasper("Catatan Dokter Pasien", `${pasien.no_rawat} — ${pasien.nm_pasien}`) : setToast({ pesan: "Belum ada catatan dokter untuk dicetak.", tipe: "info" });
   useImperativeHandle(ref, () => ({ simpan: () => void simpan(), baru, ganti: () => void simpan(), hapus: () => setKonfirmasi(true), cetak,
     gantiTanggalMulai: setTanggalMulai, gantiTanggalSelesai: setTanggalSelesai, gantiKataKunci: setKataKunci, cari, semua }));
 

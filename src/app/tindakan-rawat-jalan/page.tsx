@@ -9,6 +9,7 @@ import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { PemeriksaanRalanTab } from "@/components/tindakan-rawat-jalan/PemeriksaanRalanTab";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { PemeriksaanObgynTab } from "@/components/tindakan-rawat-jalan/PemeriksaanObgynTab";
@@ -418,7 +419,9 @@ export default function HalamanTindakanRawatJalan() {
       tampilkanToast("Belum ada data tindakan untuk dicetak.", "info");
       return;
     }
-    window.print();
+    if (!cetakTabelDomJasper("Laporan Tindakan Rawat Jalan")) {
+      tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+    }
   };
 
   const mintaPilihTindakan = () => tampilkanToast("Pilih baris tindakan yang akan diubah atau dihapus.", "info");

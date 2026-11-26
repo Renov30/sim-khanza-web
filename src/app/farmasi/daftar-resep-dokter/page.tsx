@@ -8,6 +8,7 @@ import { PanelBawah } from "@/components/modul/PanelBawah";
 import { ValidasiObatDialog } from "@/components/farmasi/ValidasiObatDialog";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { registrationDate } from "@/lib/registrasi/date";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -523,7 +524,7 @@ export default function HalamanDaftarResepDokter() {
             />
           </div>
         )}
-        onCetak={() => window.print()}
+        onCetak={() => { cetakTabelDomJasper("Laporan Daftar Resep Dokter"); }}
         tombolTambahan={[
           {
             label: "Validasi",

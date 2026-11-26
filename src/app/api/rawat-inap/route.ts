@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     const mode = (searchParams.get("mode") || "belum") as ModeFilter;
     const statusPulang = searchParams.get("status_pulang") || "Semua";
     const statusBayar = (searchParams.get("status_bayar") || "Semua") as (typeof STATUS_BAYAR)[number];
+    const filterSep = searchParams.get("sep") || "Semua";
     const tanggalMulai = searchParams.get("tanggal_mulai") || "";
     const tanggalSelesai = searchParams.get("tanggal_selesai") || "";
     const pageParameter = searchParams.get("page");
@@ -71,6 +72,11 @@ export async function GET(req: NextRequest) {
     if (statusBayar !== "Semua") {
       where.push("r.status_bayar LIKE ?");
       params.push(`%${statusBayar}%`);
+    }
+    if (filterSep === "Sudah") {
+      where.push("EXISTS (SELECT 1 FROM bridging_sep bs WHERE bs.no_rawat = ki.no_rawat)");
+    } else if (filterSep === "Belum") {
+      where.push("NOT EXISTS (SELECT 1 FROM bridging_sep bs WHERE bs.no_rawat = ki.no_rawat)");
     }
     if (bangsal) {
       where.push("b.nm_bangsal LIKE ?");

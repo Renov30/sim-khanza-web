@@ -7,6 +7,7 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUsers } from "@fortawesome/free-solid-svg-icons";
 
@@ -640,7 +641,11 @@ export default function HalamanPegawai() {
         disabledHapus={!terpilih || sedangMenyimpan}
         onGanti={padaTabData ? () => { if (!terpilih) setTabAktif("input"); else void handleGanti(); } : undefined}
         disabledGanti={!terpilih || sedangMenyimpan}
-        onCetak={padaTabData ? () => window.print() : undefined}
+        onCetak={padaTabData ? () => {
+          if (!cetakTabelDomJasper("Laporan Data Pegawai")) {
+            tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+          }
+        } : undefined}
         onSemua={padaTabData ? () => {
           setKataKunci("");
           setFilterStatus("AKTIF");

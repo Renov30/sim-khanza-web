@@ -14,5 +14,6 @@ interface MenuKonteksIgdProps {
 }
 
 export function MenuKonteksIgd({ onPilih, ...props }: MenuKonteksIgdProps) {
+  if (!props.terbuka || !props.baris) return null;
   return <MenuKonteksTabel {...props} menu={MENU_KONTEKS_IGD} onPilih={(item: ItemMenuKonteksTabel) => onPilih(item as ItemMenuKonteks)} />;
 }

@@ -10,6 +10,7 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 
 export interface OpsiMaster {
   id: string;
@@ -417,7 +418,7 @@ export default function HalamanMasterKepegawaian({ konfigurasi }: { konfigurasi:
         disabledHapus={!terpilih || sedangMenyimpan}
         onGanti={() => void handleSimpan()}
         disabledGanti={!terpilih || sedangMenyimpan}
-        onCetak={() => window.print()}
+        onCetak={() => { cetakTabelDomJasper("Laporan Master Kepegawaian"); }}
         onSemua={resetForm}
         kataKunci={filter.cari || ""}
         onGantiKataKunci={(nilai) => aturFilter("cari", nilai)}

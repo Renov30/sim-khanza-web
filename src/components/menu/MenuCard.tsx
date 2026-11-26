@@ -70,13 +70,13 @@ const iconMap: Record<string, IconDefinition> = {
   ShieldAlert: faShield,
 };
 
-export function MenuCard({ item, onClick }: MenuCardProps) {
+export const MenuCard = React.memo(function MenuCard({ item, onClick }: MenuCardProps) {
   const icon = iconMap[item.iconName] || faCircleQuestion;
 
   return (
     <button
       onClick={() => onClick(item)}
-      className="group relative flex flex-col items-center justify-center p-4 sm:p-5 bg-white hover:bg-primary-50/20 rounded-2xl border border-slate-200/90 hover:border-primary-600/50 shadow-2xs hover:shadow-md text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 min-h-[140px] sm:min-h-[155px] w-full"
+      className="group relative flex flex-col items-center justify-center p-4 sm:p-5 bg-white hover:bg-primary-50/20 rounded-2xl border border-slate-200/90 hover:border-primary-600/50 shadow-2xs hover:shadow-md text-center focus:outline-none focus:ring-2 focus:ring-primary-500/20 min-h-[140px] sm:min-h-[155px] w-full [content-visibility:auto] [contain-intrinsic-size:155px]"
     >
       {/* Category Code Badge di Pojok Kanan Atas */}
       <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-800">
@@ -94,4 +94,4 @@ export function MenuCard({ item, onClick }: MenuCardProps) {
       </h3>
     </button>
   );
-}
+});

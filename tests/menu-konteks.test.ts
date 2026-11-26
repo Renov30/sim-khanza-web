@@ -148,7 +148,11 @@ test("menu rawat inap memetakan rute, pengurutan, dan item belum tersedia", () =
 
   const billing = cariItem(MENU_KONTEKS_RAWAT_INAP, "MnBilling") as ItemRawatInap | undefined;
   assert.ok(billing);
-  assert.deepEqual(aksiRawatInap(billing, baratInap), { jenis: "belum", label: "Billing/Pembayaran Pasien" });
+  assert.deepEqual(aksiRawatInap(billing, baratInap), {
+    jenis: "rute",
+    label: "Billing/Pembayaran Pasien",
+    rute: `/rawat-inap/billing?no_rawat=${encodeURIComponent(baratInap.no_rawat)}`,
+  });
 });
 
 test("menu IGD mengikuti jumlah grup dan node DlgIgd.java", () => {
@@ -157,7 +161,7 @@ test("menu IGD mengikuti jumlah grup dan node DlgIgd.java", () => {
   assert.equal(hitung(MENU_KONTEKS_IGD), 272);
 });
 
-test("menu IGD memetakan resume, filter SEP, dan item belum tersedia", () => {
+test("menu IGD memetakan resume, filter SEP, dan billing", () => {
   const resume = cariItem(MENU_KONTEKS_IGD, "ppResume") as ItemIgd | undefined;
   assert.ok(resume);
   assert.deepEqual(aksiIgd(resume, barisIgd), {
@@ -177,7 +181,11 @@ test("menu IGD memetakan resume, filter SEP, dan item belum tersedia", () => {
 
   const billing = cariItem(MENU_KONTEKS_IGD, "MnBilling") as ItemIgd | undefined;
   assert.ok(billing);
-  assert.deepEqual(aksiIgd(billing, barisIgd), { jenis: "belum", label: "Billing Total" });
+  assert.deepEqual(aksiIgd(billing, barisIgd), {
+    jenis: "rute",
+    label: "Billing Total",
+    rute: `/rawat-inap/billing?no_rawat=${encodeURIComponent(barisIgd.no_rawat)}`,
+  });
 });
 
 test("menu registrasi mengikuti jumlah grup dan node DlgReg.java", () => {
@@ -188,7 +196,7 @@ test("menu registrasi mengikuti jumlah grup dan node DlgReg.java", () => {
   assert.equal(hitung(MENU_KONTEKS_RUJUKAN_INTERNAL), 39);
 });
 
-test("menu registrasi memetakan rute, filter SEP, pengurutan, dan item belum tersedia", () => {
+test("menu registrasi memetakan rute, filter SEP, pengurutan, dan aksi hapus rujukan", () => {
   const resume = cariItem(MENU_KONTEKS_REGISTRASI, "ppResume") as ItemRegistrasi | undefined;
   assert.ok(resume);
   assert.deepEqual(aksiRegistrasi(resume, barisRegistrasi), {
@@ -226,7 +234,38 @@ test("menu registrasi memetakan rute, filter SEP, pengurutan, dan item belum ter
   const hapusRujukan = cariItem(MENU_KONTEKS_RUJUKAN_INTERNAL, "MnHapusRujukan") as ItemRegistrasi | undefined;
   assert.ok(hapusRujukan);
   assert.deepEqual(aksiRegistrasi(hapusRujukan, barisRegistrasi), {
-    jenis: "belum",
+    jenis: "hapus",
     label: "Hapus Rujukan Poli Internal",
+    target: "MnHapusRujukan",
   });
+});
+
+function kumpulkanDaun(items: readonly SimpulMenu[], hasil: SimpulMenu[] = []) {
+  for (const item of items) {
+    if (item.children?.length) kumpulkanDaun(item.children, hasil);
+    else hasil.push(item);
+  }
+  return hasil;
+}
+
+test("seluruh leaf item pada keempat menu klik kanan aktif tanpa status belum", () => {
+  const cekSemuaAktif = (
+    nama: string,
+    menu: readonly SimpulMenu[],
+    resolver: (item: SimpulMenu) => { jenis: string },
+  ) => {
+    const daun = kumpulkanDaun(menu);
+    const belum = daun.filter((item) => resolver(item).jenis === "belum");
+    assert.deepEqual(
+      belum.map((item) => item.id),
+      [],
+      `${nama} masih memiliki item belum aktif`,
+    );
+  };
+
+  cekSemuaAktif("rawat jalan", MENU_KONTEKS_RAWAT_JALAN, (it) => aksiRawatJalan(it as ItemRawatJalan, baratJalan));
+  cekSemuaAktif("rawat inap", MENU_KONTEKS_RAWAT_INAP, (it) => aksiRawatInap(it as ItemRawatInap, baratInap));
+  cekSemuaAktif("IGD", MENU_KONTEKS_IGD, (it) => aksiIgd(it as ItemIgd, barisIgd));
+  cekSemuaAktif("registrasi", MENU_KONTEKS_REGISTRASI, (it) => aksiRegistrasi(it as ItemRegistrasi, barisRegistrasi));
+  cekSemuaAktif("rujukan internal", MENU_KONTEKS_RUJUKAN_INTERNAL, (it) => aksiRegistrasi(it as ItemRegistrasi, barisRegistrasi));
 });

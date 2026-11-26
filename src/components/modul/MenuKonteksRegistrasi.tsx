@@ -15,5 +15,6 @@ interface MenuKonteksRegistrasiProps {
 }
 
 export function MenuKonteksRegistrasi({ onPilih, ...props }: MenuKonteksRegistrasiProps) {
+  if (!props.terbuka || !props.baris) return null;
   return <MenuKonteksTabel {...props} onPilih={(item: ItemMenuKonteksTabel) => onPilih(item as ItemMenuKonteks)} />;
 }

@@ -1,16 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MainMenuGrid } from "@/components/menu/MainMenuGrid";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { GantiPasswordModal } from "@/components/auth/GantiPasswordModal";
+import { GlobalTableContextMenu } from "@/components/modul/GlobalTableContextMenu";
 import { AboutModal } from "@/components/common/AboutModal";
 import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import type { HospitalSetting } from "@/lib/types/auth";
 import type { MenuItem } from "@/lib/types/menu";
 import type { KonfigurasiModul } from "@/lib/modul/peta";
+import { dapatkanRuteKatalog } from "@/lib/modul/rute-katalog";
 
 interface NavigationContextType {
   isMenuOpen: boolean;
@@ -41,17 +44,18 @@ export function AppShell({
   const { isAuthenticated, setIsLoginModalOpen, isLocked } = useAuth();
 
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isGantiPasswordOpen, setIsGantiPasswordOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [setting, setSetting] = useState<HospitalSetting | null>(null);
   const isMenuOpen = pathname === "/" && searchParams.get("menu") === "1";
 
-  const setIsMenuOpen = (open: boolean) => {
+  const setIsMenuOpen = useCallback((open: boolean) => {
     if (open) {
       router.replace("/?menu=1");
       return;
     }
     router.replace("/");
-  };
+  }, [router]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,7 +74,7 @@ export function AppShell({
     return () => controller.abort();
   }, []);
 
-  const handleModuleClick = (module: string | MenuItem) => {
+  const handleModuleClick = useCallback((module: string | MenuItem) => {
     const title = typeof module === "string" ? module : module.title;
     if (title === "Keluar Aplikasi") {
       setToastMessage("Untuk menutup aplikasi, Anda dapat menutup tab peramban (browser).");
@@ -80,7 +84,7 @@ export function AppShell({
       if (!isAuthenticated) {
         setIsLoginModalOpen(true);
       } else {
-        setToastMessage("Fitur Ganti Password sedang dalam antrian pengembangan.");
+        setIsGantiPasswordOpen(true);
       }
       return;
     }
@@ -88,6 +92,17 @@ export function AppShell({
     if (typeof module !== "string" && module.href) {
       router.push(module.href);
       return;
+    }
+
+    if (typeof module !== "string") {
+      if (module.id === "btn-barcode-ralan" || module.id === "barcode-ralan") {
+        router.push("/rawat-jalan/barcode");
+        return;
+      }
+      if (module.id === "btn-barcode-ranap" || module.id === "barcode-ranap") {
+        router.push("/rawat-inap/barcode");
+        return;
+      }
     }
 
     if (
@@ -193,25 +208,101 @@ export function AppShell({
       return;
     }
 
-    setToastMessage(`Modul "${title}" sedang dalam antrian pengembangan tahap berikutnya.`);
-  };
+    // --- Jalur menu kategori [A] ---
+    const RUTE_KATEGORI_A: Readonly<Record<string, string>> = {
+      "Registrasi": "/registrasi",
+      "IGD/UGD": "/igd",
+      "Tindakan Ranap": "/tindakan-rawat-inap",
+      "Permintaan Lab PK": "/laboratorium/permintaan-pk",
+      "Permintaan Lab PA": "/laboratorium/permintaan-pa",
+      "Permintaan Lab MB": "/laboratorium/permintaan-mb",
+      "Periksa Lab PK": "/laboratorium/periksa-pk",
+      "Periksa Lab PA": "/laboratorium/periksa-pa",
+      "Periksa Lab MB": "/laboratorium/periksa-mb",
+      "Permintaan Radiologi": "/radiologi/permintaan",
+      "Periksa Radiologi": "/radiologi/periksa",
+      "No. Resep": "/farmasi/no-resep",
+      "Informasi Kamar": "/rawat-inap/informasi-kamar",
+      "Ketersediaan Bed / Kamar": "/rawat-inap/informasi-kamar",
+      "Booking Periksa": "/registrasi/booking-periksa",
+      "Booking Registrasi": "/registrasi/booking-registrasi",
+      "Booking Registrasi Online": "/registrasi/booking-registrasi",
+      "Booking MCU Perusahaan": "/registrasi/booking-mcu-perusahaan",
+      "Permintaan Rawat Inap": "/rawat-inap/permintaan",
+      "Jadwal Operasi": "/rawat-inap/jadwal-operasi",
+      "Permintaan Layanan Program KFR": "/rawat-jalan/permintaan-kfr",
+      "DPJP Ranap": "/rawat-inap/dpjp",
+      "Operasi/VK": "/rawat-inap/operasi",
+      "Rujukan Keluar": "/registrasi/rujukan-keluar",
+      "Rujukan Masuk": "/registrasi/rujukan-masuk",
+      "Beri Obat/BHP": "/farmasi/beri-obat",
+      "Tarif Farmasi": "/tarif-farmasi",
+      "Resep Pulang": "/farmasi/resep-pulang",
+      "Diet Pasien": "/rawat-inap/diet",
+      "Skrining Rawat Jalan": "/rawat-jalan/skrining",
+      "Deteksi Dini Corona": "/rawat-jalan/deteksi-corona",
+      "Deposit Pasien": "/rawat-inap/deposit",
+      "Perkiraan Biaya Ranap": "/rawat-inap/perkiraan-biaya",
+      "Billing Rawat Inap": "/rawat-inap/billing",
+      "Barcode Tindakan Ralan": "/rawat-jalan/barcode",
+      "Barcode Tindakan Ranap": "/rawat-inap/barcode",
+      // Menu Akun & Layanan Sistem (UserAccountMenu)
+      "Rekap Kehadiran Harian": "/kepegawaian/rekap-harian",
+      "Rekap Kehadiran Bulanan": "/kepegawaian/rekap-bulanan",
+      "Pengajuan Cuti Pegawai": "/kepegawaian/pengajuan-cuti",
+      "Ketersediaan Kamar / Info Bed": "/rawat-inap/informasi-kamar",
+      "Pencarian E-Book Kedokteran": "/perpustakaan/cari-ebook",
+      "Dashboard Indikator Pelayanan (BOR/LOS)": "/dashboard/indikator-pelayanan",
+      "Dashboard Kunjungan Poliklinik": "/dashboard/kunjungan-poliklinik",
+      "Display Antrian Loket Pendaftaran": "/antrian?jenis=loket",
+      "Display Antrian Poliklinik": "/antrian?jenis=poli",
+      "Display Antrian Farmasi / Apotek": "/antrian?jenis=apotek",
+      "Display Antrian Laboratorium": "/antrian?jenis=laborat",
+    };
 
-  const handleToggleMenu = () => {
+    const ruteKategoriA = RUTE_KATEGORI_A[title];
+    if (ruteKategoriA) {
+      router.push(ruteKategoriA);
+      return;
+    }
+
+    const idMenu = typeof module === "string" ? "" : module.id;
+    const ruteKatalog = dapatkanRuteKatalog(idMenu, title);
+    if (ruteKatalog) {
+      router.push(ruteKatalog);
+      return;
+    }
+
+    setToastMessage(`Modul "${title}" sedang dalam antrian pengembangan tahap berikutnya.`);
+  }, [isAuthenticated, router, setIsLoginModalOpen]);
+
+  const handleToggleMenu = useCallback(() => {
     if (pathname !== "/") {
       router.push("/?menu=1");
     } else {
       setIsMenuOpen(!isMenuOpen);
     }
-  };
+  }, [isMenuOpen, pathname, router, setIsMenuOpen]);
+
+  const navValue = useMemo(
+    () => ({ isMenuOpen, setIsMenuOpen, toggleMenu: handleToggleMenu }),
+    [handleToggleMenu, isMenuOpen, setIsMenuOpen],
+  );
+
+  // Halaman cetak (/cetak/*) tampil bersih layaknya JasperViewer tanpa header aplikasi.
+  if (pathname.startsWith("/cetak/")) {
+    return (
+      <NavigationContext.Provider value={navValue}>
+        <div className="min-h-screen w-full overflow-auto bg-slate-200 print:min-h-0 print:overflow-visible print:bg-white">
+          {children}
+          <LoginModal />
+        </div>
+      </NavigationContext.Provider>
+    );
+  }
 
   return (
-    <NavigationContext.Provider
-      value={{
-        isMenuOpen,
-        setIsMenuOpen,
-        toggleMenu: handleToggleMenu,
-      }}
-    >
+    <NavigationContext.Provider value={navValue}>
       <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 relative">
         {/* Konten Halaman & Header: Mengalami efek blur dan non-interaktif saat logout/terkunci */}
         <div
@@ -254,7 +345,13 @@ export function AppShell({
         </div>
 
         {/* Modals & Toast Notifikasi Global */}
+        <GlobalTableContextMenu onNotifikasi={(pesan) => setToastMessage(pesan)} />
         <LoginModal />
+        <GantiPasswordModal
+          terbuka={isGantiPasswordOpen}
+          onTutup={() => setIsGantiPasswordOpen(false)}
+          onSukses={(pesan) => setToastMessage(pesan)}
+        />
         <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
         <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
       </div>

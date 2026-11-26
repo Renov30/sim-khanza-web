@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent a
 import type { BarisApi } from "@/lib/types/api";
 import { useRouter } from "next/navigation";
 import { MenuKonteksRawatInap } from "@/components/modul/MenuKonteksRawatInap";
+import { DialogAksiKonteks, jalankanAksiKonteksApi, type JenisAksiDialogKonteks } from "@/components/modul/DialogAksiKonteks";
 import { kunciBarisRawatInap, tentukanAksiMenu, type AksiMenuKonteks, type BarisMenuKonteks, type ItemMenuKonteks, type KunciSortRawatInap } from "@/components/modul/menu-konteks-rawat-inap-data";
 import { Toast } from "@/components/common/Toast";
 import { PanelBawah, type TombolAksiCustom } from "@/components/modul/PanelBawah";
@@ -12,6 +13,7 @@ import { DialogPindahKamarRawatInap } from "@/components/modul/DialogPindahKamar
 import { DialogPasienMati } from "@/components/modul/DialogPasienMati";
 import { DialogRujuk } from "@/components/modul/DialogRujuk";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { bukaTabCetakJasper, bukaTabCetakUrl } from "@/lib/cetak/jasper-web";
 import type { BarisRawatInapMutasi } from "@/lib/rawat-inap/types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -99,7 +101,10 @@ export default function HalamanRawatInap() {
   const [tanggalMulai, setTanggalMulai] = useState(tanggalHariIni);
   const [tanggalSelesai, setTanggalSelesai] = useState(tanggalHariIni);
   const [statusBayar, setStatusBayar] = useState("Semua");
+  const [filterSep, setFilterSep] = useState<"Semua" | "Belum" | "Sudah">("Semua");
   const [bangsal, setBangsal] = useState("");
+  const [versiTabel, setVersiTabel] = useState(0);
+  const [aksiDialog, setAksiDialog] = useState<JenisAksiDialogKonteks | null>(null);
   const [pesanError, setPesanError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
   const [menuKonteks, setMenuKonteks] = useState<{ x: number; y: number; baris: BarisMenuKonteks } | null>(null);
@@ -153,9 +158,55 @@ export default function HalamanRawatInap() {
     setMenuKonteks(null);
     if (!konteks) return;
     const aksi: AksiMenuKonteks = tentukanAksiMenu(item, konteks.baris);
-    if (aksi.jenis === "rute") router.push(aksi.rute);
-    else if (aksi.jenis === "urut") setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
-    else tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+    if (aksi.jenis === "rute") {
+      if (aksi.rute.startsWith("/cetak/")) {
+        if (!bukaTabCetakUrl(aksi.rute)) {
+          tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+        }
+      } else {
+        router.push(aksi.rute);
+      }
+    } else if (aksi.jenis === "urut") {
+      setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
+    } else if (aksi.jenis === "filter") {
+      setFilterSep(aksi.nilai);
+      setHalaman(1);
+      tampilkanToast(`Filter SEP diubah menjadi ${aksi.nilai}.`, "info");
+    } else if (aksi.jenis === "status_pulang" || aksi.jenis === "update_hari") {
+      void jalankanAksiKonteksApi({
+        aksi: aksi.jenis === "status_pulang" ? "set_status_pulang" : "update_hari",
+        no_rawat: konteks.baris.no_rawat,
+        nilai: aksi.jenis === "status_pulang" ? aksi.nilai : undefined,
+        kd_kamar: konteks.baris.kd_kamar,
+        tgl_masuk: konteks.baris.tgl_masuk,
+        jam_masuk: konteks.baris.jam_masuk,
+      }).then((res) => {
+        tampilkanToast(res.pesan, res.ok ? "sukses" : "error");
+        if (res.ok) setVersiTabel((v) => v + 1);
+      });
+    } else if (aksi.jenis === "ganti") {
+      setAksiDialog({
+        tipe: "ganti",
+        aksiApi: aksi.aksiApi,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+        kd_kamar: konteks.baris.kd_kamar,
+        tgl_masuk: konteks.baris.tgl_masuk,
+        jam_masuk: konteks.baris.jam_masuk,
+      });
+    } else if (aksi.jenis === "hapus") {
+      setAksiDialog({
+        tipe: "hapus",
+        target: aksi.target,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+        kd_kamar: konteks.baris.kd_kamar,
+        tgl_masuk: konteks.baris.tgl_masuk,
+        jam_masuk: konteks.baris.jam_masuk,
+      });
+    }
   }, [menuKonteks, router, tampilkanToast]);
 
   const muatData = useCallback(async () => {
@@ -172,6 +223,7 @@ export default function HalamanRawatInap() {
         url.searchParams.set("tanggal_selesai", tanggalSelesai);
       }
       if (statusBayar !== "Semua") url.searchParams.set("status_bayar", statusBayar);
+      if (filterSep !== "Semua") url.searchParams.set("sep", filterSep);
       if (bangsal.trim()) url.searchParams.set("bangsal", bangsal.trim());
       if (kataKunci.trim()) url.searchParams.set("cari", kataKunci.trim());
       url.searchParams.set("page", String(halaman));
@@ -198,7 +250,7 @@ export default function HalamanRawatInap() {
     } finally {
       if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [bangsal, halaman, kataKunci, modeFilter, statusBayar, tanggalMulai, tanggalSelesai]);
+  }, [bangsal, filterSep, halaman, kataKunci, modeFilter, statusBayar, tanggalMulai, tanggalSelesai]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void muatData(), 0);
@@ -206,7 +258,7 @@ export default function HalamanRawatInap() {
       window.clearTimeout(timer);
       permintaanTabel.current?.abort();
     };
-  }, [muatData]);
+  }, [muatData, versiTabel]);
 
   const resetFilter = useCallback(() => {
     setKataKunci("");
@@ -214,6 +266,7 @@ export default function HalamanRawatInap() {
     setTanggalMulai(tanggalHariIni());
     setTanggalSelesai(tanggalHariIni());
     setStatusBayar("Semua");
+    setFilterSep("Semua");
     setBangsal("");
     setHalaman(1);
     setBarisTerpilih("");
@@ -484,7 +537,35 @@ export default function HalamanRawatInap() {
         placeholderCari="No. Rawat, No. RM, Pasien, Kamar, Bangsal..."
         filterTambahan={filterTambahan}
         onSemua={resetFilter}
-        onCetak={() => tampilkanToast("Cetak laporan rawat inap belum tersedia di Khanza Web.", "info")}
+        onCetak={() => {
+          if (dataTampil.length === 0) {
+            tampilkanToast("Tidak ada data rawat inap untuk dicetak!", "info");
+            return;
+          }
+          const ok = bukaTabCetakJasper({
+            mode: "tabel",
+            judul: "Laporan Data Pasien Rawat Inap",
+            subJudul: modeFilter === "masuk" || modeFilter === "pulang"
+              ? `Periode ${tanggalMulai} s/d ${tanggalSelesai} (Mode: ${modeFilter})`
+              : `Mode: ${modeFilter === "belum" ? "Belum Pulang" : "Semua"}`,
+            kolom: ["No. Rawat", "No. RM", "Nama Pasien", "Kamar / Bangsal", "Tarif", "Tgl Masuk", "Tgl Keluar", "Lama", "Diagnosa Awal", "Status Pulang"],
+            baris: dataTampil.map((item) => [
+              String(item.no_rawat ?? "-"),
+              String(item.no_rkm_medis ?? "-"),
+              String(item.nm_pasien ?? "-"),
+              item.nm_bangsal ? `${String(item.nm_bangsal)} (${String(item.kd_kamar ?? "")})` : String(item.kd_kamar ?? "-"),
+              Number(item.trf_kamar || 0).toLocaleString("id-ID"),
+              `${String(item.tgl_masuk ?? "-")} ${String(item.jam_masuk ?? "")}`.trim(),
+              item.tgl_keluar ? `${String(item.tgl_keluar)} ${String(item.jam_keluar ?? "")}`.trim() : "-",
+              `${String(item.lama || "1")} hr`,
+              String(item.diagnosa_awal || "-"),
+              item.stts_pulang === "-" || !item.stts_pulang ? "Masih Rawat" : String(item.stts_pulang),
+            ]),
+          });
+          if (!ok) {
+            tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+          }
+        }}
         tombolTambahan={tombolTambahan}
         labelKembali="Keluar"
         pagination={
@@ -504,6 +585,14 @@ export default function HalamanRawatInap() {
         baris={menuKonteks?.baris || null}
         onPilih={pilihMenuKonteks}
         onTutup={() => setMenuKonteks(null)}
+      />
+      <DialogAksiKonteks
+        aksi={aksiDialog}
+        onTutup={() => setAksiDialog(null)}
+        onSelesai={(pesan, tipe) => {
+          tampilkanToast(pesan, tipe);
+          if (tipe === "sukses") setVersiTabel((v) => v + 1);
+        }}
       />
 
       {dialogPulang && (

@@ -1,3 +1,5 @@
+import { dapatkanJudulKatalog } from "@/lib/modul/rute-katalog";
+
 const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/": "Home",
   "/registrasi": "Registrasi",
@@ -38,6 +40,33 @@ const JUDUL_HALAMAN: Readonly<Record<string, string>> = {
   "/resume-pasien": "Resume Pasien",
   "/riwayat-pasien": "Riwayat Pasien",
   "/farmasi/copy-resep": "Copy Resep",
+  "/registrasi/booking-periksa": "Booking Periksa",
+  "/registrasi/booking-registrasi": "Booking Registrasi",
+  "/registrasi/booking-mcu-perusahaan": "Booking MCU Perusahaan",
+  "/registrasi/rujukan-keluar": "Rujukan Keluar",
+  "/registrasi/rujukan-masuk": "Rujukan Masuk",
+  "/rawat-inap/informasi-kamar": "Informasi Kamar",
+  "/rawat-inap/permintaan": "Permintaan Rawat Inap",
+  "/rawat-inap/jadwal-operasi": "Jadwal Operasi",
+  "/rawat-inap/dpjp": "DPJP Ranap",
+  "/rawat-inap/operasi": "Operasi / VK",
+  "/rawat-inap/diet": "Diet Pasien",
+  "/rawat-inap/deposit": "Deposit Pasien",
+  "/rawat-inap/perkiraan-biaya": "Perkiraan Biaya Ranap",
+  "/rawat-inap/billing": "Billing Rawat Inap",
+  "/rawat-inap/barcode": "Barcode Tindakan Ranap",
+  "/rawat-jalan/permintaan-kfr": "Permintaan Layanan KFR",
+  "/rawat-jalan/skrining": "Skrining Rawat Jalan",
+  "/rawat-jalan/deteksi-corona": "Deteksi Dini Corona",
+  "/rawat-jalan/barcode": "Barcode Tindakan Ralan",
+  "/farmasi/beri-obat": "Beri Obat / BHP",
+  "/farmasi/resep-pulang": "Resep Pulang",
+  "/tarif-farmasi": "Tarif Farmasi",
+  "/cetak/dokumen": "Cetak Dokumen Pasien",
+  "/cetak/laporan": "Cetak Laporan Jasper",
+  "/dashboard/indikator-pelayanan": "Indikator Pelayanan (BOR/LOS)",
+  "/dashboard/kunjungan-poliklinik": "Dashboard Kunjungan Poliklinik",
+  "/antrian": "Display Antrian Pelayanan",
 };
 
 function formatSegmenPath(segmen: string) {
@@ -51,6 +80,9 @@ export function dapatkanJudulHalaman(pathname: string) {
   const judulTerdaftar = JUDUL_HALAMAN[pathNormal];
 
   if (judulTerdaftar) return judulTerdaftar;
+
+  const judulKatalog = dapatkanJudulKatalog(pathNormal);
+  if (judulKatalog) return judulKatalog;
 
   const segmenTerakhir = pathNormal.split("/").filter(Boolean).at(-1);
   return segmenTerakhir ? formatSegmenPath(segmenTerakhir) : "Home";

@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 import { Toast } from "@/components/common/Toast";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { SidebarTindakanRanap } from "@/components/tindakan-rawat-inap/SidebarTindakanRanap";
@@ -319,7 +320,9 @@ export default function HalamanTindakanRawatInap() {
       tampilkanToast("Belum ada data tindakan untuk dicetak.", "info");
       return;
     }
-    window.print();
+    if (!cetakTabelDomJasper("Laporan Tindakan Rawat Inap")) {
+      tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+    }
   };
 
   const mintaPilihTindakan = () => tampilkanToast("Pilih baris tindakan yang akan diubah atau dihapus.", "info");

@@ -14,5 +14,6 @@ interface MenuKonteksRawatJalanProps {
 }
 
 export function MenuKonteksRawatJalan({ onPilih, ...props }: MenuKonteksRawatJalanProps) {
+  if (!props.terbuka || !props.baris) return null;
   return <MenuKonteksTabel {...props} menu={MENU_KONTEKS_RAWAT_JALAN} onPilih={(item: ItemMenuKonteksTabel) => onPilih(item as ItemMenuKonteks)} />;
 }
