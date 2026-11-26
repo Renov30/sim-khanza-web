@@ -1,3 +1,5 @@
+import { selesaikanAksiKonteksUmum, type AksiKonteksUmum } from "./peta-rute-konteks";
+
 export type FilterSepIgd = "Semua" | "Belum" | "Sudah";
 
 export interface BarisMenuKonteks {
@@ -22,7 +24,7 @@ export interface ItemMenuKonteks {
 }
 
 export type AksiMenuKonteks =
-  | { jenis: "rute"; label: string; rute: string }
+  | AksiKonteksUmum
   | { jenis: "filter"; label: string; kunci: "sep"; nilai: Exclude<FilterSepIgd, "Semua"> }
   | { jenis: "belum"; label: string };
 
@@ -490,5 +492,7 @@ export function tentukanAksiMenu(item: ItemMenuKonteks, baris: BarisMenuKonteks)
   }
   const ruteTanpaNomor = RUTE_TANPA_NOMOR[item.id];
   if (ruteTanpaNomor) return { jenis: "rute", label: item.label, rute: ruteTanpaNomor };
+  const umum = selesaikanAksiKonteksUmum(item, baris.no_rawat, { konteksHalaman: "igd" });
+  if (umum) return umum;
   return { jenis: "belum", label: item.label };
 }

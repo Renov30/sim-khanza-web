@@ -9,6 +9,7 @@ import type {
   StatusPanelPemeriksaan,
 } from "@/components/tindakan-rawat-jalan/kontrak-panel-pemeriksaan";
 import { registrationDate } from "@/lib/registrasi/date";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 
 export type JenisPemeriksaanObgyn = "obstetri" | "ginekologi";
 
@@ -242,7 +243,9 @@ export const PemeriksaanObgynTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanO
         setToast({ pesan: `Belum ada pemeriksaan ${namaJenis} untuk dicetak.`, tipe: "info" });
         return;
       }
-      window.print();
+      if (!cetakTabelDomJasper(`Laporan Pemeriksaan ${namaJenis}`)) {
+        setToast({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+      }
     };
 
     const cariData = () => {

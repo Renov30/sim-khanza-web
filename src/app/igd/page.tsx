@@ -8,6 +8,7 @@ import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PanelInputData } from "@/components/modul/PanelInputData";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { MenuKonteksIgd } from "@/components/modul/MenuKonteksIgd";
+import { DialogAksiKonteks, jalankanAksiKonteksApi, type JenisAksiDialogKonteks } from "@/components/modul/DialogAksiKonteks";
 import {
   tentukanAksiMenu,
   type BarisMenuKonteks,
@@ -22,6 +23,7 @@ import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { useAuth } from "@/components/auth/AuthContext";
 import { registrationDate } from "@/lib/registrasi/date";
 import { pindahFieldDenganEnter } from "@/lib/formulir/pindah-field";
+import { bukaTabCetakUrl } from "@/lib/cetak/jasper-web";
 import { POLI_IGD } from "@/lib/igd/constants";
 import type { RegistrationNumbers } from "@/lib/registrasi/numbering";
 
@@ -78,6 +80,7 @@ export default function HalamanIGD() {
   const [filterSep, setFilterSep] = useState<FilterSepIgd>("Semua");
   const [versiTabel, setVersiTabel] = useState(0);
   const [menuKonteks, setMenuKonteks] = useState<{ x: number; y: number; baris: IgdRow } | null>(null);
+  const [aksiDialog, setAksiDialog] = useState<JenisAksiDialogKonteks | null>(null);
   const [barisTerpilih, setBarisTerpilih] = useState("");
   const [terpilih, setTerpilih] = useState<IgdRow | null>(null);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
@@ -324,16 +327,58 @@ export default function HalamanIGD() {
     if (!konteks) return;
     const aksi = tentukanAksiMenu(item, konteks.baris);
     if (aksi.jenis === "rute") {
-      router.push(aksi.rute);
+      if (aksi.rute.startsWith("/cetak/")) {
+        if (!bukaTabCetakUrl(aksi.rute)) {
+          tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+        }
+      } else {
+        router.push(aksi.rute);
+      }
       return;
     }
     if (aksi.jenis === "filter") {
       setFilterSep(aksi.nilai);
       setTerpilih(null);
       setBarisTerpilih("");
+      tampilkanToast(`Filter SEP diubah menjadi ${aksi.nilai}.`, "info");
       return;
     }
-    tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+    if (aksi.jenis === "status_reg" || aksi.jenis === "status_poli" || aksi.jenis === "berkas") {
+      const aksiApi =
+        aksi.jenis === "status_reg"
+          ? "set_status_reg"
+          : aksi.jenis === "status_poli"
+            ? "set_status_poli"
+            : "set_berkas";
+      void jalankanAksiKonteksApi({
+        aksi: aksiApi,
+        no_rawat: konteks.baris.no_rawat,
+        nilai: aksi.nilai,
+      }).then((res) => {
+        tampilkanToast(res.pesan, res.ok ? "sukses" : "error");
+        if (res.ok) setVersiTabel((v) => v + 1);
+      });
+      return;
+    }
+    if (aksi.jenis === "ganti") {
+      setAksiDialog({
+        tipe: "ganti",
+        aksiApi: aksi.aksiApi,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
+      return;
+    }
+    if (aksi.jenis === "hapus") {
+      setAksiDialog({
+        tipe: "hapus",
+        target: aksi.target,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
+    }
   }, [menuKonteks, router, tampilkanToast]);
 
   const payloadForm = useCallback(() => ({
@@ -673,6 +718,14 @@ export default function HalamanIGD() {
         baris={menuKonteks?.baris || null}
         onPilih={pilihMenuKonteks}
         onTutup={() => setMenuKonteks(null)}
+      />
+      <DialogAksiKonteks
+        aksi={aksiDialog}
+        onTutup={() => setAksiDialog(null)}
+        onSelesai={(pesan, tipe) => {
+          tampilkanToast(pesan, tipe);
+          if (tipe === "sukses") setVersiTabel((v) => v + 1);
+        }}
       />
       <PilihPasienDialog
         terbuka={modalPasienBuka}

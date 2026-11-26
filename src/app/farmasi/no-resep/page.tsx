@@ -10,6 +10,7 @@ import {
   faFilePrescription,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthContext";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { PanelBawah } from "@/components/modul/PanelBawah";
@@ -422,7 +423,7 @@ export default function HalamanNoResep() {
         onCari={terapkanPencarian}
         placeholderCari="No. resep, no. rawat, RM, pasien, dokter..."
         onBaru={kosongkanForm}
-        onCetak={() => window.print()}
+        onCetak={() => { cetakTabelDomJasper("Laporan Nomor Resep Farmasi"); }}
         disabledCetak={data.length === 0}
         onSemua={tampilkanSemua}
         jumlahRecord={totalData}

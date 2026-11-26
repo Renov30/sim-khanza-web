@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { MenuKonteksRawatJalan } from "@/components/modul/MenuKonteksRawatJalan";
+import { DialogAksiKonteks, jalankanAksiKonteksApi, type JenisAksiDialogKonteks } from "@/components/modul/DialogAksiKonteks";
 import { tentukanAksiMenu, type AksiMenuKonteks, type ItemMenuKonteks, type KunciSortRawatJalan } from "@/components/modul/menu-konteks-rawat-jalan-data";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -9,6 +10,7 @@ import { Toast } from "@/components/common/Toast";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useRouter } from "next/navigation";
 import { registrationDate } from "@/lib/registrasi/date";
+import { bukaTabCetakUrl } from "@/lib/cetak/jasper-web";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -92,6 +94,9 @@ export default function HalamanRawatJalan() {
   const [filterDokter, setFilterDokter] = useState("");
   const [statusPeriksa, setStatusPeriksa] = useState("Semua");
   const [statusBayar, setStatusBayar] = useState("Semua");
+  const [filterSep, setFilterSep] = useState<"Semua" | "Belum" | "Sudah">("Semua");
+  const [belumDiagnosa, setBelumDiagnosa] = useState(false);
+  const [aksiDialog, setAksiDialog] = useState<JenisAksiDialogKonteks | null>(null);
   const [halaman, setHalaman] = useState(1);
   const [totalData, setTotalData] = useState(0);
   const [versiTabel, setVersiTabel] = useState(0);
@@ -159,6 +164,8 @@ export default function HalamanRawatJalan() {
       if (filterDokter) url.searchParams.set("kd_dokter", filterDokter);
       if (statusPeriksa !== "Semua") url.searchParams.set("stts", statusPeriksa);
       if (statusBayar !== "Semua") url.searchParams.set("status_bayar", statusBayar);
+      if (filterSep !== "Semua") url.searchParams.set("sep", filterSep);
+      if (belumDiagnosa) url.searchParams.set("belum_diagnosa", "1");
       if (kataKunciFilter) url.searchParams.set("cari", kataKunciFilter);
 
       const res = await fetch(url.toString(), { signal: controller.signal, cache: "no-store" });
@@ -175,7 +182,7 @@ export default function HalamanRawatJalan() {
     } finally {
       if (!controller.signal.aborted) setMemuat(false);
     }
-  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterPj, filterPoli, filterDokter, statusPeriksa, statusBayar, kataKunciFilter, halaman, tampilkanToast]);
+  }, [isAuthenticated, tabTabel, tanggalMulai, tanggalSelesai, filterPj, filterPoli, filterDokter, statusPeriksa, statusBayar, filterSep, belumDiagnosa, kataKunciFilter, halaman, tampilkanToast]);
 
   // Hanya kata kunci yang ditunda; filter lain langsung memuat data.
   useEffect(() => {
@@ -218,6 +225,8 @@ export default function HalamanRawatJalan() {
     setFilterDokter("");
     setStatusPeriksa("Semua");
     setStatusBayar("Semua");
+    setFilterSep("Semua");
+    setBelumDiagnosa(false);
     setHalaman(1);
     setBarisTerpilih("");
     setVersiTabel((versi) => versi + 1);
@@ -242,9 +251,64 @@ export default function HalamanRawatJalan() {
     setMenuKonteks(null);
     if (!konteks) return;
     const aksi: AksiMenuKonteks = tentukanAksiMenu(item, konteks.baris);
-    if (aksi.jenis === "rute") router.push(aksi.rute);
-    else if (aksi.jenis === "urut") setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
-    else tampilkanToast(`${aksi.label} untuk ${konteks.baris.no_rawat} belum tersedia di Khanza Web.`, "info");
+    if (aksi.jenis === "rute") {
+      if (aksi.rute.startsWith("/cetak/")) {
+        if (!bukaTabCetakUrl(aksi.rute)) {
+          tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+        }
+      } else {
+        router.push(aksi.rute);
+      }
+    } else if (aksi.jenis === "urut") {
+      setUrutanTabel({ kunci: aksi.kunci, arah: aksi.arah });
+    } else if (aksi.jenis === "filter") {
+      if (aksi.kunci === "sep") {
+        setFilterSep(aksi.nilai === "Sudah" ? "Sudah" : "Belum");
+        setHalaman(1);
+        tampilkanToast(`Filter SEP diubah menjadi ${aksi.nilai}.`, "info");
+      } else if (aksi.kunci === "penjab") {
+        setFilterPj(aksi.nilai);
+        setHalaman(1);
+        tampilkanToast(`Filter jenis bayar: ${konteks.baris.png_jawab || aksi.nilai}.`, "info");
+      } else if (aksi.kunci === "belum_diagnosa") {
+        setBelumDiagnosa((prev) => !prev);
+        setHalaman(1);
+        tampilkanToast("Filter pasien belum masuk diagnosa diperbarui.", "info");
+      }
+    } else if (aksi.jenis === "status_reg" || aksi.jenis === "status_poli" || aksi.jenis === "berkas" || aksi.jenis === "antrian_poli") {
+      const aksiApi =
+        aksi.jenis === "status_reg"
+          ? "set_status_reg"
+          : aksi.jenis === "status_poli"
+            ? "set_status_poli"
+            : aksi.jenis === "berkas"
+              ? "set_berkas"
+              : "antrian_poli";
+      void jalankanAksiKonteksApi({
+        aksi: aksiApi,
+        no_rawat: konteks.baris.no_rawat,
+        nilai: "nilai" in aksi ? aksi.nilai : undefined,
+      }).then((res) => {
+        tampilkanToast(res.pesan, res.ok ? "sukses" : "error");
+        if (res.ok) setVersiTabel((v) => v + 1);
+      });
+    } else if (aksi.jenis === "ganti") {
+      setAksiDialog({
+        tipe: "ganti",
+        aksiApi: aksi.aksiApi,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
+    } else if (aksi.jenis === "hapus") {
+      setAksiDialog({
+        tipe: "hapus",
+        target: aksi.target,
+        label: aksi.label,
+        no_rawat: konteks.baris.no_rawat,
+        nm_pasien: konteks.baris.nm_pasien,
+      });
+    }
   }, [menuKonteks, router, tampilkanToast]);
 
   return (
@@ -469,6 +533,14 @@ export default function HalamanRawatJalan() {
         baris={menuKonteks?.baris || null}
         onPilih={pilihMenuKonteks}
         onTutup={() => setMenuKonteks(null)}
+      />
+      <DialogAksiKonteks
+        aksi={aksiDialog}
+        onTutup={() => setAksiDialog(null)}
+        onSelesai={(pesan, tipe) => {
+          tampilkanToast(pesan, tipe);
+          if (tipe === "sukses") setVersiTabel((v) => v + 1);
+        }}
       />
       <Toast message={toast?.pesan || null} tipe={toast?.tipe} onClose={() => setToast(null)} />
     </div>

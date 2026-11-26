@@ -1,3 +1,5 @@
+import { selesaikanAksiKonteksUmum, type AksiKonteksUmum } from "./peta-rute-konteks";
+
 export type KunciSortRawatJalan =
   | "no_rawat"
   | "tanggal"
@@ -29,7 +31,8 @@ export interface ItemMenuKonteks {
 }
 
 export type AksiMenuKonteks =
-  | { jenis: "rute"; label: string; rute: string }
+  | AksiKonteksUmum
+  | { jenis: "filter"; label: string; kunci: "sep" | "penjab" | "belum_diagnosa"; nilai: string }
   | { jenis: "urut"; label: string; kunci: KunciSortRawatJalan; arah: "asc" | "desc" }
   | { jenis: "belum"; label: string };
 
@@ -540,6 +543,11 @@ const URUTAN: Readonly<Record<string, { kunci: KunciSortRawatJalan; arah: "asc" 
 };
 
 export function tentukanAksiMenu(item: ItemMenuKonteks, baris: BarisMenuKonteks): AksiMenuKonteks {
+  if (item.id === "MnBelumTerbitSEP") return { jenis: "filter", label: item.label, kunci: "sep", nilai: "Belum" };
+  if (item.id === "MnSudahTerbitSEP") return { jenis: "filter", label: item.label, kunci: "sep", nilai: "Sudah" };
+  if (item.id === "ppTampilkanSeleksi") return { jenis: "filter", label: item.label, kunci: "penjab", nilai: baris.kd_pj };
+  if (item.id === "ppTampilkanBelumDiagnosa") return { jenis: "filter", label: item.label, kunci: "belum_diagnosa", nilai: "1" };
+
   const ruteDenganNomor = RUTE_DENGAN_NOMOR[item.id];
   if (ruteDenganNomor) {
     return { jenis: "rute", label: item.label, rute: `${ruteDenganNomor}?no_rawat=${encodeURIComponent(baris.no_rawat)}` };
@@ -548,5 +556,7 @@ export function tentukanAksiMenu(item: ItemMenuKonteks, baris: BarisMenuKonteks)
   if (ruteTanpaNomor) return { jenis: "rute", label: item.label, rute: ruteTanpaNomor };
   const urutan = URUTAN[item.id];
   if (urutan) return { jenis: "urut", label: item.label, ...urutan };
+  const umum = selesaikanAksiKonteksUmum(item, baris.no_rawat, { konteksHalaman: "ralan" });
+  if (umum) return umum;
   return { jenis: "belum", label: item.label };
 }

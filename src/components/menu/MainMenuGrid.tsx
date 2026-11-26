@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MENU_CATEGORIES, MENU_ITEMS } from "@/lib/constants/menus";
 import type { MenuItem } from "@/lib/types/menu";
@@ -84,6 +84,19 @@ export function MainMenuGrid({ onModuleClick, konfigurasiModul }: MainMenuGridPr
     : "ALL";
   const queryFromUrl = searchParams.get("cari") ?? "";
   const [searchQuery, setSearchQuery] = useState(queryFromUrl);
+  const deferredQuery = useDeferredValue(searchQuery);
+  const [batasTampil, setBatasTampil] = useState(60);
+  const penandaBawahRef = useRef<HTMLDivElement | null>(null);
+  const filterKey = `${selectedCategory}|${selectedGroup}|${deferredQuery.trim().toLowerCase()}`;
+  const prevFilterKeyRef = useRef(filterKey);
+
+  useEffect(() => {
+    if (prevFilterKeyRef.current !== filterKey) {
+      prevFilterKeyRef.current = filterKey;
+      const timer = window.setTimeout(() => setBatasTampil(60), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [filterKey]);
 
   useEffect(() => {
     if (searchQuery === queryFromUrl) return;
@@ -111,12 +124,12 @@ export function MainMenuGrid({ onModuleClick, konfigurasiModul }: MainMenuGridPr
   );
 
   const filteredItems = useMemo(() => {
+    const query = deferredQuery.toLowerCase().trim();
     return menuAktif.filter((item) => {
       const matchCategory =
         selectedCategory === "ALL" || item.categoryCode === selectedCategory;
       const matchGroup =
         selectedGroup === "ALL" || termasukKelompok(item, selectedGroup);
-      const query = searchQuery.toLowerCase().trim();
       const matchSearch =
         !query ||
         item.title.toLowerCase().includes(query) ||
@@ -124,7 +137,28 @@ export function MainMenuGrid({ onModuleClick, konfigurasiModul }: MainMenuGridPr
         (item.description && item.description.toLowerCase().includes(query));
       return matchCategory && matchGroup && matchSearch;
     });
-  }, [menuAktif, selectedCategory, selectedGroup, searchQuery]);
+  }, [menuAktif, selectedCategory, selectedGroup, deferredQuery]);
+
+  const visibleItems = useMemo(
+    () => filteredItems.slice(0, batasTampil),
+    [filteredItems, batasTampil],
+  );
+  const masihAdaLagi = visibleItems.length < filteredItems.length;
+
+  useEffect(() => {
+    const el = penandaBawahRef.current;
+    if (!el || !masihAdaLagi) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setBatasTampil((prev) => prev + 60);
+        }
+      },
+      { rootMargin: "240px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [masihAdaLagi]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
@@ -214,15 +248,31 @@ export function MainMenuGrid({ onModuleClick, konfigurasiModul }: MainMenuGridPr
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
         {/* Module Cards Grid: 5 item per baris pada layar desktop/tablet */}
         {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
-            {filteredItems.map((item) => (
-              <MenuCard
-                key={item.id}
-                item={item}
-                onClick={onModuleClick}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+              {visibleItems.map((item) => (
+                <MenuCard
+                  key={item.id}
+                  item={item}
+                  onClick={onModuleClick}
+                />
+              ))}
+            </div>
+            {masihAdaLagi && (
+              <div ref={penandaBawahRef} className="flex flex-col items-center gap-2 py-4">
+                <span className="text-[11px] text-slate-500">
+                  Menampilkan {visibleItems.length} dari {filteredItems.length} modul
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setBatasTampil((prev) => prev + 60)}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  Muat Lebih Banyak
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-slate-200">
             <FontAwesomeIcon icon={faLayerGroup} className="w-10 h-10 text-slate-300 mb-2" />

@@ -7,6 +7,7 @@ import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Toast } from "@/components/common/Toast";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxesStacked,
@@ -737,7 +738,9 @@ export default function HalamanMasterObat() {
         onBaru={() => { resetForm(opsi); setTabAktif("input"); }}
         onHapus={padaTabData ? () => setDialogStatus("hapus") : undefined}
         onGanti={padaTabTabel ? () => { if (!terpilih) setTabAktif("input"); else void handleGanti(); } : undefined}
-        onCetak={padaTabTabel ? () => window.print() : undefined}
+        onCetak={padaTabTabel ? () => {
+          cetakTabelDomJasper("Laporan Data Master Obat & Alkes");
+        } : undefined}
         onSemua={padaTabTabel ? () => {
           setKataKunci("");
           setFilterJenis("");

@@ -36,9 +36,11 @@ const PETA_PREFIX_RUTE: ReadonlyArray<readonly [string, ModulAplikasi]> = [
   ["/tarif-lab", "laboratorium"],
   ["/radiologi", "radiologi"],
   ["/farmasi", "farmasi"],
+  ["/tarif-farmasi", "farmasi"],
   ["/dokter", "sdm"],
   ["/petugas", "sdm"],
   ["/pegawai", "sdm"],
+  ["/kepegawaian", "sdm"],
   ["/poliklinik", "referensi"],
   ["/jadwal-dokter", "referensi"],
 ];

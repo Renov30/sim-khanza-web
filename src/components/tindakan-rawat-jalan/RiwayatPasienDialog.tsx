@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useKlien } from "@/lib/klien";
 import { registrationDate } from "@/lib/registrasi/date";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import {
   TAB_RIWAYAT,
   type BarisRiwayat,
@@ -789,7 +790,7 @@ export function RiwayatPasienDialog({
               </button>
             </div>
           )}
-          onCetak={() => window.print()}
+          onCetak={() => { cetakTabelDomJasper("Riwayat Perawatan Pasien", noRm ? `No. RM: ${noRm}` : undefined); }}
           disabledCetak={!noRm || items.length === 0}
           onKembali={onTutup}
           labelKembali="Keluar"

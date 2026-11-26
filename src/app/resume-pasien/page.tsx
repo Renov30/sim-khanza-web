@@ -9,6 +9,7 @@ import { PanelBawah } from "@/components/modul/PanelBawah";
 import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { RiwayatResumeButton, type JenisRiwayatResume } from "@/components/resume-pasien/RiwayatResumeButton";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import {
   KONDISI_PULANG,
   PANJANG_RESUME,
@@ -442,7 +443,11 @@ function KontenResumePasien() {
         onBaru={() => { resetForm(); setTabAktif("input"); }}
         onHapus={tabAktif === "input" ? () => setKonfirmasiHapus(true) : undefined}
         onGanti={() => { if (data) setForm(data.resume); setTabAktif("input"); }}
-        onCetak={tabAktif === "data" ? () => tampilkanToast("Cetak resume belum tersedia di Khanza Web.", "info") : undefined}
+        onCetak={tabAktif === "data" ? () => {
+          if (!cetakTabelDomJasper("Laporan Resume Medis Pasien")) {
+            tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+          }
+        } : undefined}
         onKembali={() => router.back()}
         disabledSimpan={tabAktif !== "input" || !data || !bisaUbah || menyimpan || !form.keluhan_utama.trim() || !form.jalannya_penyakit.trim() || !form.diagnosa_utama.trim()}
         disabledHapus={tabAktif !== "input" || !data?.ada || !bisaUbah || menyimpan}

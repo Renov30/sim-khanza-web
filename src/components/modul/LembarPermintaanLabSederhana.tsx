@@ -10,6 +10,7 @@ import type { BarisApi } from "@/lib/types/api";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { MENU_AKSI_UMUM, SidebarAksiLis, type AksiLis } from "@/components/modul/SidebarAksiLis";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { Toast, type ToastTipe } from "@/components/common/Toast";
 
 export type KolomPermintaanLab = {
@@ -81,7 +82,9 @@ export function LembarPermintaanLabSederhana({
       return;
     }
     if (aksi.jenis === "cetak") {
-      window.print();
+      if (!cetakTabelDomJasper("Permintaan Laboratorium", `No. Order: ${terpilih}`)) {
+        setNotifikasi({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+      }
       return;
     }
     setNotifikasi({ pesan: `${aksi.label} untuk ${terpilih} belum tersedia di Khanza Web.`, tipe: "info" });

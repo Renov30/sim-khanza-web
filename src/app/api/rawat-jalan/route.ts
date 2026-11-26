@@ -46,6 +46,8 @@ export async function GET(req: NextRequest) {
     const kdDokter = searchParams.get("kd_dokter")?.trim() || "";
     const stts = searchParams.get("stts") || "Semua";
     const statusBayar = searchParams.get("status_bayar") || "Semua";
+    const filterSep = searchParams.get("sep") || "Semua";
+    const belumDiagnosa = searchParams.get("belum_diagnosa") === "1";
     const cari = searchParams.get("cari")?.trim() || "";
     const limit = Math.max(1, Math.min(Math.trunc(Number(searchParams.get("limit"))) || 100, 200));
     const page = Math.max(1, Math.trunc(Number(searchParams.get("page"))) || 1);
@@ -74,6 +76,14 @@ export async function GET(req: NextRequest) {
     if (kdDokter) { where.push(`${kolomDokter} = ?`); params.push(kdDokter); }
     if (stts !== "Semua") { where.push("r.stts = ?"); params.push(stts); }
     if (statusBayar !== "Semua") { where.push("r.status_bayar = ?"); params.push(statusBayar); }
+    if (filterSep === "Sudah") {
+      where.push("EXISTS (SELECT 1 FROM bridging_sep bs WHERE bs.no_rawat = r.no_rawat)");
+    } else if (filterSep === "Belum") {
+      where.push("NOT EXISTS (SELECT 1 FROM bridging_sep bs WHERE bs.no_rawat = r.no_rawat)");
+    }
+    if (belumDiagnosa) {
+      where.push("NOT EXISTS (SELECT 1 FROM diagnosa_pasien dp WHERE dp.no_rawat = r.no_rawat)");
+    }
 
     if (cari) {
       where.push(`(r.no_reg LIKE ? OR r.no_rawat LIKE ? OR r.no_rkm_medis LIKE ? OR p.nm_pasien LIKE ?

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import {
   faCheck,
   faFileCircleCheck,
@@ -206,7 +207,9 @@ export default function HalamanPermintaanLabPK() {
       return;
     }
     if (aksi.jenis === "cetak") {
-      window.print();
+      if (!cetakTabelDomJasper("Laporan Permintaan Laboratorium PK", `No. Order: ${terpilih}`)) {
+        setToast({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+      }
       return;
     }
     if (aksi.jenis === "ambil" && tabel === "item") {
@@ -346,58 +349,100 @@ export default function HalamanPermintaanLabPK() {
                     <th key={`${judul}-${indeks}`} scope="col" className="whitespace-nowrap border-b border-slate-200 px-2 py-2 text-center font-semibold">{judul}</th>
                   ))}
                 </tr>
-              ) : (
-                data.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-slate-50/80"
-                  >
-                    <td className="py-2 px-2.5 font-bold text-slate-800">
-                      {item.noorder}
-                    </td>
-                    <td className="py-2 px-2.5 font-medium text-slate-800">
-                      {item.no_rawat}
-                    </td>
-                    <td className="py-2 px-2.5 text-slate-600">
-                      {item.tgl_permintaan} <span className="text-slate-400">{item.jam_permintaan}</span>
-                    </td>
-                    <td className="py-2 px-2.5 font-bold text-slate-800">
-                      {item.no_rkm_medis}
-                    </td>
-                    <td className="py-2 px-2.5 font-sans font-medium text-slate-800">
-                      {item.nm_pasien}
-                    </td>
-                    <td className="py-2 px-2.5 text-center">
-                      <span
-                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                          item.jk === "L"
-                            ? "bg-primary-50 text-primary-700"
-                            : "bg-tertiary-50 text-tertiary-700"
-                        }`}
-                      >
-                        {item.jk}
-                      </span>
-                    </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-700">
-                      {item.nm_dokter_perujuk || item.dokter_perujuk || "-"}
-                    </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
-                      {item.diagnosa_klinis || "-"}
-                    </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-500 text-[11px]">
-                      {item.informasi_tambahan || "-"}
-                    </td>
-                    <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
-                        {item.status || "ralan"}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {memuat ? (
+                  <tr><td colSpan={kolom.length} className="h-36 border-0 text-center text-slate-500">Memuat data permintaan laboratorium...</td></tr>
+                ) : data.length === 0 ? (
+                  <tr><td colSpan={kolom.length} className="h-44 border-0 text-center text-slate-400"><FontAwesomeIcon icon={faFlaskVial} className="mb-2 h-7 w-7 text-slate-300" /><p>Tidak ada permintaan laboratorium pada filter ini.</p></td></tr>
+                ) : tabel === "item" ? (
+                  data.map((baris) => (
+                    <tr key={`item-${teks(baris.noorder)}`} className={kelasBaris(teks(baris.noorder))} onClick={() => pilih(baris)}>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono text-slate-800">{teks(baris.noorder)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.no_rawat)}</td>
+                      <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{teks(baris.no_rkm_medis)}</span><span className="ml-1 text-slate-800">{teks(baris.nm_pasien)}</span></td>
+                      <td className="whitespace-nowrap px-2 py-1.5"><span className="font-mono text-slate-600">{teks(baris.kd_jenis_prw)}</span><span className="ml-1">{teks(baris.nm_perawatan)}</span></td>
+                      <td className="px-2 py-1.5">{teks(baris.pemeriksaan)}</td>
+                      <td className="px-2 py-1.5">{teks(baris.satuan)}</td>
+                      <td className="px-2 py-1.5">{teks(baris.nilai_rujukan) || "-"}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_permintaan)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_permintaan)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_sampel)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_sampel)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_hasil)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_hasil)}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5">{teks(baris.nm_dokter)}</td>
+                      <td className="px-2 py-1.5">{teks(baris.ruang)}</td>
+                      <td className="px-2 py-1.5">{teks(baris.informasi_tambahan) || "-"}</td>
+                      <td className="px-2 py-1.5">{teks(baris.diagnosa_klinis) || "-"}</td>
+                      <td className="px-2 py-1.5">{teks(baris.png_jawab)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  data.map((baris) => {
+                    const kode = teks(baris.noorder);
+                    const daftarItem = baris.item || [];
+                    const kelompok = new Map<string, ItemPermintaan[]>();
+                    for (const item of daftarItem) {
+                      const kodeItem = teks(item.kd_jenis_prw);
+                      const kumpulanItem = kelompok.get(kodeItem) || [];
+                      kumpulanItem.push(item);
+                      kelompok.set(kodeItem, kumpulanItem);
+                    }
+                    return (
+                      <React.Fragment key={`permintaan-${kode}`}>
+                        <tr className={kelasBaris(kode)} onClick={() => pilih(baris)}>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono text-slate-800">{kode}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.no_rawat)}</td>
+                          <td className="px-2 py-1.5"><span className="font-mono text-slate-600">{teks(baris.no_rkm_medis)}</span><span className="ml-1 text-slate-800">{teks(baris.nm_pasien)}</span></td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_permintaan)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_permintaan)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_sampel)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_sampel)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.tgl_hasil)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 font-mono">{teks(baris.jam_hasil)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5">{teks(baris.nm_dokter)}</td>
+                          <td className="px-2 py-1.5">{teks(baris.ruang)}</td>
+                          <td className="px-2 py-1.5">{teks(baris.informasi_tambahan) || "-"}</td>
+                          <td className="px-2 py-1.5">{teks(baris.diagnosa_klinis) || "-"}</td>
+                          <td className="px-2 py-1.5">{teks(baris.png_jawab)}</td>
+                        </tr>
+                        {[...kelompok.entries()].map(([kodeItem, daftar]) => (
+                          <React.Fragment key={`${kode}-${kodeItem}`}>
+                            <tr className={kelasBaris(kode)} onClick={() => pilih(baris)}>
+                              <td colSpan={2} />
+                              <td className="px-2 py-1 pl-6 font-semibold text-slate-700">{teks(daftar[0]?.nm_perawatan)} <span className="font-mono text-[10px] text-slate-500">{kodeItem}</span></td>
+                              <td colSpan={6} />
+                              <td className="px-2 py-1 text-slate-500">Nilai Rujukan L.D.</td>
+                              <td className="px-2 py-1 text-slate-500">Nilai Rujukan L.A.</td>
+                              <td className="px-2 py-1 text-slate-500">Nilai Rujukan P.D.</td>
+                              <td className="px-2 py-1 text-slate-500">Nilai Rujukan P.A.</td>
+                              <td />
+                            </tr>
+                            {daftar.map((item, indeks) => (
+                              <tr key={`${kode}-${kodeItem}-${teks(item.pemeriksaan)}-${indeks}`} className={kelasBaris(kode)} onClick={() => pilih(baris)}>
+                                <td colSpan={2} />
+                                <td className="px-2 py-1 pl-10">{teks(item.pemeriksaan)}</td>
+                                <td className="px-2 py-1">{teks(item.satuan)}</td>
+                                <td />
+                                <td />
+                                <td colSpan={3} />
+                                <td className="px-2 py-1">{teks(item.nilai_rujukan_ld)}</td>
+                                <td className="px-2 py-1">{teks(item.nilai_rujukan_la)}</td>
+                                <td className="px-2 py-1">{teks(item.nilai_rujukan_pd)}</td>
+                                <td className="px-2 py-1">{teks(item.nilai_rujukan_pa)}</td>
+                                <td />
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-200 bg-white px-2 py-1.5">
             <label htmlFor="permintaan-dokter" className="whitespace-nowrap text-xs font-semibold text-slate-700">Dokter :</label>
@@ -437,7 +482,11 @@ export default function HalamanPermintaanLabPK() {
       <PanelBawah
         tampilan="web"
         onHapus={() => infoBelumTersedia("Penghapusan")}
-        onCetak={() => window.print()}
+        onCetak={() => {
+          if (!cetakTabelDomJasper("Laporan Permintaan Laboratorium PK")) {
+            setToast({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+          }
+        }}
         onSemua={semua}
         tombolTambahan={tombolTambahan}
         jumlahRecord={data.length}

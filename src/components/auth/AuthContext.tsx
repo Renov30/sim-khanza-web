@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { UserSession } from "@/lib/types/auth";
 
@@ -113,12 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("storage", handleStorage);
 
-    // 3. Tab Visibility & Focus: memastikan tab yang kembali aktif selalu tersinkronisasi
+    // 3. Tab Visibility & Focus: sinkronisasi sesi maksimal 1x per 60 detik (logout lintas tab ditangani BroadcastChannel)
     const handleVisibilityChange = () => {
       const sekarang = Date.now();
-      if (document.visibilityState === "visible" && sekarang - lastActivitySync.current >= 5000) {
+      if (document.visibilityState === "visible" && sekarang - lastActivitySync.current >= 60_000) {
         lastActivitySync.current = sekarang;
-        refreshSession();
+        void refreshSession();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshSession, router]);
 
-  const login = async (idUser: string, pass: string) => {
+  const login = useCallback(async (idUser: string, pass: string) => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -176,9 +176,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const msg = err instanceof Error ? err.message : "Terjadi kesalahan jaringan";
       return { success: false, error: msg };
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch (err) {
@@ -207,32 +207,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Storage logout error:", e);
       }
     }
-  };
+  }, [router]);
 
-  const hasPermission = (permKey?: string): boolean => {
+  const hasPermission = useCallback((permKey?: string): boolean => {
     if (!permKey) return true;
     if (!user) return false;
     if (user.isAdmin) return true;
     return !!user.permissions[permKey];
-  };
+  }, [user]);
 
   const isLocked = !isLoading && !user;
 
+  const contextValue = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      isLocked,
+      isLoginModalOpen: isLocked || isLoginModalOpen,
+      setIsLoginModalOpen,
+      login,
+      logout,
+      hasPermission,
+      refreshSession,
+    }),
+    [user, isLoading, isLocked, isLoginModalOpen, login, logout, hasPermission, refreshSession],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        isLocked,
-        isLoginModalOpen: isLocked || isLoginModalOpen,
-        setIsLoginModalOpen,
-        login,
-        logout,
-        hasPermission,
-        refreshSession,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

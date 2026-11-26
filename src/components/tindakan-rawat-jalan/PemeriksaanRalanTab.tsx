@@ -9,6 +9,7 @@ import { PatientMasterSelect } from "@/components/pasien/PatientMasterSelect";
 import { KonfirmasiDialog } from "@/components/common/KonfirmasiDialog";
 import { Toast } from "@/components/common/Toast";
 import { registrationDate } from "@/lib/registrasi/date";
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import type {
   AksiPanelPemeriksaan,
   StatusPanelPemeriksaan,
@@ -211,7 +212,9 @@ export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanR
       setToast({ pesan: "Belum ada data pemeriksaan untuk dicetak.", tipe: "info" });
       return;
     }
-    window.print();
+    if (!cetakTabelDomJasper("Laporan Pemeriksaan Rawat Jalan")) {
+      setToast({ pesan: "Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", tipe: "error" });
+    }
   };
 
   const cariData = () => {

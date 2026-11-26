@@ -6,6 +6,7 @@ import { PatientMasterSelect } from '@/components/pasien/PatientMasterSelect';
 import { additionalPatientFields, emptyPatientDetails, fullPatientAge } from '@/lib/pasien/fields';
 import { registrationDate } from '@/lib/registrasi/date';
 import { pindahFieldDenganEnter } from '@/lib/formulir/pindah-field';
+import { cetakTabelDomJasper } from "@/lib/cetak/jasper-web";
 import { PanelBawah } from "@/components/modul/PanelBawah";
 import { GridFormulirModul } from "@/components/modul/GridFormulirModul";
 import { CustomSelect } from "@/components/ui/CustomSelect";
@@ -408,7 +409,9 @@ export default function HalamanDataPasien() {
       tampilkanToast("Tidak ada data pasien untuk dicetak!", "info");
       return;
     }
-    window.print();
+    if (!cetakTabelDomJasper("Laporan Data Master Pasien")) {
+      tampilkanToast("Pop-up tab cetak diblokir browser. Izinkan pop-up untuk mencetak.", "error");
+    }
   };
 
   const inputClass = "h-7 w-full min-w-0 border border-slate-300 bg-white px-2 font-sans text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600 read-only:bg-slate-50";
