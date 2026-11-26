@@ -285,7 +285,7 @@ export default function HalamanRawatJalan() {
             className="min-h-0 flex-1 overflow-auto"
             aria-busy={memuat}
           >
-            <table className="min-w-[96rem] w-full border-collapse text-left text-[11px]">
+            <table className="min-w-[96rem] w-full border-collapse text-left text-[11px] [&_tbody_td]:whitespace-nowrap">
               <caption className="sr-only">
                 Daftar registrasi rawat jalan. Pilih baris untuk menandai data.
               </caption>
@@ -367,27 +367,26 @@ export default function HalamanRawatJalan() {
                     </td>
                     <td className="px-2.5 py-2 font-bold text-slate-800">{item.no_rkm_medis}</td>
                     <td className="px-2.5 py-2 font-sans font-medium text-slate-800">
-                      {item.nm_pasien} <span className="font-mono text-[10px] font-normal text-slate-500">({item.umurdaftar} {item.sttsumur})</span>
+                      {item.nm_pasien} <span className="font-mono text-[11px] font-normal text-slate-500">({item.umurdaftar} {item.sttsumur})</span>
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_poli}</td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.nm_dokter}</td>
-                    <td className="max-w-[14rem] px-2.5 py-2 font-sans text-[10px] text-slate-600" title={item.almt_pj || undefined}>
-                      <span className="block truncate">{item.p_jawab || "-"} <span className="text-slate-400">({item.hubunganpj || "-"})</span></span>
-                      {item.almt_pj && <span className="block truncate text-[9px] text-slate-400">{item.almt_pj}</span>}
+                    <td className="max-w-[14rem] truncate px-2.5 py-2 font-sans text-[11px] text-slate-600" title={[item.p_jawab, item.hubunganpj && `(${item.hubunganpj})`, item.almt_pj].filter(Boolean).join(" · ") || undefined}>
+                      {item.p_jawab || "-"} <span className="text-slate-400">({item.hubunganpj || "-"})</span>{item.almt_pj && <span className="text-slate-400"> · {item.almt_pj}</span>}
                     </td>
                     <td className="px-2.5 py-2 font-sans text-slate-700">{item.png_jawab || item.kd_pj || "-"}</td>
                     <td className="px-2.5 py-2 text-center">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${warnaStatusPeriksa(item.stts)}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${warnaStatusPeriksa(item.stts)}`}>
                         {item.stts || "-"}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2.5 py-2 text-center">
-                      <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status_bayar === "Sudah Bayar" ? "border border-secondary-200 bg-secondary-50 text-secondary-700" : "border border-slate-200 bg-slate-100 text-slate-600"}`}>
+                      <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold ${item.status_bayar === "Sudah Bayar" ? "border border-secondary-200 bg-secondary-50 text-secondary-700" : "border border-slate-200 bg-slate-100 text-slate-600"}`}>
                         {item.status_bayar || "Belum Bayar"}
                       </span>
                     </td>
-                    <td className="px-2.5 py-2 text-center font-sans text-[10px] text-slate-600">{item.status_poli || "-"}</td>
-                    <td className="whitespace-nowrap px-2.5 py-2 font-sans text-[10px] text-slate-600">{item.no_tlp || "-"}</td>
+                    <td className="px-2.5 py-2 text-center font-sans text-[11px] text-slate-600">{item.status_poli || "-"}</td>
+                    <td className="whitespace-nowrap px-2.5 py-2 font-sans text-[11px] text-slate-600">{item.no_tlp || "-"}</td>
                   </tr>
                 ))}
               </tbody>

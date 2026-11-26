@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { UserSession } from "@/lib/types/auth";
 
 const BROADCAST_AUTH_CHANNEL = "khanza_auth_sync_channel";
@@ -41,9 +42,11 @@ async function bacaJsonApi(res: Response): Promise<ResponsApi> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const lastActivitySync = useRef(0);
 
   const refreshSession = useCallback(async () => {
     try {
@@ -82,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Tab lain melakukan logout: segera kunci sesi di tab ini
             setUser(null);
             setIsLoginModalOpen(true);
+            router.replace("/");
           } else if (event.data.type === "LOGIN") {
             // Tab lain berhasil login: sinkronkan sesi di tab ini
             if (event.data.user) {
@@ -102,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (e.key === STORAGE_LOGOUT_KEY) {
         setUser(null);
         setIsLoginModalOpen(true);
+        router.replace("/");
       } else if (e.key === STORAGE_LOGIN_KEY) {
         refreshSession();
       }
@@ -110,7 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Tab Visibility & Focus: memastikan tab yang kembali aktif selalu tersinkronisasi
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      const sekarang = Date.now();
+      if (document.visibilityState === "visible" && sekarang - lastActivitySync.current >= 5000) {
+        lastActivitySync.current = sekarang;
         refreshSession();
       }
     };
@@ -127,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleVisibilityChange);
     };
-  }, [refreshSession]);
+  }, [refreshSession, router]);
 
   const login = async (idUser: string, pass: string) => {
     try {
@@ -179,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setIsLoginModalOpen(true);
+      router.replace("/");
 
       // Siarkan status LOGOUT ke seluruh tab lain yang terbuka
       try {

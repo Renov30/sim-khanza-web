@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
+import { dapatkanKonfigurasiModul } from "@/lib/modul/konfigurasi";
 
 config.autoAddCss = false;
 
@@ -13,11 +15,14 @@ export const metadata: Metadata = {
   description: "Sistem Informasi Manajemen Rumah Sakit Khanza Versi Web",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await connection();
+  const konfigurasiModul = dapatkanKonfigurasiModul();
+
   return (
     <html lang="id" className="h-full" suppressHydrationWarning>
       <head>
@@ -31,7 +36,7 @@ export default function RootLayout({
       <body className="h-full flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans antialiased">
         <AuthProvider>
           <Suspense fallback={<div className="h-screen bg-slate-50" />}>
-            <AppShell>{children}</AppShell>
+            <AppShell konfigurasiModul={konfigurasiModul}>{children}</AppShell>
           </Suspense>
         </AuthProvider>
       </body>

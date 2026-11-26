@@ -282,7 +282,7 @@ export const PemeriksaanRalanTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanR
         </div>
       </div>
 
-      <div className="grid gap-2 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)_10.75rem]">
+      <div className="grid gap-2 p-1 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)_10.75rem]">
         <div className="min-w-0 space-y-1.5">
           <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
             <span className="whitespace-nowrap text-right font-medium">Dilakukan :</span>

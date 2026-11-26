@@ -924,10 +924,10 @@ export default function HalamanInputResep() {
         jumlahRecord={totalObat}
       />
       {targetAturanPakai && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-tertiary-950/40 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setTargetAturanPakai(null); }}>
+        <div className="fixed inset-0 z-[99990] flex items-center justify-center bg-tertiary-950/40 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setTargetAturanPakai(null); }}>
           <div className="flex max-h-[min(34rem,calc(100vh-2rem))] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl" role="dialog" aria-modal="true" aria-labelledby="judul-pemilih-aturan">
             <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
-              <h2 id="judul-pemilih-aturan" className="text-sm font-semibold text-slate-800">Pilih Aturan Pakai</h2>
+              <h2 id="judul-pemilih-aturan" className="text-xs font-semibold text-slate-800">Pilih Aturan Pakai</h2>
               <button type="button" onClick={() => setTargetAturanPakai(null)} aria-label="Tutup pemilih aturan pakai" title="Tutup" className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-700"><FontAwesomeIcon icon={faXmark} className="h-4 w-4" /></button>
             </div>
             <div className="border-b border-slate-200 p-3">

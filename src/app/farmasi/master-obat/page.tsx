@@ -257,7 +257,7 @@ function TabelMasterObat({ data, memuat, sedangMenyimpan, terpilih, onPilih, onB
                 <td className="whitespace-nowrap px-2 py-2">{item.nama_golongan || item.kode_golongan}</td>
                 <td className="whitespace-nowrap px-2 py-2 tabular-nums">{item.expire && item.expire !== "0000-00-00" ? item.expire : "-"}</td>
                 <td className="whitespace-nowrap px-2 py-2">
-                  <span className={`rounded px-1.5 py-0.5 text-[10px] ${item.status === "1" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
+                  <span className={`rounded px-1.5 py-0.5 text-[11px] ${item.status === "1" ? "bg-secondary-50 text-secondary-800" : "bg-slate-100 text-slate-600"}`}>
                     {item.status === "1" ? "Aktif" : "Nonaktif"}
                   </span>
                 </td>
@@ -288,6 +288,7 @@ export default function HalamanMasterObat() {
   const [filterStatus, setFilterStatus] = useState("1");
   const [memuat, setMemuat] = useState(true);
   const [sedangMenyimpan, setSedangMenyimpan] = useState(false);
+  const [sedangMenghitungHarga, setSedangMenghitungHarga] = useState(false);
   const [dialogStatus, setDialogStatus] = useState<null | "hapus" | "pulihkan">(null);
   const [toast, setToast] = useState<{ pesan: string; tipe: "info" | "sukses" | "error"; key: number } | null>(null);
   const batas = 50;
@@ -413,7 +414,7 @@ export default function HalamanMasterObat() {
     });
   };
 
-  const hitungHarga = () => {
+  const hitungHarga = async () => {
     if (!opsi) return;
     const beli = Number(form.h_beli);
     if (!Number.isFinite(beli) || beli <= 0) {
@@ -425,6 +426,30 @@ export default function HalamanMasterObat() {
       aturan = opsi.harga.jenis.find((item) => item.kdjns === form.kdjns) || null;
     } else if (opsi.harga.mode === "Per Barang") {
       aturan = opsi.harga.barang.find((item) => item.kode_brng === form.kode_brng) || null;
+      if (!aturan) {
+        if (!form.kode_brng.trim() || form.kode_brng.length > 15) {
+          tampilkanToast("Kode barang tidak valid.", "error");
+          return;
+        }
+        setSedangMenghitungHarga(true);
+        try {
+          const response = await fetch(`/api/farmasi/master-obat/options?resource=harga&kode_brng=${encodeURIComponent(form.kode_brng)}`, {
+            cache: "no-store",
+          });
+          const json: { success?: boolean; data?: { harga?: HargaSetting }; error?: string } = await response.json();
+          if (!response.ok || !json.success || !json.data?.harga) {
+            throw new Error(json.error || "Gagal memuat pengaturan harga barang.");
+          }
+          const hargaBarang = json.data.harga.barang.find((item) => item.kode_brng === form.kode_brng) || null;
+          setOpsi((lama) => lama ? { ...lama, harga: { ...lama.harga, barang: hargaBarang ? [hargaBarang] : [] } } : lama);
+          aturan = hargaBarang;
+        } catch (error) {
+          tampilkanToast(pesanError(error, "Gagal memuat pengaturan harga barang."), "error");
+          return;
+        } finally {
+          setSedangMenghitungHarga(false);
+        }
+      }
     } else {
       aturan = opsi.harga.umum;
     }
@@ -662,6 +687,7 @@ export default function HalamanMasterObat() {
                 <button
                   type="button"
                   onClick={hitungHarga}
+                  disabled={sedangMenghitungHarga || sedangMenyimpan}
                   title="Hitung harga jual dari pengaturan harga aktif"
                   className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs text-slate-700"
                 >

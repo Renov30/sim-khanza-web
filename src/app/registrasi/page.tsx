@@ -570,14 +570,6 @@ export default function HalamanRegistrasi() {
     });
   }, [data, urutanTabel]);
 
-  const dataTampilRujukan = useMemo(() => {
-    if (!urutanTabel) return dataRujukan;
-    return [...dataRujukan].sort((a, b) => {
-      const hasil = nilaiSort(a, urutanTabel.kunci).localeCompare(nilaiSort(b, urutanTabel.kunci), "id", { numeric: true, sensitivity: "base" });
-      return urutanTabel.arah === "asc" ? hasil : -hasil;
-    });
-  }, [dataRujukan, urutanTabel]);
-
   const inputClass =
  "h-7 min-w-0 rounded-full border border-slate-300 bg-white px-2 text-xs font-normal text-slate-800 focus:outline-none focus:border-primary-600";
   const input = (label:string,value:string,change?: (value:string)=>void,readOnly=false,placeholder='') => (
@@ -770,7 +762,7 @@ export default function HalamanRegistrasi() {
                       {item.nm_pasien}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${item.jk === "L" ? "bg-primary-50 text-primary-700" : "bg-tertiary-50 text-tertiary-700"}`}>{item.jk}</span>
+                      <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${item.jk === "L" ? "bg-primary-50 text-primary-700" : "bg-tertiary-50 text-tertiary-700"}`}>{item.jk}</span>
                     </td>
                     <td className="py-2 px-2.5 text-slate-600">
                       {item.umurdaftar} {item.sttsumur}
@@ -781,17 +773,17 @@ export default function HalamanRegistrasi() {
                     <td className="py-2 px-2.5 font-sans text-slate-700">
                       {item.nm_dokter}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.p_jawab || "-"} ({item.hubunganpj || "-"})
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
                         {item.stts}
                       </span>
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                           item.status_bayar === "Sudah Bayar"
                             ? "bg-secondary-50 text-secondary-700 border border-secondary-200"
                             : "bg-slate-100 text-slate-600 border border-slate-200"

@@ -87,9 +87,9 @@ export async function GET(req: NextRequest) {
 
     // Default: kembalikan opsi ringkas dokter & poli & penjab untuk dropdown langsung
     const [dokter, poli, penjab] = await Promise.all([
-      executeQuery<Record<string, unknown>>("SELECT kd_dokter, nm_dokter FROM dokter WHERE status = '1' ORDER BY nm_dokter ASC"),
-      executeQuery<Record<string, unknown>>("SELECT kd_poli, nm_poli, registrasi, registrasilama FROM poliklinik WHERE status = '1' ORDER BY nm_poli ASC"),
-      executeQuery<Record<string, unknown>>("SELECT kd_pj, png_jawab FROM penjab WHERE status = '1' ORDER BY png_jawab ASC"),
+      executeQuery<Record<string, unknown>>("SELECT kd_dokter, nm_dokter FROM dokter WHERE status = '1' ORDER BY nm_dokter ASC LIMIT 50"),
+      executeQuery<Record<string, unknown>>("SELECT kd_poli, nm_poli, registrasi, registrasilama FROM poliklinik WHERE status = '1' ORDER BY nm_poli ASC LIMIT 50"),
+      executeQuery<Record<string, unknown>>("SELECT kd_pj, png_jawab FROM penjab WHERE status = '1' ORDER BY png_jawab ASC LIMIT 50"),
     ]);
 
     return NextResponse.json({

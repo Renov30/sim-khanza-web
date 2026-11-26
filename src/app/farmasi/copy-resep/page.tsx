@@ -271,11 +271,10 @@ export default function HalamanCopyResep() {
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm">
         <div className="min-h-0 flex-1 overflow-auto" aria-busy={memuat}>
-          <table className="w-full min-w-[78rem] border-collapse text-left text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
+          <table className="w-full min-w-[74rem] border-collapse text-left text-[11px] text-slate-700 [&_td]:!border-r-0 [&_th]:!border-r-0">
             <caption className="sr-only">Daftar resep dokter pada kunjungan pasien sebelumnya</caption>
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
               <tr>
-                <th scope="col" className="w-12 border-b border-r border-slate-200 px-2 py-2 text-center">Pilih</th>
                 <th scope="col" className="w-28 border-b border-r border-slate-200 px-2 py-2 text-center">No. Resep</th>
                 <th scope="col" className="w-24 border-b border-r border-slate-200 px-2 py-2 text-center">Tgl. Resep</th>
                 <th scope="col" className="w-20 border-b border-r border-slate-200 px-2 py-2 text-center">Jam Resep</th>
@@ -288,11 +287,11 @@ export default function HalamanCopyResep() {
             </thead>
             <tbody>
               {!kunjungan ? (
-                <tr><td colSpan={9} className="h-44 text-center text-slate-400"><FontAwesomeIcon icon={faFilePrescription} className="mb-2 h-7 w-7 text-slate-300" /><p>Pilih kunjungan tujuan untuk melihat resep sebelumnya.</p></td></tr>
+                <tr><td colSpan={8} className="h-44 text-center text-slate-400"><FontAwesomeIcon icon={faFilePrescription} className="mb-2 h-7 w-7 text-slate-300" /><p>Pilih kunjungan tujuan untuk melihat resep sebelumnya.</p></td></tr>
               ) : memuat ? (
-                <tr><td colSpan={9} className="h-36 text-center text-slate-500">Memuat resep sebelumnya...</td></tr>
+                <tr><td colSpan={8} className="h-36 text-center text-slate-500">Memuat resep sebelumnya...</td></tr>
               ) : data.length === 0 ? (
-                <tr><td colSpan={9} className="h-44 text-center text-slate-400"><FontAwesomeIcon icon={faFilePrescription} className="mb-2 h-7 w-7 text-slate-300" /><p>Tidak ada resep pasien dari dokter yang sama.</p></td></tr>
+                <tr><td colSpan={8} className="h-44 text-center text-slate-400"><FontAwesomeIcon icon={faFilePrescription} className="mb-2 h-7 w-7 text-slate-300" /><p>Tidak ada resep pasien dari dokter yang sama.</p></td></tr>
               ) : data.map((resep) => {
                 const dipilih = resep.no_resep === noResepTerpilih;
                 return (
@@ -367,16 +366,6 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
   return (
     <>
       <tr onClick={onPilih} onDoubleClick={onCopy} aria-selected={dipilih} className={`cursor-pointer ${dipilih ? "bg-primary-100" : "bg-white hover:bg-slate-50/80"}`}>
-        <td className={`border-b border-slate-100 px-2 py-1.5 text-center ${dipilih ? "bg-primary-100" : "bg-transparent"}`}>
-          <input
-            type="checkbox"
-            checked={dipilih}
-            onClick={(event) => event.stopPropagation()}
-            onChange={onPilih}
-            aria-label={`Pilih resep ${resep.no_resep}`}
-            className="h-4 w-4 accent-primary-700"
-          />
-        </td>
         <td className="truncate border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums text-slate-800">{resep.no_resep}</td>
         <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center tabular-nums">{resep.tgl_peresepan}</td>
         <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums">{resep.jam_peresepan}</td>
@@ -387,7 +376,6 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
         <td className="border-b border-slate-100 px-2 py-1.5 text-center">{resep.status_pelayanan}</td>
       </tr>
       <tr className={dipilih ? "bg-primary-100" : "bg-slate-100/70"}>
-        <td className={`border-b border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} />
         <td className="border-b border-r border-slate-100" />
         <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Jumlah</th>
         <th scope="col" className="border-b border-r border-slate-100 px-2 py-1 text-center font-semibold">Satuan</th>
@@ -397,10 +385,9 @@ function FragmentResep({ resep, dipilih, onPilih, onCopy }: {
         <td className="border-b border-slate-100 px-2 py-1 text-center text-slate-500">{resep.status_asal}</td>
       </tr>
       {resep.items.length === 0 ? (
-        <tr className={dipilih ? "bg-primary-100" : "bg-white"}><td className={`border-b border-r border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} /><td className="border-b border-r border-slate-100" /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
+        <tr className={dipilih ? "bg-primary-100" : "bg-white"}><td className="border-b border-r border-slate-100" /><td colSpan={7} className="border-b border-slate-100 px-2 py-1.5 text-slate-400">Belum ada rincian obat.</td></tr>
       ) : resep.items.map((item, index) => (
         <tr key={`${resep.no_resep}-${item.jenis}-${item.no_racik}-${item.kode_item}-${index}`} className={dipilih ? "bg-primary-100" : "bg-white"}>
-          <td className={`border-b border-r border-slate-100 ${dipilih ? "bg-primary-100" : "bg-transparent"}`} />
           <td className="border-b border-r border-slate-100" />
           <td className={`${item.jenis === "Bahan Racikan" ? "pl-6" : ""} border-b border-r border-slate-100 px-2 py-1.5 text-center font-mono tabular-nums`}>{item.jumlah}</td>
           <td className="border-b border-r border-slate-100 px-2 py-1.5 text-center">{item.satuan}</td>

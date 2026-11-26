@@ -14,20 +14,26 @@ function handler({ denied } = {}) {
     '@/lib/db': {
       executeQuery: async (sql, params) => {
         calls.push([sql, params]);
+        if (/SELECT COUNT\(\*\) AS total/.test(sql)) return [{ total: 1 }];
+        if (/ORDER BY ro\.tgl_perawatan, ro\.jam, ro\.no_resep/.test(sql)) return [{
+          no_resep: '202611220001', no_rawat: '2026/11/22/000001', no_rkm_medis: '000001',
+          nm_pasien: 'Pasien Uji', kd_dokter: 'D1', nm_dokter: 'Dokter Uji', jenis: 'ralan',
+          jenis_bayar: 'Umum', tgl_resep: '2026-11-22', jam_resep: '10:51:32', status_pelayanan: 'Sudah Terlayani',
+        }];
         if (/FROM resep_obat ro/.test(sql)) return [{
           no_resep: '202611220001', no_rawat: '2026/11/22/000001', no_rkm_medis: '000001',
           nm_pasien: 'Pasien Uji', kd_dokter: 'D1', nm_dokter: 'Dokter Uji', jenis: 'ralan',
           jenis_bayar: 'Umum', tgl_resep: '2026-11-22', jam_resep: '10:51:32', status_pelayanan: 'Sudah Terlayani',
         }];
         if (/dor\.kode_brng IS NULL/.test(sql)) return [{
-          kode_item: 'OBAT1', nama_item: 'Obat Uji', jumlah: 1, satuan: 'TAB', harga: 2501,
+          no_resep: '202611220001', kode_item: 'OBAT1', nama_item: 'Obat Uji', jumlah: 1, satuan: 'TAB', harga: 2501,
           embalase: 0, tuslah: 0, total: 2501, aturan_pakai: '3 x 1',
         }];
-        if (/FROM obat_racikan ob/.test(sql)) return [{
-          no_racik: '1', nama_item: 'Racikan Uji', jumlah: 5, satuan: 'Puyer', aturan_pakai: '2 x 1', keterangan: 'Habiskan',
+        if (/(?:FROM|JOIN) obat_racikan ob/.test(sql)) return [{
+          no_resep: '202611220001', no_racik: '1', nama_item: 'Racikan Uji', jumlah: 5, satuan: 'Puyer', aturan_pakai: '2 x 1', keterangan: 'Habiskan',
         }];
-        if (/FROM detail_obat_racikan dor/.test(sql)) return [{
-          no_racik: '1', kode_item: 'OBAT2', nama_item: 'Bahan Uji', jumlah: 2, satuan: 'TAB',
+        if (/(?:FROM|JOIN) detail_obat_racikan dor/.test(sql)) return [{
+          no_resep: '202611220001', no_racik: '1', kode_item: 'OBAT2', nama_item: 'Bahan Uji', jumlah: 2, satuan: 'TAB',
           harga: 100, embalase: 0, tuslah: 0, total: 200, aturan_pakai: '',
         }];
         return [];
@@ -35,6 +41,9 @@ function handler({ denied } = {}) {
     },
     '@/lib/farmasi/access': {
       validasiObatAccess: async () => denied ? NextResponse.json({ success: false }, { status: denied }) : null,
+    },
+    '@/lib/registrasi/date': {
+      isRegistrationDate: (value) => /^\d{4}-\d{2}-\d{2}$/.test(value),
     },
   };
   const file = resolve('src/app/api/farmasi/no-resep/route.ts');
@@ -73,6 +82,27 @@ test('nomor resep memuat header, obat, racikan, dan bahan racikan', async () => 
 test('nomor resep menolak parameter tidak valid tanpa query', async () => {
   const { api, calls } = handler();
   const response = await api.GET(new NextRequest('http://localhost/api/farmasi/no-resep?no_resep=%27%20OR%201=1'));
+  assert.equal(response.status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test('daftar nomor resep memuat resep tervalidasi beserta rincian dan pagination', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/farmasi/no-resep?tanggal_mulai=2026-11-22&tanggal_selesai=2026-11-22&page=1&limit=50'));
+  const json = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(json.success, true);
+  assert.equal(json.data.total, 1);
+  assert.equal(json.data.items[0].header.no_resep, '202611220001');
+  assert.deepEqual(json.data.items[0].detail.map((item) => item.jenis_item), ['Obat', 'Racikan', 'Bahan Racikan']);
+  assert.ok(calls.some(([sql, params]) => /ro\.tgl_perawatan BETWEEN \? AND \?/.test(sql)
+    && params[0] === '2026-11-22' && params[1] === '2026-11-22'));
+  assert.ok(calls.every(([, params]) => Array.isArray(params)));
+});
+
+test('daftar nomor resep menolak rentang tanggal tidak valid tanpa query', async () => {
+  const { api, calls } = handler();
+  const response = await api.GET(new NextRequest('http://localhost/api/farmasi/no-resep?tanggal_mulai=2026-11-23&tanggal_selesai=2026-11-22'));
   assert.equal(response.status, 400);
   assert.equal(calls.length, 0);
 });

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthContext";
 import { UserAccountMenu } from "./UserAccountMenu";
 import { dapatkanJudulHalaman } from "@/lib/navigasi/judul-halaman";
+import { modulDiaktifkan, type KonfigurasiModul } from "@/lib/modul/peta";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -29,6 +30,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 interface AppHeaderProps {
+  konfigurasiModul: KonfigurasiModul;
   isMenuOpen: boolean;
   onToggleMenu: () => void;
   onModuleClick: (title: string) => void;
@@ -40,6 +42,7 @@ const snapshotKlien = () => true;
 const snapshotServer = () => false;
 
 export function AppHeader({
+  konfigurasiModul,
   isMenuOpen,
   onToggleMenu,
   onModuleClick,
@@ -53,6 +56,9 @@ export function AppHeader({
   const [menuLabTerbuka, setMenuLabTerbuka] = useState(false);
   const [menuRadTerbuka, setMenuRadTerbuka] = useState(false);
   const [menuFarmasiTerbuka, setMenuFarmasiTerbuka] = useState(false);
+  const modulAktif = (modul: Parameters<typeof modulDiaktifkan>[1]) => (
+    modulDiaktifkan(konfigurasiModul, modul)
+  );
 
   const labRef = useRef<HTMLDivElement>(null);
   const radRef = useRef<HTMLDivElement>(null);
@@ -106,10 +112,10 @@ export function AppHeader({
           : "text-sm";
 
   return (
-    <header className="shrink-0 select-none bg-primary-800 px-4 py-2 text-white">
+    <header className="app-header shrink-0 select-none border-b border-primary-600 bg-tertiary-900 px-4 py-2 text-white">
       <div className="flex items-center gap-2">
         <div
-          className="flex h-8 w-52 shrink-0 items-center border-r border-primary-700/60 pr-3"
+          className="app-header-title flex h-8 w-52 shrink-0 items-center border-r border-primary-600/70 pr-3"
           title={judulHalaman}
         >
           <h1 className={`line-clamp-2 w-full font-bold leading-[1.05] tracking-tight text-white ${ukuranJudul}`}>
@@ -122,10 +128,10 @@ export function AppHeader({
           {/* 1. Menu */}
           <button
             onClick={onToggleMenu}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isMenuOpen
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             }`}
             title="Buka / Tutup Daftar Menu (Alt+M)"
           >
@@ -134,53 +140,53 @@ export function AppHeader({
           </button>
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 2. Registrasi */}
-          <button
+          {modulAktif("registrasi") && <button
             onClick={() => handleToolAction("registrasi", "Registrasi Pasien")}
             disabled={autentikasiAktif && !hasPermission("registrasi")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRegistrasiActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pendaftaran Pasien (Alt+R)"
           >
             <FontAwesomeIcon icon={faUserPlus} className="w-3.5 h-3.5 text-primary-300" />
             <span>Registrasi</span>
-          </button>
+          </button>}
 
           {/* 3. IGD/UGD */}
-          <button
+          {modulAktif("igd") && <button
             onClick={() => handleToolAction("igd", "Instalasi Gawat Darurat")}
             disabled={autentikasiAktif && !hasPermission("igd")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isIgdActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Pelayanan IGD (Alt+D)"
           >
             <FontAwesomeIcon icon={faHeartPulse} className="w-3.5 h-3.5 text-red-300" />
             <span>IGD/UGD</span>
-          </button>
+          </button>}
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 4. Laborat Dropdown */}
-          <div className="relative shrink-0" ref={labRef}>
+          {modulAktif("laboratorium") && <div className="relative shrink-0" ref={labRef}>
             <button
               onClick={() => {
                 setMenuRadTerbuka(false);
                 setMenuFarmasiTerbuka(false);
                 setMenuLabTerbuka(!menuLabTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isLaboratActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Laboratorium (Alt+O)"
             >
@@ -276,20 +282,20 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* 5. Radiologi Dropdown */}
-          <div className="relative shrink-0" ref={radRef}>
+          {modulAktif("radiologi") && <div className="relative shrink-0" ref={radRef}>
             <button
               onClick={() => {
                 setMenuLabTerbuka(false);
                 setMenuFarmasiTerbuka(false);
                 setMenuRadTerbuka(!menuRadTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isRadiologiActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Radiologi (Alt+A)"
             >
@@ -331,20 +337,20 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* 6. Farmasi Dropdown */}
-          <div className="relative shrink-0" ref={farmasiRef}>
+          {modulAktif("farmasi") && <div className="relative shrink-0" ref={farmasiRef}>
             <button
               onClick={() => {
                 setMenuLabTerbuka(false);
                 setMenuRadTerbuka(false);
                 setMenuFarmasiTerbuka(!menuFarmasiTerbuka);
               }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
+              className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border ${
                 isFarmasiActive
-                  ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                  : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                  ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                  : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
               }`}
               title="Pilihan Modul Farmasi (Alt+J)"
             >
@@ -421,10 +427,10 @@ export function AppHeader({
                   <span>Daftar Resep Dokter</span>
                 </Link>
                 <Link
-                  href="/farmasi/resep-obat"
+                  href="/farmasi/no-resep"
                   onClick={() => setMenuFarmasiTerbuka(false)}
                   className={`flex items-center gap-2.5 px-3 py-2 text-xs ${
-                    pathname === "/farmasi/resep-obat"
+                    pathname === "/farmasi/no-resep"
                       ? "bg-primary-50 text-primary-800 font-bold"
                       : "hover:bg-slate-50 text-slate-700 hover:text-primary-900 font-medium"
                   }`}
@@ -434,40 +440,40 @@ export function AppHeader({
                 </Link>
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Separator */}
-          <div className="h-5 w-px bg-primary-700/60 mx-1 shrink-0" />
+          <div className="h-5 w-px bg-primary-600/70 mx-1 shrink-0" />
 
           {/* 7. Rawat Inap */}
-          <button
+          {modulAktif("rawat-inap") && <button
             onClick={() => handleToolAction("kamar_inap", "Rawat Inap & Kamar")}
             disabled={autentikasiAktif && !hasPermission("kamar_inap")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatInapActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Inap (Alt+K)"
           >
             <FontAwesomeIcon icon={faBed} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Inap</span>
-          </button>
+          </button>}
 
           {/* 8. Rawat Jalan */}
-          <button
+          {modulAktif("rawat-jalan") && <button
             onClick={() => handleToolAction("tindakan_ralan", "Rawat Jalan / Poliklinik")}
             disabled={autentikasiAktif && !hasPermission("tindakan_ralan")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
+            className={`app-header-module px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border shrink-0 ${
               isRawatJalanActive
-                ? "bg-primary-950 text-white border-primary-700 shadow-xs font-semibold"
-                : "text-primary-100 hover:text-white hover:bg-primary-700/70 border-transparent hover:border-primary-600/50 font-medium"
+                ? "app-header-module-active bg-tertiary-950 text-white border-primary-600 shadow-xs font-semibold"
+                : "app-header-module-inactive text-slate-200 hover:text-white hover:bg-tertiary-800 border-transparent hover:border-primary-600/50 font-medium"
             } disabled:opacity-40 disabled:hover:bg-transparent`}
             title="Rawat Jalan (Alt+S)"
           >
             <FontAwesomeIcon icon={faStethoscope} className="w-3.5 h-3.5 text-secondary-300" />
             <span>Rawat Jalan</span>
-          </button>
+          </button>}
         </div>
 
         {/* Sisi Kanan: Informasi Akun / Tombol Log In */}

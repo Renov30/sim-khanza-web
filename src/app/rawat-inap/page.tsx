@@ -277,7 +277,7 @@ export default function HalamanRawatInap() {
         ))}
       </div>
       {modeFilter !== "semua" && (
-        <span className="text-[10px] text-slate-500">
+        <span className="text-[11px] text-slate-500">
           Periode: {modeFilter === "masuk" ? "Tgl. Masuk" : "Tgl. Pulang"}
         </span>
       )}
@@ -445,15 +445,15 @@ export default function HalamanRawatInap() {
                     <td className="py-2 px-2.5 text-center font-bold text-slate-800">
                       {item.lama || "1"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.diagnosa_awal || "-"}
                     </td>
-                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[10px]">
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
                       {item.diagnosa_akhir || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                           item.stts_pulang === "-" || !item.stts_pulang
                             ? "bg-slate-100 text-slate-600 border border-slate-200"
                             : "bg-secondary-50 text-secondary-700 border border-secondary-200"

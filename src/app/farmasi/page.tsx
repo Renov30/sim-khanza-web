@@ -171,7 +171,7 @@ export default function HalamanFarmasi() {
                       {item.no_batch || "-"}
                     </td>
                     <td className="py-2 px-2.5 text-center">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
                         {item.status || "Ralan"}
                       </span>
                     </td>

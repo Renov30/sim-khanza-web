@@ -82,7 +82,7 @@ export function UserAccountMenu({
       {/* Tombol Akun di Header (Kompak, hanya nama & avatar) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-primary-900/80 hover:bg-primary-900 text-white pl-2.5 pr-2 py-1.5 rounded-lg border border-primary-700/70 text-xs font-semibold shadow-xs"
+        className="app-header-account flex items-center gap-2 rounded-lg border border-primary-600/70 bg-tertiary-950 pl-2.5 pr-2 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-tertiary-800"
         title="Klik untuk membuka menu akun & modul sistem"
         aria-haspopup="true"
         aria-expanded={isOpen}

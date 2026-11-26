@@ -144,7 +144,7 @@ export default function HalamanValidasiObat() {
       const json: { success?: boolean; message?: string; error?: string } = await response.json();
       if (!response.ok || !json.success) throw new Error(json.error || "Validasi obat gagal diproses.");
       setKonfirmasi(false);
-      router.push(`/farmasi/no-resep?no_resep=${encodeURIComponent(data.resep.no_resep)}`);
+      router.push(`/farmasi/daftar-obat-telah-tervalidasi?no_resep=${encodeURIComponent(data.resep.no_resep)}`);
     } catch (error) {
       tampilkanToast(error instanceof Error ? error.message : "Validasi obat gagal diproses.", "error");
     } finally {

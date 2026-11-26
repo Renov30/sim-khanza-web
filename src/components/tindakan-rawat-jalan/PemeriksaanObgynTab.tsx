@@ -309,7 +309,7 @@ export const PemeriksaanObgynTab = forwardRef<AksiPanelPemeriksaan, PemeriksaanO
       </label>
     );
     const bagian = (judul: string, children: React.ReactNode, className = "") => (
-      <fieldset className={`min-w-0 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 ${className}`}>
+      <fieldset className={`min-w-0 p-1 ${className}`}>
         <legend className="px-1 text-[11px] font-semibold text-slate-700">{judul}</legend>
         <div className="space-y-1.5">{children}</div>
       </fieldset>

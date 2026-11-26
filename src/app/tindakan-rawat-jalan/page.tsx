@@ -519,7 +519,7 @@ export default function HalamanTindakanRawatJalan() {
           </div>
         )}
         <GridFormulirModul tampilkanKolomCadangan={false} className="items-start gap-y-2 lg:gap-x-2">
-          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2">
+          <div className="space-y-1.5 p-1">
             {!pasien && <label className="block text-xs text-slate-700">
               <span className="mb-1 block">No. Rawat / RM / Pasien</span>
               <input
@@ -565,7 +565,7 @@ export default function HalamanTindakanRawatJalan() {
             </div>}
           </div>
 
-          <div className="space-y-1.5 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 lg:col-span-2">
+          <div className="space-y-1.5 p-1 lg:col-span-2">
             <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700"><span className="whitespace-nowrap text-right font-medium">Cari tindakan :</span>
               <input value={cariTarif} onChange={(event) => setCariTarif(event.target.value)} disabled={!pasien} placeholder="Cari data di sini" className="h-7 w-full rounded-md border border-slate-300 bg-white px-2.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none disabled:bg-slate-100" />
             </label>
@@ -614,7 +614,7 @@ export default function HalamanTindakanRawatJalan() {
                   <td className="px-2.5 py-2">{[item.nm_dokter, item.nm_petugas].filter(Boolean).join(" · ") || "-"}</td>
                   <td className="whitespace-nowrap px-2.5 py-2 font-mono">{item.tgl_perawatan} {item.jam_rawat}</td>
                   <td className="whitespace-nowrap px-2.5 py-2 text-right font-mono">{rupiah(item.biaya_rawat)}</td>
-                  <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px]">{item.stts_bayar || "Belum"}</span></td>
+                  <td className="px-2.5 py-2 text-center"><span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px]">{item.stts_bayar || "Belum"}</span></td>
                 </tr>)}
           </tbody>
         </table>

@@ -47,7 +47,7 @@ function KontenRiwayatPasien() {
     return () => controller.abort();
   }, [noRawat, noRawatValid, tampilkanToast]);
 
-  if (memuat) return <main className="module-page flex h-full items-center justify-center bg-slate-50 p-3 text-sm text-slate-500">Memuat data pasien...</main>;
+  if (memuat) return <main className="module-page flex h-full items-center justify-center bg-slate-50 p-3 text-xs text-slate-500">Memuat data pasien...</main>;
 
   return (
     <>
@@ -71,7 +71,7 @@ function KontenRiwayatPasien() {
 
 export default function HalamanRiwayatPasien() {
   return (
-    <Suspense fallback={<main className="module-page flex h-full items-center justify-center bg-slate-50 p-3 text-sm text-slate-500">Memuat halaman riwayat pasien...</main>}>
+    <Suspense fallback={<main className="module-page flex h-full items-center justify-center bg-slate-50 p-3 text-xs text-slate-500">Memuat halaman riwayat pasien...</main>}>
       <KontenRiwayatPasien />
     </Suspense>
   );

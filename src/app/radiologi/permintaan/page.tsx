@@ -546,26 +546,52 @@ export default function HalamanPermintaanRadiologi() {
                     <th key={judul} scope="col" className="border-b border-slate-200 px-2 py-2">{judul}</th>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {memuatData ? (
-                  <tr><td colSpan={12} className="h-36 border-0 text-center text-slate-500">Memuat item pemeriksaan radiologi...</td></tr>
-                ) : dataItem.length === 0 ? (
-                  <tr><td colSpan={12} className="h-44 border-0 text-center text-slate-500">Tidak ada item pemeriksaan pada periode ini.</td></tr>
-                ) : dataItem.map((baris) => (
-                  <tr key={`${baris.noorder}-${baris.kd_jenis_prw}`} className="hover:bg-slate-50/80">
-                    <td className="px-2 py-1.5 font-mono text-slate-800">{baris.noorder}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-600">{baris.tgl_permintaan}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-600">{baris.jam_permintaan}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-800">{baris.no_rawat}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-800">{baris.no_rkm_medis}</td>
-                    <td className="px-2 py-1.5">{baris.nm_pasien}</td>
-                    <td className="px-2 py-1.5 font-mono text-slate-600">{baris.kd_jenis_prw}</td>
-                    <td className="px-2 py-1.5">{baris.nm_perawatan}</td>
-                    <td className="px-2 py-1.5">{baris.status || "-"}</td>
-                    <td className="px-2 py-1.5">{baris.ruang || "-"}</td>
-                    <td className="px-2 py-1.5">{baris.nm_dokter_perujuk || baris.dokter_perujuk || "-"}</td>
-                    <td className="px-2 py-1.5">{baris.png_jawab || "-"}</td>
+              ) : (
+                data.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className="hover:bg-slate-50/80"
+                  >
+                    <td className="py-2 px-2.5 font-bold text-slate-800">
+                      {item.noorder}
+                    </td>
+                    <td className="py-2 px-2.5 font-medium text-slate-800">
+                      {item.no_rawat}
+                    </td>
+                    <td className="py-2 px-2.5 text-slate-600">
+                      {item.tgl_permintaan} <span className="text-slate-400">{item.jam_permintaan}</span>
+                    </td>
+                    <td className="py-2 px-2.5 font-bold text-slate-800">
+                      {item.no_rkm_medis}
+                    </td>
+                    <td className="py-2 px-2.5 font-sans font-medium text-slate-800">
+                      {item.nm_pasien}
+                    </td>
+                    <td className="py-2 px-2.5 text-center">
+                      <span
+                        className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                          item.jk === "L"
+                            ? "bg-primary-50 text-primary-700"
+                            : "bg-tertiary-50 text-tertiary-700"
+                        }`}
+                      >
+                        {item.jk}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2.5 font-sans text-slate-700">
+                      {item.nm_dokter_perujuk || item.dokter_perujuk || "-"}
+                    </td>
+                    <td className="py-2 px-2.5 font-sans text-slate-600 text-[11px]">
+                      {item.diagnosa_klinis || "-"}
+                    </td>
+                    <td className="py-2 px-2.5 font-sans text-slate-500 text-[11px]">
+                      {item.informasi_tambahan || "-"}
+                    </td>
+                    <td className="py-2 px-2.5 text-center">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-50 text-primary-700 border border-primary-200">
+                        {item.status || "ralan"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
                 </tbody>

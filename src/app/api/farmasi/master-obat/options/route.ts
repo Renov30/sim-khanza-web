@@ -1,6 +1,6 @@
 import { masterObatAccess } from "@/lib/farmasi/access";
 import { loadHargaSetting, nextMasterObatCode } from "@/lib/farmasi/master-obat";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2/promise";
 
@@ -9,11 +9,22 @@ interface OpsiMaster extends RowDataPacket {
   label: string;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const denied = await masterObatAccess();
   if (denied) return denied;
   const connection = await pool.getConnection();
   try {
+    const resource = req.nextUrl.searchParams.get("resource");
+    if (resource === "harga") {
+      const kodeBrng = req.nextUrl.searchParams.get("kode_brng")?.trim() || "";
+      if (!kodeBrng || kodeBrng.length > 15) {
+        return NextResponse.json({ success: false, error: "Kode barang tidak valid." }, { status: 400 });
+      }
+      const harga = await loadHargaSetting(connection, kodeBrng);
+      return NextResponse.json({ success: true, data: { harga } }, {
+        headers: { "Cache-Control": "private, max-age=300" },
+      });
+    }
     const [satuan] = await connection.execute<OpsiMaster[]>(
       "SELECT kode_sat AS id, satuan AS label FROM kodesatuan ORDER BY satuan",
     );

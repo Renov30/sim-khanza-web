@@ -29,6 +29,9 @@ function handler({ denied } = {}) {
           kode_item: 'OBAT1', nama_item: 'Obat Uji', jumlah: 10, satuan: 'TAB',
           aturan_pakai: '3 x 1', kapasitas: 1, stok: 20, h_beli: 100, ralan: 150,
           kelas1: 160, kelas2: 155, kelas3: 150, utama: 150, vip: 170, vvip: 180,
+          jenis_obat: 'Tablet', industri: 'Farmasi Uji', kategori: 'Generik',
+          golongan: 'Obat Bebas', no_batch: 'BATCH-01', no_faktur: 'FAK-01',
+          kedaluwarsa: '2027-11-22',
         }];
         if (/FROM resep_dokter_racikan rr/.test(sql)) return [{
           no_racik: '1', nama_item: 'Racikan Uji', jumlah: 5, satuan: 'Puyer',
@@ -38,6 +41,9 @@ function handler({ denied } = {}) {
           no_racik: '1', kode_item: 'OBAT2', nama_item: 'Bahan Uji', jumlah: 2,
           satuan: 'TAB', aturan_pakai: '', kapasitas: 1, stok: 1, h_beli: 50,
           ralan: 75, kelas1: 80, kelas2: 78, kelas3: 75, utama: 75, vip: 85, vvip: 90,
+          jenis_obat: 'Tablet', industri: 'Farmasi Uji', kategori: 'Generik',
+          golongan: 'Obat Bebas', no_batch: 'BATCH-02', no_faktur: 'FAK-02',
+          kedaluwarsa: '2027-12-01',
         }];
         return [];
       },
@@ -89,9 +95,13 @@ test('validasi obat memuat identitas, depo, obat, dan racikan', async () => {
   assert.equal(json.data.depot.kd_bangsal, 'AP');
   assert.deepEqual(json.data.detail.map((item) => item.jenis_item), ['Obat', 'Racikan', 'Bahan Racikan']);
   assert.equal(json.data.detail[0].stok_cukup, true);
+  assert.equal(json.data.detail[0].kategori, 'Generik');
+  assert.equal(json.data.detail[0].no_batch, 'BATCH-01');
+  assert.equal(json.data.detail[0].kedaluwarsa, '2027-11-22');
   assert.equal(json.data.detail[2].stok_cukup, false);
   assert.ok(calls.every(([, params]) => Array.isArray(params)));
   assert.ok(calls.some(([sql, params]) => /FROM resep_dokter rd/.test(sql) && params.includes('202611220001')));
+  assert.ok(calls.some(([sql]) => /LEFT JOIN jenis j/.test(sql) && /LEFT JOIN industrifarmasi inf/.test(sql)));
 });
 
 test('validasi obat menolak nomor resep tidak valid tanpa query', async () => {

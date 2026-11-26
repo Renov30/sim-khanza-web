@@ -137,13 +137,13 @@ export const CatatanDokterTab = forwardRef<AksiPanelPemeriksaan, {
         <div className="flex items-center gap-1.5"><label className="flex items-center gap-1">Tanggal<input type="date" value={form.tanggal} onChange={(event) => { setWaktuOtomatis(false); isi("tanggal", event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label><label className="flex items-center gap-1">Jam<input type="time" step="1" value={form.jam} onChange={(event) => { setWaktuOtomatis(false); isi("jam", event.target.value); }} className="h-7 rounded-md border border-slate-300 bg-white px-1.5 text-[11px] focus:border-primary-600 focus:outline-none" /></label><label title="Perbarui tanggal dan jam secara otomatis"><input aria-label="Perbarui waktu catatan secara otomatis" type="checkbox" checked={waktuOtomatis} onChange={(event) => setWaktuOtomatis(event.target.checked)} className="accent-primary-700" /></label></div>
       </div>
       <div className="grid gap-x-7 gap-y-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <div className="rounded-lg border border-slate-200/80 bg-slate-50/60 p-2 lg:col-span-3">
+        <div className="p-1 lg:col-span-3">
           <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-center gap-1 text-[11px] text-slate-700">
             <span className="whitespace-nowrap text-right font-medium">Dokter :</span>
             <PatientMasterSelect jenis="Dokter catatan perawatan" label="Dokter" value={form.kd_dokter} items={daftarDokter.map((item) => ({ id: item.kode, label: item.nama }))} onChange={(kode) => isi("kd_dokter", kode)} />
           </div>
         </div>
-        <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-1 rounded-md border border-slate-200/80 bg-slate-50/60 p-2 text-[11px] text-slate-700 lg:col-span-3"><span className="pt-1.5 text-right font-medium">Catatan :</span><textarea aria-label="Catatan dokter" value={form.catatan} onChange={(event) => isi("catatan", event.target.value)} maxLength={700} rows={5} className="w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none" /></label>
+        <label className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-1 p-1 text-[11px] text-slate-700 lg:col-span-3"><span className="pt-1.5 text-right font-medium">Catatan :</span><textarea aria-label="Catatan dokter" value={form.catatan} onChange={(event) => isi("catatan", event.target.value)} maxLength={700} rows={5} className="w-full resize-y rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[11px] text-slate-800 focus:border-primary-600 focus:outline-none" /></label>
       </div>
     </section>
     <section className="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200/80 bg-white shadow-sm">
