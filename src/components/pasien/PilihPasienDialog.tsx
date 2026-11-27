@@ -199,7 +199,7 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
           {sedangMemuat && <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin text-primary-600" />}
         </div>
         <div
-          className="flex-1 overflow-auto p-2"
+          className="min-h-0 flex-1 overflow-auto px-2 pb-2"
           aria-busy={sedangMemuat || sedangMemuatBerikutnya}
           onScroll={(event) => {
             const target = event.currentTarget;
@@ -208,7 +208,7 @@ export function PilihPasienDialog({ terbuka, endpoint, pencarianAwal = '', onTut
         >
           <table className="w-full text-left text-xs">
             <caption className="sr-only">Daftar hasil pencarian pasien</caption>
-            <thead className="sticky top-0 z-10 border-b bg-slate-50 font-bold text-slate-600 shadow-2xs">
+            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-white font-bold text-slate-600 shadow-2xs">
               <tr>
                 <th scope="col" className="w-24 p-2">No. RM</th>
                 <th scope="col" className="p-2">Nama Pasien</th>
